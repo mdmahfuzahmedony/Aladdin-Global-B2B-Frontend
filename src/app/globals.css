@@ -1,26 +1,37 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ১. থিম কালার কনফিগারেশন */
+@theme {
+  --color-brand-navy: #12233f;
+  --color-brand-gold: #d6a419;
+  --color-brand-gold-light: #f1c453;
+  --color-surface-bg: #f5f6fa;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ২. বাটন ও অন্যান্য ইউটিলিটি (আগে আমরা যে নামগুলো দিয়েছিলাম) */
+@layer utilities {
+  .btn-gold {
+    background-color: var(--color-brand-gold);
+    color: var(--color-brand-navy);
+    @apply font-bold py-2 px-6 rounded-lg transition-all cursor-pointer;
+  }
+  .btn-gold:hover {
+    background-color: var(--color-brand-gold-light);
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  .btn-navy {
+    background-color: var(--color-brand-navy);
+    color: white;
+    @apply font-bold py-2 px-6 rounded-lg transition-all cursor-pointer;
+  }
+
+  .p-card {
+    @apply bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm;
   }
 }
 
+/* ৩. বডির বেসিক ডিজাইন */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-surface-bg);
+  @apply antialiased;
 }
