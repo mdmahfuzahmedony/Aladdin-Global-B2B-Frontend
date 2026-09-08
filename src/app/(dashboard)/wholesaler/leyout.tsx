@@ -1,5 +1,6 @@
-import { WholesalerSidebar } from "@/components/layout/sidebar/wholesaler-sidebar";
-import { WholesalerNavbar } from "@/components/layout/navbar/wholesaler-navbar";
+import { WholesalerNavbar } from "@/components/navbar/wholesaler-navbar";
+import { WholesalerSidebar } from "@/components/sidebar/wholesaler-sidebar";
+
 
 export default function WholesalerLayout({
   children,

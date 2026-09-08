@@ -1,5 +1,9 @@
-import { SellerSidebar } from "@/components/layout/sidebar/seller-sidebar";
-import { SellerNavbar } from "@/components/layout/navbar/seller-navbar";
+import { SellerSidebar } from "@/components/sidebar/seller-sidebar";
+import { SellerNavbar } from '@/components/navbar/seller-navbar';
+
+
+        
+
 
 export default function SellerLayout({
   children,
