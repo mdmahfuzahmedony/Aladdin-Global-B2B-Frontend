@@ -1,6 +1,5 @@
-import { AffiliateNavbar } from "@/components/navbar/affiliate-navbar";
+import { AffiliateNavbar } from "@/components/header/affiliate-navbar";
 import { AffiliateSidebar } from "@/components/sidebar/affiliate-sidebar";
-
 
 export default function AffiliateLayout({
   children,
