@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* ১. থিম কালার কনফিগারেশন */
 @theme {
   --color-brand-navy: #12233f;
   --color-brand-gold: #d6a419;
@@ -8,30 +7,24 @@
   --color-surface-bg: #f5f6fa;
 }
 
-/* ২. বাটন ও অন্যান্য ইউটিলিটি (আগে আমরা যে নামগুলো দিয়েছিলাম) */
-@layer utilities {
-  .btn-gold {
-    background-color: var(--color-brand-gold);
+@layer base {
+  body {
+    background-color: var(--color-surface-bg);
     color: var(--color-brand-navy);
-    @apply font-bold py-2 px-6 rounded-lg transition-all cursor-pointer;
-  }
-  .btn-gold:hover {
-    background-color: var(--color-brand-gold-light);
-  }
-
-  .btn-navy {
-    background-color: var(--color-brand-navy);
-    color: white;
-    @apply font-bold py-2 px-6 rounded-lg transition-all cursor-pointer;
-  }
-
-  .p-card {
-    @apply bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm;
   }
 }
 
-/* ৩. বডির বেসিক ডিজাইন */
-body {
-  background-color: var(--color-surface-bg);
-  @apply antialiased;
+@layer utilities {
+  .btn-gold {
+    @apply bg-brand-gold text-brand-navy cursor-pointer rounded-lg px-6 py-2 font-bold transition-all;
+  }
+  .btn-gold:hover {
+    @apply bg-brand-gold-light;
+  }
+  .btn-navy {
+    @apply bg-brand-navy text-white cursor-pointer rounded-lg px-6 py-2 font-bold transition-all;
+  }
+  .p-card {
+    @apply overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm;
+  }
 }

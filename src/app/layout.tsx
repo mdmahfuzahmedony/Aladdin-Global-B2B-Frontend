@@ -1,47 +1,51 @@
 import type { Metadata } from "next";
-import { Inter, Poppins } from "next/font/google"; // ফন্ট যোগ করা হলো
-import "./globals.css"; // সিএসএস অবশ্যই সবার উপরে থাকবে
+import { Inter, Poppins } from "next/font/google";
+
+import "./globals.css";
+
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// ১. প্রিমিয়াম ফন্ট কনফিগারেশন
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const poppins = Poppins({ 
-  weight: ["600", "700", "800"], 
-  subsets: ["latin"], 
-  variable: "--font-poppins" 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
-// ২. মেটাডাটা (এসইও এর জন্য জরুরি)
+const poppins = Poppins({
+  weight: ["600", "700", "800"],
+  subsets: ["latin"],
+  variable: "--font-poppins",
+});
+
 export const metadata: Metadata = {
   title: "Aladdin Global B2B | Verified Wholesale Marketplace",
-  description: "Direct sourcing from manufacturers across Bangladesh. Reliable and transparent B2B platform.",
+  description:
+    "Direct sourcing from manufacturers across Bangladesh. Reliable and transparent B2B platform.",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${poppins.variable} font-sans antialiased`}>
-        
-        {/* মেইন কন্টেন্ট */}
+      <body
+        className={`${inter.variable} ${poppins.variable} font-sans antialiased`}
+      >
         {children}
 
-        {/* টোস্ট নোটিফিকেশন সিস্টেম */}
-        <ToastContainer 
+        <ToastContainer
           position="top-right"
           autoClose={3000}
           hideProgressBar={false}
-          newestOnTop={true} // নতুন নোটিফিকেশন উপরে আসবে
+          newestOnTop
           closeOnClick
           rtl={false}
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="colored" 
+          theme="colored"
         />
       </body>
     </html>

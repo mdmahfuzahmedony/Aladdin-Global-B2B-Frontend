@@ -1,13 +1,7 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-    ],
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
   },
 };
 
-export default nextConfig;
+export default config;
