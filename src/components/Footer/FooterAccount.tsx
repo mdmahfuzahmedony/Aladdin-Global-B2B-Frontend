@@ -11,7 +11,7 @@ const accountLinks = [
 export function FooterAccount() {
   return (
     <div>
-      <h3 className="mb-5 text-lg font-bold">
+      <h3 className="mb-5 text-md font-bold">
         My Account
       </h3>
 
