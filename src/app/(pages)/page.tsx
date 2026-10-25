@@ -1,32 +1,45 @@
-import { ArrowRight, BadgeCheck, Globe2, ShieldCheck, Zap } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import CategorySlider from '@/components/section/home/category-slider';
+import FlashSale from '@/components/section/home/flash-sale';
+import TrustFeatures from '@/components/section/home/trust-features';
+import BestSellers from '@/components/section/home/best-sellers';
+import PopularBrands from '@/components/section/home/popular-brands';
+import FAQSection from '@/components/section/home/faq-section';
+import FeaturedProducts from '@/components/section/home/featured-products';
+import TopRatedProducts from '@/components/section/home/top-rated-products';
+import HeroBanner from '@/components/section/home/hero-banner';
+import NewArrivalsPage from '@/components/section/home/new-arrivals';
+import SectionBanner from '@/components/section/home/section-banner';
+import JustForYouSection from '@/components/section/home/Justforyousection';
 
-export default function Home() {
+
+export default function HomePage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-      <div className="text-center">
-        {/* লোগো টাইপ লেখা */}
-        <h2 className="text-sm font-bold text-brand-gold uppercase tracking-[0.3em] mb-2">
-          Official Wholesale Platform
-        </h2>
+    <main>
+      <HeroBanner />
 
-        {/* মেইন ওয়েলকাম মেসেজ */}
-        <h1 className="text-4xl md:text-6xl font-extrabold text-brand-navy">
-          Welcome to <span className="text-brand-gold">Aladdin Global B2B</span>
-        </h1>
+      <TrustFeatures />
 
-        {/* সাব টেক্সট */}
-        <p className="mt-4 text-gray-500 text-lg max-w-lg mx-auto">
-          Start your professional journey with Bangladeshs most reliable premium marketplace.
-        </p>
+      <CategorySlider />
 
-        {/* সাধারণ বাটন টেস্টিং */}
-        <div className="mt-8 flex gap-4 justify-center">
-          <button className="btn-gold">Explore Now</button>
-          <button className="btn-navy text-sm px-6 py-2 rounded-lg bg-[#12233F] text-white">Login Area</button>
-        </div>
-      </div>
+      <SectionBanner placement="FLASH_SALE" />
+      <FlashSale />
+
+      <SectionBanner placement="NEW_ARRIVALS" />
+      <NewArrivalsPage />
+
+      <SectionBanner placement="BEST_SELLERS" />
+      <BestSellers />
+
+      <SectionBanner placement="FEATURED_PRODUCTS" />
+      <FeaturedProducts />
+
+      <SectionBanner placement="TOP_RATED_PRODUCTS" />
+      <TopRatedProducts />
+ <JustForYouSection/>
+      <PopularBrands />
+     
+
+      <FAQSection />
     </main>
   );
 }
