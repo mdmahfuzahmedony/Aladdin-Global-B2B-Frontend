@@ -593,9 +593,15 @@ export default function ProductInformation({
   }, []);
 
   const rootCategories = useMemo(() => {
-    return categories.filter(
-      (category) => !category.parentId,
-    );
+    return categories
+      .filter((category) => !category.parentId)
+      .sort((a, b) => {
+        const aIsGrocery = /grocer|মুদি/i.test(a.name);
+        const bIsGrocery = /grocer|মুদি/i.test(b.name);
+        if (aIsGrocery && !bIsGrocery) return -1;
+        if (!aIsGrocery && bIsGrocery) return 1;
+        return a.name.localeCompare(b.name);
+      });
   }, [categories]);
 
   const selectedCategory = useMemo(() => {

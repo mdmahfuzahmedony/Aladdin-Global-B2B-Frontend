@@ -16,7 +16,7 @@ type CategoryItem = {
 };
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function CategorySlider() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -63,9 +63,15 @@ export default function CategorySlider() {
           );
         }
 
-        setCategories(
-          Array.isArray(result?.data) ? result.data : []
-        );
+        const list = Array.isArray(result?.data) ? (result.data as CategoryItem[]) : [];
+        list.sort((a: CategoryItem, b: CategoryItem) => {
+          const aIsGrocery = /grocer|মুদি/i.test(a.name);
+          const bIsGrocery = /grocer|মুদি/i.test(b.name);
+          if (aIsGrocery && !bIsGrocery) return -1;
+          if (!aIsGrocery && bIsGrocery) return 1;
+          return a.name.localeCompare(b.name);
+        });
+        setCategories(list);
       } catch (error: unknown) {
         console.error("Category fetch error:", error);
 

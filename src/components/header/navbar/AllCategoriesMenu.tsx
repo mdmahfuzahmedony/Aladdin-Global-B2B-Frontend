@@ -21,7 +21,7 @@ import {
 // ======================================================
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 const CATEGORY_API = `${API_URL}/api/categories/main-with-count`;
 
@@ -269,10 +269,19 @@ export function AllCategoriesMenu({
         const apiCategories = extractCategories(payload);
         const tree = buildCategoryTree(apiCategories);
 
+        // Ensure Grocery is always at the top of All Categories menu
+        tree.sort((a, b) => {
+          const aIsGrocery = /grocer|মুদি/i.test(a.name);
+          const bIsGrocery = /grocer|মুদি/i.test(b.name);
+          if (aIsGrocery && !bIsGrocery) return -1;
+          if (!aIsGrocery && bIsGrocery) return 1;
+          return a.name.localeCompare(b.name);
+        });
+
         if (!mounted) return;
 
         setCategories(tree);
-        setActivePath([]);
+        setActivePath(tree.length > 0 ? [tree[0]] : []);
         setExpandedIds(new Set());
       } catch (err) {
         console.error("MegaMenu error:", err);

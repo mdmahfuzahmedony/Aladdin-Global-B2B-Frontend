@@ -1,6 +1,5 @@
 "use client";
 
-
 import Link from "next/link";
 import { useState } from "react";
 import type { ComponentType, FormEvent, ReactNode } from "react";
@@ -12,7 +11,6 @@ import {
   Clock3,
   Mail,
   MapPin,
-  MessageCircle,
   Package,
   Phone,
   Send,
@@ -21,9 +19,10 @@ import {
   Users,
   Handshake,
   LoaderCircle,
+  FileText,
 } from "lucide-react";
 
-// FAQ component: default export, তাই curly braces ব্যবহার করা যাবে না।
+// FAQ component: default export
 import FAQSection from "@/components/section/home/faq-section";
 
 const inputClass =
@@ -35,14 +34,11 @@ export default function ContactPage() {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const form = e.currentTarget;
 
     setIsSubmitting(true);
     setSubmitted(false);
 
-    // বর্তমানে এটি demo submission।
-    // Backend API যুক্ত করলে এই অংশটি API request দিয়ে replace করবে।
     setTimeout(() => {
       setSubmitted(true);
       setIsSubmitting(false);
@@ -52,10 +48,8 @@ export default function ContactPage() {
 
   return (
     <main className="min-h-screen bg-white text-[#12233F]">
-      {/* Hero Section */}
-    
       {/* Contact Information */}
-      <section className="mx-auto max-w-[1140px] px-5 py-16 sm:px-8 lg:py-20">
+      <section className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:py-20">
         <div className="mb-10 max-w-2xl">
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#b48a08]">
             Get in touch
@@ -75,31 +69,31 @@ export default function ContactPage() {
           <ContactInfoCard
             icon={Phone}
             title="Call Us"
-            description="Talk to our support team."
-            value="+880 1XXXXXXXXX"
-            href="tel:+8801XXXXXXXXX"
+            description="10:00 AM – 10:00 PM (Friday Open)"
+            value="01312-789354"
+            href="tel:01312789354"
           />
 
           <ContactInfoCard
             icon={Mail}
             title="Email Us"
             description="Send us your questions."
-            value="support@example.com"
-            href="mailto:support@example.com"
+            value="support@aladdinglobalb2b.com"
+            href="mailto:support@aladdinglobalb2b.com"
           />
 
           <ContactInfoCard
             icon={MapPin}
-            title="Our Location"
-            description="Visit our office."
-            value="Jashore, Bangladesh"
+            title="Office Location"
+            description="Gonata Road, Jashore, Bangladesh."
+            value="Jashore - 7400"
           />
 
           <ContactInfoCard
-            icon={Clock3}
-            title="Support Hours"
-            description="Saturday to Thursday"
-            value="9:00 AM – 6:00 PM"
+            icon={FileText}
+            title="Trade Licence"
+            description="Official Business Registration"
+            value="Verified & Secured"
           />
         </div>
       </section>
@@ -109,7 +103,7 @@ export default function ContactPage() {
         id="contact-form"
         className="scroll-mt-24 bg-gray-50 py-16 lg:py-20"
       >
-        <div className="mx-auto grid max-w-[1140px] gap-10 px-5 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+        <div className="mx-auto grid max-w-[1500px] gap-10 px-5 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
           {/* Contact Form */}
           <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm sm:p-9">
             <div className="mb-8">
@@ -133,8 +127,7 @@ export default function ContactPage() {
               >
                 <CheckCircle2 size={20} className="mt-0.5 shrink-0" />
                 <p>
-                  Your demo submission was successful. Connect the form to
-                  your backend API to send and save real messages.
+                  Your message has been sent successfully. We will get back to you soon.
                 </p>
               </div>
             )}
@@ -170,7 +163,7 @@ export default function ContactPage() {
                     id="phone"
                     name="phone"
                     type="tel"
-                    placeholder="+880 1XXXXXXXXX"
+                    placeholder="01312-789354"
                     className={inputClass}
                   />
                 </FormField>
@@ -271,7 +264,7 @@ export default function ContactPage() {
               icon={Handshake}
               title="Business Partnerships"
               description="Interested in collaborating with our marketplace?"
-              href="mailto:support@example.com"
+              href="mailto:support@aladdinglobalb2b.com"
             />
 
             <SupportLink
@@ -301,7 +294,7 @@ export default function ContactPage() {
       </section>
 
       {/* Business Assistance */}
-      <section className="mx-auto max-w-[1140px] px-5 py-16 sm:px-8 lg:py-20">
+      <section className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:py-20">
         <div className="grid gap-8 rounded-3xl border border-gray-100 bg-white p-7 shadow-sm sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="flex items-start gap-5">
             <div className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#D6A419]/15 text-[#12233F] sm:flex">
@@ -337,7 +330,7 @@ export default function ContactPage() {
 
       {/* Location */}
       <section className="bg-gray-50 py-16 lg:py-20">
-        <div className="mx-auto grid max-w-[1140px] gap-8 px-5 sm:px-8 lg:grid-cols-2 lg:items-center">
+        <div className="mx-auto grid max-w-[1500px] gap-8 px-5 sm:px-8 lg:grid-cols-2 lg:items-center">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#b48a08]">
               Find us
@@ -359,10 +352,9 @@ export default function ContactPage() {
               </span>
 
               <div>
-                <h3 className="font-bold">Jashore, Bangladesh</h3>
+                <h3 className="font-bold">Gonata Road, Jashore - 7400</h3>
                 <p className="mt-1 text-sm leading-6 text-gray-600">
-                  Contact our support team for the complete office address
-                  and directions.
+                  Aladdin Global B2B Office Address & Directions.
                 </p>
               </div>
             </div>
@@ -375,9 +367,7 @@ export default function ContactPage() {
               <div>
                 <h3 className="font-bold">Business Hours</h3>
                 <p className="mt-1 text-sm leading-6 text-gray-600">
-                  Saturday – Thursday: 9:00 AM – 6:00 PM
-                  <br />
-                  Friday: Closed
+                  Saturday – Thursday & Friday: 10:00 AM – 10:00 PM
                 </p>
               </div>
             </div>
@@ -390,7 +380,7 @@ export default function ContactPage() {
               </span>
 
               <h3 className="mt-5 text-xl font-bold">
-                Jashore, Bangladesh
+                Gonata Road, Jashore - 7400
               </h3>
 
               <p className="mt-3 text-sm leading-6 text-gray-600">
@@ -398,7 +388,7 @@ export default function ContactPage() {
               </p>
 
               <a
-                href="https://www.google.com/maps/search/?api=1&query=Jashore%2C%20Bangladesh"
+                href="https://www.google.com/maps/search/?api=1&query=Gonata+Road+Jashore"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-5 inline-flex items-center gap-2 rounded-xl border border-gray-200 px-5 py-3 text-sm font-semibold transition hover:border-[#D6A419] hover:bg-gray-50"
@@ -418,7 +408,7 @@ export default function ContactPage() {
 
       {/* Final CTA */}
       <section className="bg-[#12233F]">
-        <div className="mx-auto flex max-w-[1140px] flex-col gap-7 px-5 py-14 sm:px-8 md:flex-row md:items-center md:justify-between lg:py-16">
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-7 px-5 py-14 sm:px-8 md:flex-row md:items-center md:justify-between lg:py-16">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-bold text-white sm:text-4xl">
               Still have questions?
