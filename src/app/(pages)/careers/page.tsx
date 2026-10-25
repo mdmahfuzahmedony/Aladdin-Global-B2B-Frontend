@@ -113,25 +113,25 @@ export default function CareersPage() {
       {/* =========================================================
           HERO HEADER
       ========================================================= */}
-      <section className="relative overflow-hidden bg-[#12233F] py-14 text-white sm:py-20">
-        <div className="relative mx-auto max-w-[1400px] px-4 text-center sm:px-6 lg:px-8">
+      <section className="py-12 sm:py-16">
+        <div className="mx-auto max-w-[1400px] px-4 text-center sm:px-6 lg:px-8">
           {/* Pill Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-1.5 text-xs font-semibold text-[#f1c453]">
-            <Briefcase size={14} className="text-[#D6A419]" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-1.5 text-xs font-semibold text-amber-800">
+            <Briefcase size={14} className="text-[#b48a08]" />
             Careers at Aladdin Global B2B
           </div>
 
           {/* Main Title & Motto from User Notes */}
-          <h1 className="mt-4 font-[var(--font-poppins)] text-3xl font-extrabold text-white sm:text-4xl lg:text-5xl">
+          <h1 className="mt-4 font-[var(--font-poppins)] text-3xl font-extrabold text-[#12233F] sm:text-4xl lg:text-5xl">
             Join Aladdin Global B2B
           </h1>
 
-          <p className="mt-2 text-lg font-bold text-[#D6A419] sm:text-xl">
+          <p className="mt-2 text-lg font-bold text-[#b48a08] sm:text-xl">
             Build your career, Build the future.
           </p>
 
           {/* Description from User Notes */}
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
             Aladdin Global B2B is a modern multi-vendor e-commerce platform. Submit your CV to our organization’s email or through the Career Application Form below.
           </p>
 
@@ -139,7 +139,7 @@ export default function CareersPage() {
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <a
               href="#apply-form"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#D6A419] px-6 py-3 text-xs font-bold text-[#12233F] shadow transition hover:bg-[#e2b534] sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#12233F] px-6 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-[#1b345e] sm:text-sm"
             >
               <Send size={16} />
               Career Application Form
@@ -147,7 +147,7 @@ export default function CareersPage() {
 
             <a
               href={`mailto:${OFFICIAL_EMAIL}?subject=Application%20for%20Career%20at%20Aladdin%20Global%20B2B`}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-xs font-bold text-white transition hover:bg-white/20 sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 sm:text-sm"
             >
               <Mail size={16} />
               Email Your CV
@@ -159,7 +159,7 @@ export default function CareersPage() {
       {/* =========================================================
           KEY SUBMISSION METHODS (From User Note)
       ========================================================= */}
-      <section className="relative -mt-6 mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {/* Card 1: Official Email Submission */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
