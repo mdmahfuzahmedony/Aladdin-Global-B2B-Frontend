@@ -35,7 +35,7 @@ export function BusinessInfoStep({ data, onChange }: Props) {
           type="text"
           value={data.storeName}
           onChange={(e) => onChange({ ...data, storeName: e.target.value })}
-          placeholder="যেমন: Rahman Electronics"
+          placeholder="e.g., Rahman Electronics"
           className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-[14px] outline-none focus:border-[#D6A419] focus:ring-1 focus:ring-[#D6A419]"
         />
       </div>
@@ -50,7 +50,7 @@ export function BusinessInfoStep({ data, onChange }: Props) {
             onChange({ ...data, businessAddress: e.target.value })
           }
           rows={3}
-          placeholder="পূর্ণ ঠিকানা লিখুন"
+          placeholder="Enter your full business address"
           className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-[14px] outline-none focus:border-[#D6A419] focus:ring-1 focus:ring-[#D6A419]"
         />
       </div>
@@ -66,7 +66,7 @@ export function BusinessInfoStep({ data, onChange }: Props) {
           }
           className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-[14px] outline-none focus:border-[#D6A419] focus:ring-1 focus:ring-[#D6A419]"
         >
-          <option value="">নির্বাচন করুন</option>
+          <option value="">Select a category</option>
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
               {c}
