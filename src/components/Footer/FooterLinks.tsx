@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const companyLinks = [
   { label: "About Us", href: "/about" },
   { label: "Contact Us", href: "/contact" },
@@ -11,28 +13,24 @@ const companyLinks = [
   { label: "Partnership", href: "/partnership" },
   { label: "Investors", href: "/investors" },
   { label: "Donates", href: "/donates" },
-  { label: "E-cab members ID", href: "/e-cab" },
-  { label: "Trade License", href: "/trade-license" },
-  { label: "DBID", href: "/dbid" },
-  { label: "VAT Reg", href: "/vat" },
 ];
 
 export function FooterLinks() {
   return (
     <div>
-      <h3 className="mb-5 text-lg font-bold">
+      <h3 className="mb-3 text-sm font-bold tracking-tight text-[#12233F] sm:text-base">
         About Company
       </h3>
 
-      <ul className="space-y-3">
+      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
         {companyLinks.map((link) => (
           <li key={link.href}>
-            <a
+            <Link
               href={link.href}
-              className="text-blue-200 transition hover:text-white"
+              className="text-xs text-slate-600 transition-colors duration-200 hover:text-[#12233F] hover:underline sm:text-sm"
             >
               {link.label}
-            </a>
+            </Link>
           </li>
         ))}
       </ul>

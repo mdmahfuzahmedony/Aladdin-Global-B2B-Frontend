@@ -1,66 +1,144 @@
 "use client";
 
-import React from "react";
-import { Check } from "lucide-react";
 
-interface Props {
-  lang: string;
-  setLang: (lang: string) => void;
-  currency: string;
-  setCurrency: (currency: string) => void;
-}
+import { useEffect, useRef, useState } from "react";
+import { Globe2, ChevronDown } from "lucide-react";
 
-export const LanguageDropdown: React.FC<Props> = ({
-  lang,
-  setLang,
-  currency,
-  setCurrency,
-}) => {
+export function LanguageDropdown() {
+  const [open, setOpen] = useState(false);
+  const [language, setLanguage] = useState("English");
+  const [currency, setCurrency] = useState("BDT (৳)");
+
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="absolute right-0 mt-3 w-56 bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-200 p-3 space-y-3 z-50">
-      <div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Language</p>
-        <div className="grid grid-cols-2 gap-1">
-          <button
-            onClick={() => setLang("en")}
-            className={`p-1.5 text-xs rounded border flex items-center justify-between ${
-              lang === "en" ? "border-amber-500 bg-amber-50 font-bold text-amber-900" : "border-slate-200"
-            }`}
-          >
-            English {lang === "en" && <Check className="w-3 h-3 text-amber-600" />}
-          </button>
-          <button
-            onClick={() => setLang("bn")}
-            className={`p-1.5 text-xs rounded border flex items-center justify-between ${
-              lang === "bn" ? "border-amber-500 bg-amber-50 font-bold text-amber-900" : "border-slate-200"
-            }`}
-          >
-            বাংলা {lang === "bn" && <Check className="w-3 h-3 text-amber-600" />}
-          </button>
-        </div>
-      </div>
+    <div ref={wrapperRef} className="relative z-[100]">
+      {/* LANGUAGE BUTTON */}
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="group flex min-w-0 flex-col items-center justify-center rounded-xl px-2 py-2 !text-white transition hover:bg-white/10 sm:px-3"
+        aria-label="Language and currency"
+        aria-expanded={open}
+      >
+        <Globe2
+          size={22}
+          strokeWidth={1.8}
+          className="!text-white transition-colors group-hover:!text-[#D6A419]"
+        />
 
-      <div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Currency</p>
-        <div className="grid grid-cols-2 gap-1">
-          <button
-            onClick={() => setCurrency("BDT")}
-            className={`p-1.5 text-xs rounded border flex items-center justify-between ${
-              currency === "BDT" ? "border-amber-500 bg-amber-50 font-bold text-amber-900" : "border-slate-200"
-            }`}
-          >
-            BDT (৳) {currency === "BDT" && <Check className="w-3 h-3 text-amber-600" />}
-          </button>
-          <button
-            onClick={() => setCurrency("USD")}
-            className={`p-1.5 text-xs rounded border flex items-center justify-between ${
-              currency === "USD" ? "border-amber-500 bg-amber-50 font-bold text-amber-900" : "border-slate-200"
-            }`}
-          >
-            USD ($) {currency === "USD" && <Check className="w-3 h-3 text-amber-600" />}
-          </button>
+        {/* Desktop: language label */}
+        <span className="mt-1 hidden whitespace-nowrap text-[11px] font-semibold !text-white transition-colors group-hover:!text-[#D6A419] xl:inline">
+          {language}
+        </span>
+
+        <ChevronDown
+          size={12}
+          className={`hidden !text-white transition-transform group-hover:!text-[#D6A419] xl:inline ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {/* LANGUAGE & CURRENCY MENU */}
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-[260px] rounded-2xl border border-slate-200 bg-white p-4 text-[#12233F] shadow-2xl">
+          {/* LANGUAGE */}
+          <div>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+              Language
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setLanguage("English");
+                  setOpen(false);
+                }}
+                className={`rounded-lg border px-3 py-2 text-left text-sm font-medium transition ${
+                  language === "English"
+                    ? "border-[#D6A419] bg-slate-50 text-[#12233F]"
+                    : "border-slate-200 bg-white text-[#12233F] hover:border-[#D6A419] hover:bg-slate-50"
+                }`}
+              >
+                English
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setLanguage("বাংলা");
+                  setOpen(false);
+                }}
+                className={`rounded-lg border px-3 py-2 text-left text-sm font-medium transition ${
+                  language === "বাংলা"
+                    ? "border-[#D6A419] bg-slate-50 text-[#12233F]"
+                    : "border-slate-200 bg-white text-[#12233F] hover:border-[#D6A419] hover:bg-slate-50"
+                }`}
+              >
+                বাংলা
+              </button>
+            </div>
+          </div>
+
+          {/* CURRENCY */}
+          <div className="mt-4">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+              Currency
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrency("BDT (৳)");
+                  setOpen(false);
+                }}
+                className={`rounded-lg border px-3 py-2 text-left text-sm font-medium transition ${
+                  currency === "BDT (৳)"
+                    ? "border-[#D6A419] bg-slate-50 text-[#12233F]"
+                    : "border-slate-200 bg-white text-[#12233F] hover:border-[#D6A419] hover:bg-slate-50"
+                }`}
+              >
+                BDT (৳)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrency("USD ($)");
+                  setOpen(false);
+                }}
+                className={`rounded-lg border px-3 py-2 text-left text-sm font-medium transition ${
+                  currency === "USD ($)"
+                    ? "border-[#D6A419] bg-slate-50 text-[#12233F]"
+                    : "border-slate-200 bg-white text-[#12233F] hover:border-[#D6A419] hover:bg-slate-50"
+                }`}
+              >
+                USD ($)
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
-};
+}

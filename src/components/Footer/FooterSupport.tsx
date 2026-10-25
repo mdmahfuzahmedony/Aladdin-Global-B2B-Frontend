@@ -1,30 +1,26 @@
+import Link from "next/link";
+
 const supportLinks = [
   { label: "Help Center", href: "/help" },
   { label: "Payment Methods", href: "/payment-methods" },
-  { label: "How to shop on Aladdin Global B2B", href: "/how-to-shop" },
-  { label: "Terms & Conditions", href: "/terms" },
-  {
-    label: "Cancellation, Returns & Refunds",
-    href: "/returns-refunds",
-  },
 ];
 
 export function FooterSupport() {
   return (
     <div>
-      <h3 className="mb-5 text-lg font-bold">
+      <h3 className="mb-3 text-sm font-bold tracking-tight text-[#12233F] sm:text-base">
         Customer Service
       </h3>
 
-      <ul className="space-y-3">
+      <ul className="space-y-2">
         {supportLinks.map((link) => (
           <li key={link.href}>
-            <a
+            <Link
               href={link.href}
-              className="text-blue-200 transition hover:text-white"
+              className="text-xs text-slate-600 transition-colors duration-200 hover:text-[#12233F] hover:underline sm:text-sm"
             >
               {link.label}
-            </a>
+            </Link>
           </li>
         ))}
       </ul>

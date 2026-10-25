@@ -5,6 +5,8 @@ import "./globals.css";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { SiteSettingsProvider } from "../context/SiteSettingsContext";
+import { CompareProvider } from "../context/CompareContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,20 +35,24 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${poppins.variable} font-sans antialiased`}
       >
-        {children}
+        <SiteSettingsProvider>
+          <CompareProvider>
+            {children}
 
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="colored"
-        />
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="colored"
+            />
+          </CompareProvider>
+        </SiteSettingsProvider>
       </body>
     </html>
   );
