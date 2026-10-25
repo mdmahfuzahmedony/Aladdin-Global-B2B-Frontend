@@ -26,6 +26,7 @@ import type {
   ProductAttributes,
 } from "../types";
 import { createClient } from "../../../../../lib/supabase-client";
+import { ProductCategoryHighlights } from "./ProductCategoryAttributes";
 
 type Props = {
   product: ProductDetails;
@@ -248,10 +249,10 @@ export default function ProductInfo({ product }: Props) {
     isUpazilaMismatch || sellerLocationMissing || deliveryScopeMissing;
 
   const getLocationMessage = () => {
-    if (deliveryScopeMissing) return "ডেলিভারি স্কোপ পাওয়া যায়নি।";
+    if (deliveryScopeMissing) return "Delivery scope is unavailable.";
     if (isUpazilaMismatch)
-      return `আপনার এলাকা ${customerUpazila}, কিন্তু বিক্রেতার এলাকা ${sellerUpazila}।`;
-    if (sellerLocationMissing) return "বিক্রেতার লোকেশন পাওয়া যায়নি।";
+      return `Your location is ${customerUpazila}, but seller delivers in ${sellerUpazila}.`;
+    if (sellerLocationMissing) return "Seller location is unavailable.";
     return "";
   };
 
@@ -302,10 +303,10 @@ export default function ProductInfo({ product }: Props) {
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard) {
         await navigator.clipboard.writeText(window.location.href);
-        toast.success("প্রোডাক্টের লিংক কপি করা হয়েছে!");
+        toast.success("Product link copied to clipboard!");
       }
     } catch {
-      toast.info("লিংক কপি করতে ব্যর্থ হয়েছে।");
+      toast.info("Failed to copy link.");
     }
   };
 
@@ -313,9 +314,9 @@ export default function ProductInfo({ product }: Props) {
     setLiked((prev) => {
       const next = !prev;
       if (next) {
-        toast.success("উইশলিস্টে যুক্ত করা হয়েছে!");
+        toast.success("Added to wishlist!");
       } else {
-        toast.info("উইশলিস্ট থেকে সরানো হয়েছে");
+        toast.info("Removed from wishlist");
       }
       return next;
     });
@@ -364,14 +365,14 @@ export default function ProductInfo({ product }: Props) {
     if (variantStockInvalid) {
       setStatusType("error");
       if (!selectedColor) {
-        setStatusMessage("কার্টে যোগ করার আগে একটি রং নির্বাচন করুন।");
+        setStatusMessage("Please select a color before adding to cart.");
       } else if (!selectedSize) {
-        setStatusMessage("কার্টে যোগ করার আগে একটি সাইজ নির্বাচন করুন।");
+        setStatusMessage("Please select a size before adding to cart.");
       } else if (selectedStock <= 0) {
-        setStatusMessage("নির্বাচিত সাইজটি বর্তমানে স্টকে নেই।");
+        setStatusMessage("Selected size is currently out of stock.");
       } else {
         setStatusMessage(
-          `নির্বাচিত সাইজে মাত্র ${selectedStock}টি পণ্য স্টকে আছে।`
+          `Only ${selectedStock} item(s) available in selected size.`
         );
       }
       return;
@@ -387,7 +388,7 @@ export default function ProductInfo({ product }: Props) {
 
       if (!productId || productId === "undefined" || productId === "null") {
         setStatusType("error");
-        setStatusMessage("Product ID পাওয়া যায়নি।");
+        setStatusMessage("Product ID not found.");
         return;
       }
 
@@ -397,7 +398,7 @@ export default function ProductInfo({ product }: Props) {
 
       if (!session?.access_token) {
         setStatusType("error");
-        setStatusMessage("কার্টে যোগ করতে আগে লগইন করুন।");
+        setStatusMessage("Please login to add items to your cart.");
         router.push("/login");
         return;
       }
@@ -422,7 +423,7 @@ export default function ProductInfo({ product }: Props) {
         setStatusMessage(
           result?.message ||
             result?.error ||
-            "কার্টে প্রোডাক্ট যোগ করা যায়নি।"
+            "Failed to add product to cart."
         );
         return;
       }
@@ -470,8 +471,8 @@ export default function ProductInfo({ product }: Props) {
 
       toast.success(
         goToCheckout
-          ? "চেকআউটে নিয়ে যাওয়া হচ্ছে..."
-          : "পণ্যটি সফলভাবে কার্টে যুক্ত হয়েছে!"
+          ? "Redirecting to checkout..."
+          : "Product added to cart successfully!"
       );
 
       if (goToCheckout) {
@@ -482,7 +483,7 @@ export default function ProductInfo({ product }: Props) {
     } catch (error) {
       console.error("ADD TO CART ERROR:", error);
       setStatusType("error");
-      setStatusMessage("কার্টে প্রোডাক্ট যোগ করতে সমস্যা হয়েছে।");
+      setStatusMessage("Error adding product to cart.");
     } finally {
       setAddingToCart(false);
     }
@@ -546,7 +547,7 @@ export default function ProductInfo({ product }: Props) {
           <button
             type="button"
             onClick={handleToggleCompare}
-            title={inCompare ? "তুলনা তালিকা থেকে সরান" : "তুলনা তালিকায় যোগ করুন"}
+            title={inCompare ? "Remove from comparison" : "Add to comparison"}
             className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition ${
               inCompare
                 ? "border-amber-300 bg-amber-50 text-amber-700 font-bold"
@@ -563,7 +564,7 @@ export default function ProductInfo({ product }: Props) {
           <button
             type="button"
             onClick={handleShare}
-            title="শেয়ার করুন"
+            title="Share"
             className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
           >
             <Share2 size={14} className="text-slate-500" />
@@ -573,7 +574,7 @@ export default function ProductInfo({ product }: Props) {
           <button
             type="button"
             onClick={handleToggleWishlist}
-            title={liked ? "উইশলিস্ট থেকে সরান" : "উইশলিস্টে রাখুন"}
+            title={liked ? "Remove from wishlist" : "Add to wishlist"}
             className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition ${
               liked
                 ? "border-rose-200 bg-rose-50 text-rose-600"
@@ -645,6 +646,9 @@ export default function ProductInfo({ product }: Props) {
         </div>
       </div>
 
+      {/* 3.5. CATEGORY SPECIFIC HIGHLIGHT BADGES */}
+      <ProductCategoryHighlights product={product} />
+
       {/* 4. PRICING SECTION */}
       <div className="rounded-2xl border border-amber-200/70 bg-gradient-to-r from-amber-50/60 via-orange-50/30 to-amber-50/10 p-4">
         <div className="flex flex-wrap items-baseline gap-3">
@@ -678,7 +682,7 @@ export default function ProductInfo({ product }: Props) {
           <div className="flex items-center gap-2">
             <Palette size={15} className="text-[#12233f]" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              রং ও সাইজ নির্বাচন করুন
+              Select Color &amp; Size
             </h3>
           </div>
 
@@ -690,7 +694,7 @@ export default function ProductInfo({ product }: Props) {
                 <span className="font-bold text-slate-900">{selectedColor}</span>
               ) : (
                 <span className="text-amber-600 font-normal">
-                  (একটি রং সিলেক্ট করুন)
+                  (Select a color)
                 </span>
               )}
             </p>
@@ -732,7 +736,7 @@ export default function ProductInfo({ product }: Props) {
                   <span className="font-bold text-slate-900">{selectedSize}</span>
                 ) : (
                   <span className="text-amber-600 font-normal">
-                    (একটি সাইজ সিলেক্ট করুন)
+                    (Select a size)
                   </span>
                 )}
               </p>
@@ -823,13 +827,13 @@ export default function ProductInfo({ product }: Props) {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <span>
-              ইন স্টক ({availableStockCount} টি)
+              In Stock ({availableStockCount} available)
             </span>
           </div>
         ) : (
           <div className="flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 border border-rose-200/70">
             <span className="h-2 w-2 rounded-full bg-rose-500"></span>
-            <span>স্টকে নেই</span>
+            <span>Out of Stock</span>
           </div>
         )}
       </div>
@@ -875,15 +879,15 @@ export default function ProductInfo({ product }: Props) {
           <div className="flex items-center gap-1.5 text-slate-600 truncate">
             <MapPin size={14} className="text-slate-500 shrink-0" />
             <span className="truncate">
-              ডেলিভারি এলাকা:{" "}
+              Delivery Location:{" "}
               <b className="text-slate-800">
-                {customerUpazila || customerLocation?.district || "সারা বাংলাদেশ"}
+                {customerUpazila || customerLocation?.district || "All Bangladesh"}
               </b>
             </span>
           </div>
 
           <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-700">
-            {isNationwide ? "সারাদেশে ডেলিভারি" : "ক্যাশ অন ডেলিভারি"}
+            {isNationwide ? "Nationwide Delivery" : "Cash on Delivery"}
           </span>
         </div>
 
@@ -920,7 +924,7 @@ export default function ProductInfo({ product }: Props) {
           {/* Price & Stock info */}
           <div className="min-w-0 pr-1">
             <p className="text-xs text-slate-400 font-medium leading-none">
-              মোট মূল্য
+              Total Price
             </p>
             <p className="text-lg font-black text-[#12233f] leading-tight">
               ৳{(currentPrice * quantity).toLocaleString()}
@@ -948,7 +952,7 @@ export default function ProductInfo({ product }: Props) {
               title="Add to Cart"
             >
               <ShoppingCart size={15} />
-              <span>কার্ট</span>
+              <span>Cart</span>
             </button>
 
             <button

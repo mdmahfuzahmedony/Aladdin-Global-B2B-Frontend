@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 import type { ProductDetails } from "../types";
 import ProductReview from "./ProductReviews";
+import ProductCategorySpecs from "./ProductCategoryAttributes";
 import {
   FileText,
   Sliders,
@@ -65,10 +66,10 @@ export default function ProductTabs({ product }: Props) {
   }, [vendorStorageKey]);
 
   const ratingAspects = [
-    "পণ্যের গুণমান ও সঠিকতা",
-    "নিরাপদ ও সুন্দর প্যাকেজিং",
-    "দ্রুত শিপিং ও ডেলিভারি",
-    "বন্ধুসুলভ বিক্রেতা সহায়তা",
+    "Product Quality & Accuracy",
+    "Secure & Neat Packaging",
+    "Fast Dispatch & Delivery",
+    "Helpful Seller Communication",
   ];
 
   const handleToggleAspect = (aspect: string) => {
@@ -80,7 +81,7 @@ export default function ProductTabs({ product }: Props) {
   const handleSubmitVendorRating = (e: React.FormEvent) => {
     e.preventDefault();
     if (vendorRating === 0) {
-      toast.warning("অনুগ্রহ করে বিক্রেতার সার্ভিসের জন্য স্টার রেটিং সিলেক্ট করুন।");
+      toast.warning("Please select a star rating for seller service.");
       return;
     }
 
@@ -90,7 +91,7 @@ export default function ProductTabs({ product }: Props) {
         rating: vendorRating,
         comment: vendorComment.trim(),
         aspects: selectedAspects,
-        date: new Date().toLocaleDateString("bn-BD", {
+        date: new Date().toLocaleDateString("en-US", {
           year: "numeric",
           month: "long",
           day: "numeric",
@@ -106,24 +107,24 @@ export default function ProductTabs({ product }: Props) {
       setSavedRatingData(submission);
       setHasRatedVendor(true);
       setIsSubmittingRating(false);
-      toast.success("ধন্যবাদ! আপনার সেলার রেটিং সফলভাবে জমা হয়েছে।");
+      toast.success("Thank you! Your seller rating has been submitted successfully.");
     }, 400);
   };
 
   const getStarRatingLabel = (stars: number) => {
     switch (stars) {
       case 5:
-        return "অসাধারণ সার্ভিস (Excellent)";
+        return "Excellent Service";
       case 4:
-        return "খুব ভালো (Very Good)";
+        return "Very Good";
       case 3:
-        return "ভালো (Good)";
+        return "Good";
       case 2:
-        return "মোটামুটি (Fair)";
+        return "Fair";
       case 1:
-        return "সন্তোষজনক নয় (Poor)";
+        return "Poor";
       default:
-        return "রেটিং নির্বাচন করুন";
+        return "Select a rating";
     }
   };
 
@@ -211,35 +212,7 @@ export default function ProductTabs({ product }: Props) {
 
         {/* Specification */}
         {activeTab === "specification" && (
-          <div className="space-y-4">
-            <h3 className="text-base font-bold text-[#12233f]">
-              Product Specifications
-            </h3>
-
-            {product.specifications?.length ? (
-              <div className="overflow-hidden rounded-xl border border-slate-200">
-                {product.specifications.map((item, index) => (
-                  <div
-                    key={`${item.label}-${index}`}
-                    className={`grid grid-cols-1 sm:grid-cols-3 border-b border-slate-100 last:border-0 ${
-                      index % 2 === 0 ? "bg-slate-50/70" : "bg-white"
-                    } p-3 text-xs`}
-                  >
-                    <span className="font-medium text-slate-500">
-                      {item.label}
-                    </span>
-                    <span className="font-semibold text-slate-800 sm:col-span-2">
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-slate-400 italic">
-                No specifications listed for this product.
-              </p>
-            )}
-          </div>
+          <ProductCategorySpecs product={product} />
         )}
 
         {/* Vendor Information */}
@@ -273,7 +246,7 @@ export default function ProductTabs({ product }: Props) {
                   href={`/vendor/store/${product.sellerId}`}
                   className="inline-flex items-center gap-1.5 rounded-xl border border-[#12233f] px-4 py-2 text-xs font-bold text-[#12233f] transition hover:bg-[#12233f] hover:text-white"
                 >
-                  <span>দোকান ভিজিট করুন</span>
+                  <span>Visit Store</span>
                   <ExternalLink size={13} />
                 </Link>
               )}
@@ -283,7 +256,7 @@ export default function ProductTabs({ product }: Props) {
             <div>
               <h4 className="text-sm font-bold text-[#12233f] mb-3 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-amber-500" />
-                <span>বিক্রেতার পারফরম্যান্স ও রেটিং স্কোর</span>
+                <span>Seller Performance &amp; Rating Score</span>
               </h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -298,7 +271,7 @@ export default function ProductTabs({ product }: Props) {
                     {positiveRatingPercent}%
                   </p>
                   <p className="mt-0.5 text-[11px] text-slate-500">
-                    সন্তুষ্ট ক্রেতাদের ইতিবাচক মূল্যায়ন
+                    Satisfied buyer positive ratings
                   </p>
                 </div>
 
@@ -313,7 +286,7 @@ export default function ProductTabs({ product }: Props) {
                     {shippingOnTimePercent}%
                   </p>
                   <p className="mt-0.5 text-[11px] text-slate-500">
-                    নির্দিষ্ট সময়ে অর্ডার হ্যান্ডওভার ও শিপিং
+                    Orders dispatched on schedule
                   </p>
                 </div>
 
@@ -328,7 +301,7 @@ export default function ProductTabs({ product }: Props) {
                     99%
                   </p>
                   <p className="mt-0.5 text-[11px] text-slate-500">
-                    গ্রাহকের প্রশ্নের অতি দ্রুত উত্তর প্রদান
+                    Fast response to customer inquiries
                   </p>
                 </div>
 
@@ -343,7 +316,7 @@ export default function ProductTabs({ product }: Props) {
                     {product.vendor.averageRating || 4.8} / 5.0
                   </p>
                   <p className="mt-0.5 text-[11px] text-slate-500">
-                    সার্বিক ভেন্ডর সার্ভিস মান
+                    Overall seller service quality
                   </p>
                 </div>
               </div>
@@ -355,17 +328,17 @@ export default function ProductTabs({ product }: Props) {
                 <div>
                   <h4 className="text-base font-bold text-[#12233f] flex items-center gap-2">
                     <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-                    <span>Rate This Seller (বিক্রেতাকে রেটিং দিন)</span>
+                    <span>Rate This Seller</span>
                   </h4>
                   <p className="text-xs text-slate-500 mt-1">
-                    এই বিক্রেতার পণ্য ও সার্ভিস আপনার কেমন লেগেছে? আপনার সৎ রেটিং অন্য ক্রেতাদের সহায়তা করবে।
+                    How was your experience with this seller? Your feedback helps other buyers make informed decisions.
                   </p>
                 </div>
 
                 {hasRatedVendor && (
                   <span className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                    রেটিং জমা দেওয়া হয়েছে
+                    Rating Submitted
                   </span>
                 )}
               </div>
@@ -412,14 +385,14 @@ export default function ProductTabs({ product }: Props) {
 
                   <div className="mt-3 flex items-center justify-between border-t border-emerald-200/60 pt-2.5">
                     <span className="text-[11px] font-semibold text-emerald-700">
-                      আপনার মূল্যায়নের জন্য ধন্যবাদ!
+                      Thank you for your rating!
                     </span>
                     <button
                       type="button"
                       onClick={() => setHasRatedVendor(false)}
                       className="text-[11px] font-bold text-slate-500 hover:text-[#12233f] underline"
                     >
-                      রেটিং পরিবর্তন করুন
+                      Edit Rating
                     </button>
                   </div>
                 </div>
@@ -428,7 +401,7 @@ export default function ProductTabs({ product }: Props) {
                   {/* Star Selector */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      ১. সামগ্রিক সেলার রেটিং নির্বাচন করুন:
+                      1. Select overall seller rating:
                     </label>
                     <div className="flex items-center gap-1.5">
                       {[1, 2, 3, 4, 5].map((star) => (
@@ -458,7 +431,7 @@ export default function ProductTabs({ product }: Props) {
                   {/* Rating Aspects */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      ২. বিক্রেতার কোন দিকগুলো আপনার ভালো লেগেছে? (ক্লিক করে নির্বাচন করুন):
+                      2. What did you like most about this seller? (Click to select):
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {ratingAspects.map((aspect) => {
@@ -485,13 +458,13 @@ export default function ProductTabs({ product }: Props) {
                   {/* Feedback text */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      ৩. বিক্রেতা সম্পর্কে আপনার মন্তব্য (ঐচ্ছিক):
+                      3. Your feedback about this seller (Optional):
                     </label>
                     <textarea
                       rows={2}
                       value={vendorComment}
                       onChange={(e) => setVendorComment(e.target.value)}
-                      placeholder="যেমন: প্যাকেজিং অনেক ভালো ছিল, নির্ধারিত সময়ে পণ্য হাতে পেয়েছি..."
+                      placeholder="e.g. Packaging was very secure, product arrived promptly on schedule..."
                       className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-800 placeholder-slate-400 focus:border-[#12233f] focus:outline-none focus:ring-1 focus:ring-[#12233f]"
                     />
                   </div>
@@ -508,7 +481,7 @@ export default function ProductTabs({ product }: Props) {
                       }`}
                     >
                       <Send size={13} />
-                      <span>{isSubmittingRating ? "জমা হচ্ছে..." : "রেটিং সাবমিট করুন"}</span>
+                      <span>{isSubmittingRating ? "Submitting..." : "Submit Rating"}</span>
                     </button>
                   </div>
                 </form>
@@ -548,7 +521,7 @@ export default function ProductTabs({ product }: Props) {
               <button
                 type="button"
                 onClick={() => {
-                  toast.info("Question & Answer সুবিধাটি খুব শীঘ্রই আসছে!");
+                  toast.info("Question & Answer feature is coming soon!");
                 }}
                 className="mt-3 inline-flex items-center rounded-xl bg-[#12233f] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#1b3155]"
               >

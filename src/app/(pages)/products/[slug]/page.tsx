@@ -490,6 +490,7 @@ export default function ProductDetailsPage({ params }: Props) {
           name: item.title || "Untitled Product",
 
           category: item.category?.name || "General",
+          categorySlug: item.category?.slug || undefined,
           subcategory: item.attributes?.subcategory || undefined,
 
           sku: String(item.sku ?? ""),
