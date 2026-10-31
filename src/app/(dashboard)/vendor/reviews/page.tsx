@@ -18,7 +18,7 @@ import {
 import { createClient } from "../../../../../lib/supabase-client";
 import AdminStatCard from "@/components/cards/AdminStatCard";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type ReviewStatus = "PUBLISHED" | "PENDING" | "HIDDEN";
 type StatusFilter = "ALL" | ReviewStatus;

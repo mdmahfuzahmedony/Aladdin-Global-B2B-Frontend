@@ -26,7 +26,7 @@ import {
 // API
 // ============================================================
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 // ============================================================
 // TYPES
@@ -238,7 +238,7 @@ export default function Page() {
           const updated = { ...parsed, logoUrl: uploadedUrl };
           localStorage.setItem("aladin_site_settings", JSON.stringify(updated));
           window.dispatchEvent(
-            new CustomEvent("aladin:settings_updated", { detail: updated })
+            new CustomEvent("aladin:settings_updated", { detail: updated }),
           );
           setSavedMessage(true);
           setTimeout(() => setSavedMessage(false), 3000);
@@ -249,7 +249,7 @@ export default function Page() {
     } catch (err: unknown) {
       console.error("Logo upload error:", err);
       setErrorMessage(
-        err instanceof Error ? err.message : "Logo upload failed"
+        err instanceof Error ? err.message : "Logo upload failed",
       );
     } finally {
       setIsUploadingLogo(false);
@@ -273,7 +273,7 @@ export default function Page() {
       const updated = { ...parsed, logoUrl: null };
       localStorage.setItem("aladin_site_settings", JSON.stringify(updated));
       window.dispatchEvent(
-        new CustomEvent("aladin:settings_updated", { detail: updated })
+        new CustomEvent("aladin:settings_updated", { detail: updated }),
       );
     } catch {
       // Ignore
@@ -532,22 +532,18 @@ export default function Page() {
           result.data?.logoUrl !== undefined
             ? result.data.logoUrl
             : formData.logoUrl,
-        contactNumber:
-          result.data?.contactNumber || formData.contactNumber,
-        supportEmail:
-          result.data?.supportEmail || formData.supportEmail,
+        contactNumber: result.data?.contactNumber || formData.contactNumber,
+        supportEmail: result.data?.supportEmail || formData.supportEmail,
         address: result.data?.address || formData.address,
         currency: result.data?.currency || formData.currency,
         timezone: result.data?.timezone || formData.timezone,
-        maintenance: Boolean(
-          result.data?.maintenance ?? formData.maintenance
-        ),
+        maintenance: Boolean(result.data?.maintenance ?? formData.maintenance),
       };
 
       try {
         localStorage.setItem("aladin_site_settings", JSON.stringify(syncData));
         window.dispatchEvent(
-          new CustomEvent("aladin:settings_updated", { detail: syncData })
+          new CustomEvent("aladin:settings_updated", { detail: syncData }),
         );
       } catch {
         // Ignore
@@ -763,8 +759,8 @@ export default function Page() {
                       <h2 className={sectionTitleClass}>General Settings</h2>
 
                       <p className="mt-1 text-xs text-slate-500">
-                        Configure the core identity, branding, and contact details of your
-                        platform.
+                        Configure the core identity, branding, and contact
+                        details of your platform.
                       </p>
                     </div>
 
@@ -798,7 +794,11 @@ export default function Page() {
                           <div className="flex flex-wrap items-center gap-2">
                             <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#12233f] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[#1b3155]">
                               <Upload size={14} />
-                              <span>{isUploadingLogo ? "Uploading..." : "Upload New Logo"}</span>
+                              <span>
+                                {isUploadingLogo
+                                  ? "Uploading..."
+                                  : "Upload New Logo"}
+                              </span>
                               <input
                                 type="file"
                                 accept="image/*"
@@ -827,7 +827,9 @@ export default function Page() {
                               onChange={(e) =>
                                 handleChange(
                                   "logoUrl",
-                                  e.target.value.trim() ? e.target.value.trim() : null
+                                  e.target.value.trim()
+                                    ? e.target.value.trim()
+                                    : null,
                                 )
                               }
                               placeholder="Or paste direct image URL (https://...)"
@@ -838,20 +840,43 @@ export default function Page() {
                                 type="button"
                                 onClick={async () => {
                                   try {
-                                    await fetch(`${API_BASE_URL}/api/settings/update`, {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ logoUrl: formData.logoUrl }),
-                                    });
-                                    const cached = localStorage.getItem("aladin_site_settings");
-                                    const parsed = cached ? JSON.parse(cached) : {};
-                                    const updated = { ...parsed, logoUrl: formData.logoUrl };
-                                    localStorage.setItem("aladin_site_settings", JSON.stringify(updated));
+                                    await fetch(
+                                      `${API_BASE_URL}/api/settings/update`,
+                                      {
+                                        method: "POST",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                          logoUrl: formData.logoUrl,
+                                        }),
+                                      },
+                                    );
+                                    const cached = localStorage.getItem(
+                                      "aladin_site_settings",
+                                    );
+                                    const parsed = cached
+                                      ? JSON.parse(cached)
+                                      : {};
+                                    const updated = {
+                                      ...parsed,
+                                      logoUrl: formData.logoUrl,
+                                    };
+                                    localStorage.setItem(
+                                      "aladin_site_settings",
+                                      JSON.stringify(updated),
+                                    );
                                     window.dispatchEvent(
-                                      new CustomEvent("aladin:settings_updated", { detail: updated })
+                                      new CustomEvent(
+                                        "aladin:settings_updated",
+                                        { detail: updated },
+                                      ),
                                     );
                                     setSavedMessage(true);
-                                    setTimeout(() => setSavedMessage(false), 3000);
+                                    setTimeout(
+                                      () => setSavedMessage(false),
+                                      3000,
+                                    );
                                   } catch (err) {
                                     console.error("Save logo error:", err);
                                   }
@@ -863,7 +888,8 @@ export default function Page() {
                             )}
                           </div>
                           <p className="text-[11px] text-slate-500">
-                            Recommended size: 240x60px PNG or SVG with transparent background.
+                            Recommended size: 240x60px PNG or SVG with
+                            transparent background.
                           </p>
                         </div>
                       </div>
@@ -927,7 +953,9 @@ export default function Page() {
                     <div>
                       <label className="mb-1.5 flex items-center gap-1 text-xs font-bold text-slate-700">
                         <MapPin size={13} className="text-[#f59e0b]" />
-                        <span>Office / Store Address (অফিস বা স্টোর ঠিকানা)</span>
+                        <span>
+                          Office / Store Address (অফিস বা স্টোর ঠিকানা)
+                        </span>
                       </label>
 
                       <textarea
@@ -986,7 +1014,8 @@ export default function Page() {
                         </span>
 
                         <span className="mt-1 block text-[11px] leading-5 text-slate-500">
-                          Temporarily disable public access to the platform for site maintenance.
+                          Temporarily disable public access to the platform for
+                          site maintenance.
                         </span>
                       </div>
 

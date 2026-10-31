@@ -22,7 +22,7 @@ import AdminStatCard from "@/components/cards/AdminStatCard";
 import VendorDetailsSidebar from "./sidebar/VendorDetailsSidebar";
 import { createClient } from "../../../../../lib/supabase-client";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type VendorStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
 
@@ -226,7 +226,7 @@ export default function VendorsPage() {
   ).length;
 
   const pendingChangeRequestsCount = vendors.filter(
-    (v) => v.hasPendingChangeRequest
+    (v) => v.hasPendingChangeRequest,
   ).length;
 
   // =====================================================
@@ -297,14 +297,19 @@ export default function VendorsPage() {
 
         const res = await response.json();
         if (!response.ok) {
-          throw new Error(res?.message || res?.error || "ভেন্ডর মুছে ফেলা ব্যর্থ হয়েছে");
+          throw new Error(
+            res?.message || res?.error || "ভেন্ডর মুছে ফেলা ব্যর্থ হয়েছে",
+          );
         }
 
         setVendors((prev) => prev.filter((v) => !selectedIds.includes(v.id)));
         if (selectedVendorId && selectedIds.includes(selectedVendorId)) {
           setSelectedVendorId(null);
         }
-        toast.success(res?.message || `${selectedIds.length}টি ভেন্ডর সফলভাবে মুছে ফেলা হয়েছে!`);
+        toast.success(
+          res?.message ||
+            `${selectedIds.length}টি ভেন্ডর সফলভাবে মুছে ফেলা হয়েছে!`,
+        );
         setSelectedIds([]);
         await fetchVendors();
       } else if (deleteModal.vendorId) {
@@ -319,7 +324,9 @@ export default function VendorsPage() {
 
         const res = await response.json();
         if (!response.ok) {
-          throw new Error(res?.message || res?.error || "ভেন্ডর মুছে ফেলা ব্যর্থ হয়েছে");
+          throw new Error(
+            res?.message || res?.error || "ভেন্ডর মুছে ফেলা ব্যর্থ হয়েছে",
+          );
         }
 
         setVendors((prev) => prev.filter((v) => v.id !== id));
@@ -327,10 +334,17 @@ export default function VendorsPage() {
         if (selectedVendorId === id) {
           setSelectedVendorId(null);
         }
-        toast.success(`ভেন্ডর "${deleteModal.storeName}" ডাটাবেজ থেকে সফলভাবে মুছে ফেলা হয়েছে!`);
+        toast.success(
+          `ভেন্ডর "${deleteModal.storeName}" ডাটাবেজ থেকে সফলভাবে মুছে ফেলা হয়েছে!`,
+        );
         await fetchVendors();
       }
-      setDeleteModal({ isOpen: false, vendorId: null, storeName: "", isBulk: false });
+      setDeleteModal({
+        isOpen: false,
+        vendorId: null,
+        storeName: "",
+        isBulk: false,
+      });
     } catch (err: any) {
       console.error("Delete Vendor Error:", err);
       toast.error(err?.message || "ভেন্ডর মুছে ফেলতে সমস্যা হয়েছে");
@@ -357,7 +371,9 @@ export default function VendorsPage() {
 
       const res = await response.json();
       if (!response.ok) {
-        throw new Error(res?.message || res?.error || "স্ট্যাটাস পরিবর্তন ব্যর্থ হয়েছে");
+        throw new Error(
+          res?.message || res?.error || "স্ট্যাটাস পরিবর্তন ব্যর্থ হয়েছে",
+        );
       }
 
       setVendors((prev) =>
@@ -375,8 +391,8 @@ export default function VendorsPage() {
         status === "APPROVED"
           ? "ভেন্ডর সফলভাবে সক্রিয় করা হয়েছে!"
           : status === "SUSPENDED"
-          ? "ভেন্ডর সাময়িকভাবে স্থগিত করা হয়েছে"
-          : "স্ট্যাটাস পরিবর্তন সফল হয়েছে"
+            ? "ভেন্ডর সাময়িকভাবে স্থগিত করা হয়েছে"
+            : "স্ট্যাটাস পরিবর্তন সফল হয়েছে",
       );
     } catch (err: any) {
       console.error("Update Status Error:", err);
@@ -399,21 +415,21 @@ export default function VendorsPage() {
 
       const res = await response.json();
       if (!response.ok) {
-        throw new Error(res?.message || res?.error || "স্ট্যাটাস পরিবর্তন ব্যর্থ হয়েছে");
+        throw new Error(
+          res?.message || res?.error || "স্ট্যাটাস পরিবর্তন ব্যর্থ হয়েছে",
+        );
       }
 
       setVendors((prev) =>
         prev.map((vendor) =>
-          selectedIds.includes(vendor.id)
-            ? { ...vendor, status }
-            : vendor
-        )
+          selectedIds.includes(vendor.id) ? { ...vendor, status } : vendor,
+        ),
       );
 
       toast.success(
         status === "APPROVED"
           ? `${selectedIds.length}টি ভেন্ডর সফলভাবে সক্রিয় করা হয়েছে!`
-          : `${selectedIds.length}টি ভেন্ডর সাময়িকভাবে স্থগিত করা হয়েছে`
+          : `${selectedIds.length}টি ভেন্ডর সাময়িকভাবে স্থগিত করা হয়েছে`,
       );
       setSelectedIds([]);
     } catch (err: any) {
@@ -620,7 +636,9 @@ export default function VendorsPage() {
                   >
                     <AlertTriangle
                       size={14}
-                      className={onlyChangeRequests ? "text-white" : "text-amber-600"}
+                      className={
+                        onlyChangeRequests ? "text-white" : "text-amber-600"
+                      }
                     />
                     <span>পরিবর্তন অনুরোধ ({pendingChangeRequestsCount})</span>
                   </button>
@@ -766,7 +784,10 @@ export default function VendorsPage() {
                               </p>
                               {vendor.hasPendingChangeRequest && (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-300 px-2 py-0.5 text-[10.5px] font-extrabold text-amber-700 animate-pulse">
-                                  <AlertTriangle size={10} className="text-amber-600" />
+                                  <AlertTriangle
+                                    size={10}
+                                    className="text-amber-600"
+                                  />
                                   <span>পরিবর্তন অনুরোধ</span>
                                 </span>
                               )}
@@ -877,7 +898,9 @@ export default function VendorsPage() {
                           <button
                             type="button"
                             title="Delete vendor"
-                            onClick={() => confirmDeleteVendor(vendor.id, vendor.storeName)}
+                            onClick={() =>
+                              confirmDeleteVendor(vendor.id, vendor.storeName)
+                            }
                             className="rounded-lg p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
                           >
                             <Trash2 size={17} />
@@ -942,7 +965,9 @@ export default function VendorsPage() {
         onClose={() => setSelectedVendorId(null)}
         onStatusChange={(vId, newStatus) => {
           setVendors((prev) =>
-            prev.map((v) => (v.id === vId ? { ...v, status: newStatus as VendorStatus } : v))
+            prev.map((v) =>
+              v.id === vId ? { ...v, status: newStatus as VendorStatus } : v,
+            ),
           );
         }}
         onVendorUpdated={() => {
@@ -952,10 +977,21 @@ export default function VendorsPage() {
 
       <ConfirmModal
         isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal({ isOpen: false, vendorId: null, storeName: "", isBulk: false })}
+        onClose={() =>
+          setDeleteModal({
+            isOpen: false,
+            vendorId: null,
+            storeName: "",
+            isBulk: false,
+          })
+        }
         onConfirm={handleDeleteConfirmed}
         isLoading={isDeleting}
-        title={deleteModal.isBulk ? "নির্বাচিত ভেন্ডরগুলো মুছে ফেলতে চান?" : "ভেন্ডর মুছে ফেলতে চান?"}
+        title={
+          deleteModal.isBulk
+            ? "নির্বাচিত ভেন্ডরগুলো মুছে ফেলতে চান?"
+            : "ভেন্ডর মুছে ফেলতে চান?"
+        }
         description={
           deleteModal.isBulk
             ? `আপনি কি নিশ্চিতভাবে ${deleteModal.storeName} ডিলিট করতে চান? এই তথ্যটি আর ফিরে পাওয়া যাবে না।`

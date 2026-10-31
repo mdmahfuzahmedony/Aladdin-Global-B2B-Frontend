@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 const PRODUCTS_PER_PAGE = 16;
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
 
 type BannerPlacement =
   | "FLASH_SALE"
@@ -24,10 +25,11 @@ interface SectionBannerProps {
 }
 
 const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001"
 ).replace(/\/+$/, "");
 
 export default function SectionBanner({ placement }: SectionBannerProps) {
+  const { t } = useLanguage();
   const [banners, setBanners] = useState<SectionBannerItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -113,7 +115,7 @@ export default function SectionBanner({ placement }: SectionBannerProps) {
   const imageElement = (
     <img
       src={banner.image}
-      alt={banner.name || "Promotional banner"}
+      alt={banner.name || t("promotionalBanner")}
       loading="eager"
       onError={() => {
         console.error(`Banner image failed: ${banner.name}`, banner.image);
@@ -133,7 +135,7 @@ export default function SectionBanner({ placement }: SectionBannerProps) {
         <div className="relative h-[115px] w-full overflow-hidden rounded-lg bg-slate-100 shadow-sm sm:h-[155px] sm:rounded-xl md:h-[175px] lg:h-[190px] xl:h-[205px]">
           {imageFailed ? (
             <div className="flex h-full w-full items-center justify-center bg-gray-100 px-4 text-center text-xs text-gray-500 sm:text-sm">
-              ব্যানারের ছবি লোড হয়নি। Admin Panel-এ ছবির URL পরীক্ষা করো।
+              {t("bannerImageLoadError")}
             </div>
           ) : banner.link ? (
             <Link
@@ -158,7 +160,7 @@ export default function SectionBanner({ placement }: SectionBannerProps) {
               <button
                 key={item.id}
                 type="button"
-                aria-label={`ব্যানার ${index + 1} দেখুন`}
+                aria-label={`${t("goToSlide")} ${index + 1}`}
                 aria-current={currentIndex === index ? "true" : undefined}
                 onClick={() => setCurrentIndex(index)}
                 className={`h-1.5 rounded-full transition-all duration-300 ${

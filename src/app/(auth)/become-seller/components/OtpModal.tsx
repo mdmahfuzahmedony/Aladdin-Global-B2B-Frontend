@@ -38,7 +38,7 @@ export function OtpModal({
     setMessage("");
 
     try {
-      const response = await fetch("http://localhost:3001/api/otp/send-otp", {
+      const response = await fetch("http://localhost:5001/api/otp/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -64,7 +64,7 @@ export function OtpModal({
     setError("");
 
     try {
-      const response = await fetch("http://localhost:3001/api/otp/verify-otp", {
+      const response = await fetch("http://localhost:5001/api/otp/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, enteredOtp: otpCode }),

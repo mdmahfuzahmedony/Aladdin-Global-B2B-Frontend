@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ShieldAlert, RefreshCw } from "lucide-react";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type SettingsResponse = {
   success?: boolean;

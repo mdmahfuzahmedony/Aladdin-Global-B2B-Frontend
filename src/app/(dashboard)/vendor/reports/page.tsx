@@ -23,7 +23,7 @@ import AdminStatCard from "@/components/cards/AdminStatCard";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
 import { createClient } from "../../../../../lib/supabase-client";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 const REPORTS_URL = `${API_BASE_URL}/api/vendors/reports`;
 
 type ReportPeriod = "7D" | "30D" | "90D" | "1Y";
@@ -437,7 +437,8 @@ export default function ReportsPage() {
   const generateReportHTML = () => {
     const periodInfo = getPeriodInfo(period);
     const siteName = settings.siteName || "Aladin Global B2B";
-    const supportEmail = settings.supportEmail || "support@aladdinglobalb2b.com";
+    const supportEmail =
+      settings.supportEmail || "support@aladdinglobalb2b.com";
     const contactNumber = settings.contactNumber || "01322-130929";
     const address =
       settings.address ||
@@ -458,9 +459,7 @@ export default function ReportsPage() {
           ? row.products.join(", ")
           : row.products || "—";
         const comm = Number(row.commission ?? 0);
-        const earn = Number(
-          row.earnings ?? Number(row.grossSales || 0) - comm,
-        );
+        const earn = Number(row.earnings ?? Number(row.grossSales || 0) - comm);
 
         return `
           <tr>
@@ -1735,7 +1734,9 @@ export default function ReportsPage() {
                       <tbody className="divide-y divide-slate-100">
                         {filteredSalesDetails.slice(0, 15).map((row) => (
                           <tr key={row.id}>
-                            <td className="py-2 pl-3">{formatDate(row.date)}</td>
+                            <td className="py-2 pl-3">
+                              {formatDate(row.date)}
+                            </td>
                             <td className="py-2 font-semibold">
                               {row.orderNumber}
                             </td>

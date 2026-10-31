@@ -1,6 +1,5 @@
 "use client";
 
-
 import {
   useEffect,
   useMemo,
@@ -73,8 +72,7 @@ type BannerForm = {
 // API
 // =====================================================
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 // =====================================================
 // PLACEMENTS
@@ -141,8 +139,7 @@ const EMPTY_FORM: BannerForm = {
 // =====================================================
 
 const placementLabel = (placement: BannerPlacement) =>
-  PLACEMENTS.find((item) => item.value === placement)?.label ??
-  placement;
+  PLACEMENTS.find((item) => item.value === placement)?.label ?? placement;
 
 const supabase = createClient();
 
@@ -190,10 +187,7 @@ export default function HomepageBannersPage() {
   // API ERROR MESSAGE
   // ===================================================
 
-  const getErrorMessage = async (
-    response: Response,
-    fallback: string
-  ) => {
+  const getErrorMessage = async (response: Response, fallback: string) => {
     const text = await response.text();
 
     if (!text) {
@@ -202,11 +196,7 @@ export default function HomepageBannersPage() {
 
     try {
       const result = JSON.parse(text);
-      return (
-        result?.message ||
-        result?.error ||
-        fallback
-      );
+      return result?.message || result?.error || fallback;
     } catch {
       return fallback;
     }
@@ -232,10 +222,7 @@ export default function HomepageBannersPage() {
 
       if (!response.ok) {
         throw new Error(
-          await getErrorMessage(
-            response,
-            "ব্যানার লোড করা যায়নি।"
-          )
+          await getErrorMessage(response, "ব্যানার লোড করা যায়নি।"),
         );
       }
 
@@ -245,37 +232,29 @@ export default function HomepageBannersPage() {
         ? result
         : result?.data || result?.banners || [];
 
-      const normalizedBanners: Banner[] =
-        backendBanners.map((banner: any) => ({
-          id: banner.id,
-          name: banner.name ?? "",
-          image: banner.image ?? "",
-          link: banner.link ?? "",
-          placement:
-            banner.placementKey ??
-            (typeof banner.placement === "string"
-              ? banner.placement
-              : banner.placement?.key) ??
-            "TOP_BANNER",
-          status:
-            banner.status === "INACTIVE"
-              ? "INACTIVE"
-              : "ACTIVE",
-          startDate: banner.startDate
-            ? String(banner.startDate).slice(0, 10)
-            : "",
-          endDate: banner.endDate
-            ? String(banner.endDate).slice(0, 10)
-            : "",
-          createdAt: banner.createdAt ?? "",
-        }));
+      const normalizedBanners: Banner[] = backendBanners.map((banner: any) => ({
+        id: banner.id,
+        name: banner.name ?? "",
+        image: banner.image ?? "",
+        link: banner.link ?? "",
+        placement:
+          banner.placementKey ??
+          (typeof banner.placement === "string"
+            ? banner.placement
+            : banner.placement?.key) ??
+          "TOP_BANNER",
+        status: banner.status === "INACTIVE" ? "INACTIVE" : "ACTIVE",
+        startDate: banner.startDate
+          ? String(banner.startDate).slice(0, 10)
+          : "",
+        endDate: banner.endDate ? String(banner.endDate).slice(0, 10) : "",
+        createdAt: banner.createdAt ?? "",
+      }));
 
       setBanners(normalizedBanners);
     } catch (error: unknown) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "ব্যানার লোড করা যায়নি।"
+        error instanceof Error ? error.message : "ব্যানার লোড করা যায়নি।",
       );
     } finally {
       setIsLoading(false);
@@ -293,10 +272,8 @@ export default function HomepageBannersPage() {
   // ===================================================
 
   const activeCount = useMemo(
-    () =>
-      banners.filter((banner) => banner.status === "ACTIVE")
-        .length,
-    [banners]
+    () => banners.filter((banner) => banner.status === "ACTIVE").length,
+    [banners],
   );
 
   const inactiveCount = banners.length - activeCount;
@@ -315,18 +292,12 @@ export default function HomepageBannersPage() {
         banner.link.toLowerCase().includes(keyword);
 
       const matchesPlacement =
-        placementFilter === "ALL" ||
-        banner.placement === placementFilter;
+        placementFilter === "ALL" || banner.placement === placementFilter;
 
       const matchesStatus =
-        statusFilter === "ALL" ||
-        banner.status === statusFilter;
+        statusFilter === "ALL" || banner.status === statusFilter;
 
-      return (
-        matchesSearch &&
-        matchesPlacement &&
-        matchesStatus
-      );
+      return matchesSearch && matchesPlacement && matchesStatus;
     });
   }, [banners, search, placementFilter, statusFilter]);
 
@@ -368,9 +339,7 @@ export default function HomepageBannersPage() {
   // IMAGE UPLOAD
   // ===================================================
 
-  const handleImageChange = async (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) return;
@@ -391,37 +360,27 @@ export default function HomepageBannersPage() {
 
       formData.append("file", file);
 
-      const response = await fetch(
-        `${API_URL}/api/uploads/banner-image`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
+      const response = await fetch(`${API_URL}/api/uploads/banner-image`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
       if (!response.ok) {
         throw new Error(
-          await getErrorMessage(
-            response,
-            "ব্যানার ইমেজ আপলোড করা যায়নি।"
-          )
+          await getErrorMessage(response, "ব্যানার ইমেজ আপলোড করা যায়নি।"),
         );
       }
 
       const result = await response.json();
 
       const uploadedUrl =
-        result?.data?.url ||
-        result?.url ||
-        result?.data?.publicUrl;
+        result?.data?.url || result?.url || result?.data?.publicUrl;
 
       if (!uploadedUrl) {
-        throw new Error(
-          "ইমেজ আপলোড হয়েছে, কিন্তু image URL পাওয়া যায়নি।"
-        );
+        throw new Error("ইমেজ আপলোড হয়েছে, কিন্তু image URL পাওয়া যায়নি।");
       }
 
       setForm((current) => ({
@@ -434,9 +393,7 @@ export default function HomepageBannersPage() {
       setImageName("");
 
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "ইমেজ আপলোড করা যায়নি।"
+        error instanceof Error ? error.message : "ইমেজ আপলোড করা যায়নি।",
       );
     } finally {
       setIsUploadingImage(false);
@@ -448,9 +405,7 @@ export default function HomepageBannersPage() {
   // SUBMIT CREATE / UPDATE
   // ===================================================
 
-  const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>
-  ) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!form.name.trim()) {
@@ -463,11 +418,7 @@ export default function HomepageBannersPage() {
       return;
     }
 
-    if (
-      form.startDate &&
-      form.endDate &&
-      form.endDate < form.startDate
-    ) {
+    if (form.startDate && form.endDate && form.endDate < form.startDate) {
       toast.error("শেষ তারিখ শুরুর তারিখের আগে হতে পারবে না।");
       return;
     }
@@ -509,8 +460,8 @@ export default function HomepageBannersPage() {
             response,
             isEditing
               ? "ব্যানার আপডেট করা যায়নি।"
-              : "ব্যানার তৈরি করা যায়নি।"
-          )
+              : "ব্যানার তৈরি করা যায়নি।",
+          ),
         );
       }
 
@@ -518,9 +469,7 @@ export default function HomepageBannersPage() {
 
       if (result?.success === false) {
         throw new Error(
-          result?.message ||
-          result?.error ||
-          "ব্যানার সংরক্ষণ করা যায়নি।"
+          result?.message || result?.error || "ব্যানার সংরক্ষণ করা যায়নি।",
         );
       }
 
@@ -533,15 +482,13 @@ export default function HomepageBannersPage() {
       toast.success(
         isEditing
           ? "ব্যানার সফলভাবে আপডেট হয়েছে!"
-          : "ব্যানার সফলভাবে যোগ হয়েছে!"
+          : "ব্যানার সফলভাবে যোগ হয়েছে!",
       );
 
       await loadBanners();
     } catch (error: unknown) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "ব্যানার সংরক্ষণ করা যায়নি।"
+        error instanceof Error ? error.message : "ব্যানার সংরক্ষণ করা যায়নি।",
       );
     } finally {
       setIsSubmitting(false);
@@ -566,26 +513,23 @@ export default function HomepageBannersPage() {
       const nextStatus: BannerStatus =
         banner.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 
-      const response = await fetch(
-        `${API_URL}/api/banners/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            status: nextStatus,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/banners/${id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: nextStatus,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(
           await getErrorMessage(
             response,
-            "ব্যানারের স্ট্যাটাস পরিবর্তন করা যায়নি।"
-          )
+            "ব্যানারের স্ট্যাটাস পরিবর্তন করা যায়নি।",
+          ),
         );
       }
 
@@ -594,15 +538,15 @@ export default function HomepageBannersPage() {
       if (result?.success === false) {
         throw new Error(
           result?.message ||
-          result?.error ||
-          "ব্যানারের স্ট্যাটাস পরিবর্তন করা যায়নি।"
+            result?.error ||
+            "ব্যানারের স্ট্যাটাস পরিবর্তন করা যায়নি।",
         );
       }
 
       toast.success(
         nextStatus === "ACTIVE"
           ? "ব্যানার সক্রিয় করা হয়েছে!"
-          : "ব্যানার নিষ্ক্রিয় করা হয়েছে!"
+          : "ব্যানার নিষ্ক্রিয় করা হয়েছে!",
       );
 
       await loadBanners();
@@ -610,7 +554,7 @@ export default function HomepageBannersPage() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "ব্যানারের স্ট্যাটাস পরিবর্তন করা যায়নি।"
+          : "ব্যানারের স্ট্যাটাস পরিবর্তন করা যায়নি।",
       );
     }
   };
@@ -620,26 +564,19 @@ export default function HomepageBannersPage() {
   // ===================================================
 
   const deleteBanner = async (banner: Banner) => {
-
     try {
       const token = await getAccessToken();
 
-      const response = await fetch(
-        `${API_URL}/api/banners/${banner.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/api/banners/${banner.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error(
-          await getErrorMessage(
-            response,
-            "ব্যানার ডিলিট করা যায়নি।"
-          )
+          await getErrorMessage(response, "ব্যানার ডিলিট করা যায়নি।"),
         );
       }
 
@@ -647,9 +584,7 @@ export default function HomepageBannersPage() {
 
       if (result?.success === false) {
         throw new Error(
-          result?.message ||
-          result?.error ||
-          "ব্যানার ডিলিট করা যায়নি।"
+          result?.message || result?.error || "ব্যানার ডিলিট করা যায়নি।",
         );
       }
 
@@ -658,9 +593,7 @@ export default function HomepageBannersPage() {
       await loadBanners();
     } catch (error: unknown) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "ব্যানার ডিলিট করা যায়নি।"
+        error instanceof Error ? error.message : "ব্যানার ডিলিট করা যায়নি।",
       );
     }
   };
@@ -742,9 +675,7 @@ export default function HomepageBannersPage() {
 
       <section className="mb-8">
         <div className="mb-4">
-          <h2 className="text-lg font-bold text-[#12233F]">
-            Banner Overview
-          </h2>
+          <h2 className="text-lg font-bold text-[#12233F]">Banner Overview</h2>
           <p className="mt-1 text-sm text-slate-500">
             Overview of all promotional banners.
           </p>
@@ -796,7 +727,8 @@ export default function HomepageBannersPage() {
                   All Banners
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Select a website section for each banner and control its status.
+                  Select a website section for each banner and control its
+                  status.
                 </p>
               </div>
 
@@ -822,10 +754,7 @@ export default function HomepageBannersPage() {
                 >
                   <option value="ALL">All Sections</option>
                   {PLACEMENTS.map((placement) => (
-                    <option
-                      key={placement.value}
-                      value={placement.value}
-                    >
+                    <option key={placement.value} value={placement.value}>
                       {placement.label}
                     </option>
                   ))}
@@ -967,7 +896,9 @@ export default function HomepageBannersPage() {
                               ) : (
                                 <ToggleLeft size={16} />
                               )}
-                              {banner.status === "ACTIVE" ? "Disable" : "Enable"}
+                              {banner.status === "ACTIVE"
+                                ? "Disable"
+                                : "Enable"}
                             </button>
 
                             <button
@@ -1104,10 +1035,7 @@ export default function HomepageBannersPage() {
               </button>
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-5 p-5 sm:p-6"
-            >
+            <form onSubmit={handleSubmit} className="space-y-5 p-5 sm:p-6">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {/* NAME */}
 
@@ -1145,19 +1073,15 @@ export default function HomepageBannersPage() {
                     className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
                   >
                     {PLACEMENTS.map((placement) => (
-                      <option
-                        key={placement.value}
-                        value={placement.value}
-                      >
+                      <option key={placement.value} value={placement.value}>
                         {placement.label}
                       </option>
                     ))}
                   </select>
                   <p className="mt-1.5 text-xs text-slate-500">
                     {
-                      PLACEMENTS.find(
-                        (item) => item.value === form.placement
-                      )?.description
+                      PLACEMENTS.find((item) => item.value === form.placement)
+                        ?.description
                     }
                   </p>
                 </div>
@@ -1286,9 +1210,7 @@ export default function HomepageBannersPage() {
                     setForm((current) => ({
                       ...current,
                       status:
-                        current.status === "ACTIVE"
-                          ? "INACTIVE"
-                          : "ACTIVE",
+                        current.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
                     }))
                   }
                   className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition ${

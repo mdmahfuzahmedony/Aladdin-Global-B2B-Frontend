@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
 import {
@@ -26,8 +26,9 @@ import { AccountDropdown } from "./../header/navbar/account-dropdown";
 import { AllCategoriesMenu } from "../header/navbar/AllCategoriesMenu";
 import { useSiteSettings } from "../../context/SiteSettingsContext";
 import { useCompare } from "../../context/CompareContext";
+import { useLanguage } from "../../context/LanguageContext";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type CartItem = {
   id: string;
@@ -49,11 +50,14 @@ type TopBanner = {
 export default function MainNavbar() {
   const { settings } = useSiteSettings();
   const { compareCount } = useCompare();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [categoryMenuMounted, setCategoryMenuMounted] = useState(false);
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
+  const categoryCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [authReady, setAuthReady] = useState(false);
@@ -63,6 +67,14 @@ export default function MainNavbar() {
   const [currentTopBanner, setCurrentTopBanner] = useState(0);
 
   const [supabase] = useState(() => createClient());
+
+  useEffect(() => {
+    return () => {
+      if (categoryCloseTimer.current) {
+        clearTimeout(categoryCloseTimer.current);
+      }
+    };
+  }, []);
 
   const getAccessToken = useCallback(async () => {
     const {
@@ -282,9 +294,27 @@ export default function MainNavbar() {
   };
 
   const handleOpenCategories = () => {
-    setCategoryOpen((previous) => !previous);
+    setCategoryMenuMounted(true);
+    setCategoryOpen(true);
     setAccountOpen(false);
     setCartOpen(false);
+  };
+
+  const handleCategoryMouseEnter = () => {
+    if (categoryCloseTimer.current) {
+      clearTimeout(categoryCloseTimer.current);
+      categoryCloseTimer.current = null;
+    }
+    setCategoryMenuMounted(true);
+    setCategoryOpen(true);
+  };
+
+  const handleCategoryMouseLeave = () => {
+    if (categoryCloseTimer.current) clearTimeout(categoryCloseTimer.current);
+    categoryCloseTimer.current = setTimeout(() => {
+      setCategoryOpen(false);
+      categoryCloseTimer.current = null;
+    }, 140);
   };
 
   const handleOpenMobileCategories = () => {
@@ -382,7 +412,8 @@ export default function MainNavbar() {
                     {settings.siteName?.split(" ")[0] || "Aladin"}
                   </span>
                   <span className="block text-[10px] font-semibold uppercase tracking-[2px] text-[#D6A419]">
-                    {settings.siteName?.split(" ").slice(1).join(" ") || "Global"}
+                    {settings.siteName?.split(" ").slice(1).join(" ") ||
+                      "Global"}
                   </span>
                 </div>
               </>
@@ -398,13 +429,13 @@ export default function MainNavbar() {
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search products, brands and more..."
+              placeholder={t("searchPlaceholder")}
               className="min-w-0 flex-1 bg-transparent px-4 text-sm text-slate-700 outline-none"
             />
 
             <button
               type="submit"
-              aria-label="Search"
+              aria-label={t("search")}
               className="flex w-[55px] shrink-0 items-center justify-center bg-[#D6A419] text-[#12233F] transition hover:bg-[#c69a12]"
             >
               <Search size={20} />
@@ -425,7 +456,7 @@ export default function MainNavbar() {
               className="flex flex-col items-center text-white transition hover:text-[#D6A419]"
             >
               <User size={22} />
-              <span className="mt-1 text-[11px] font-semibold">Account</span>
+              <span className="mt-1 text-[11px] font-semibold">{t("account")}</span>
             </button>
 
             {accountOpen && (
@@ -453,7 +484,7 @@ export default function MainNavbar() {
                 </span>
               )}
             </div>
-            <span className="mt-1 text-[11px] font-semibold">Compare</span>
+            <span className="mt-1 text-[11px] font-semibold">{t("compare")}</span>
           </Link>
 
           {/* LANGUAGE */}
@@ -476,7 +507,7 @@ export default function MainNavbar() {
                   </span>
                 )}
               </div>
-              <span className="mt-1 text-[11px] font-semibold">Cart</span>
+              <span className="mt-1 text-[11px] font-semibold">{t("cart")}</span>
             </button>
           )}
         </div>
@@ -487,23 +518,33 @@ export default function MainNavbar() {
             {/* ALL CATEGORIES: SAME BACKGROUND AS SECTION */}
             <div
               className="relative flex h-full shrink-0 items-center"
-              onMouseEnter={() => setCategoryOpen(true)}
-              onMouseLeave={() => setCategoryOpen(false)}
+              onMouseLeave={handleCategoryMouseLeave}
             >
               <button
                 type="button"
                 onClick={handleOpenCategories}
+                onMouseEnter={handleCategoryMouseEnter}
                 aria-expanded={categoryOpen}
-                className="flex h-full items-center gap-2 px-5 text-white transition hover:bg-white/10 hover:text-[#D6A419]"
+                className="flex h-full items-center gap-2 bg-[#D6A419] px-5 text-[#12233F] transition hover:bg-[#e2b62f]"
               >
                 <Tags size={17} />
-                All Categories
+                {t("allCategories")}
                 <ChevronDown size={15} />
               </button>
 
-              {categoryOpen && (
-                <div className="absolute left-0 top-full z-[90] w-[850px] max-w-[90vw]">
-                  <div className="overflow-hidden rounded-b-lg border border-slate-200 bg-white text-slate-800 shadow-xl">
+              {categoryMenuMounted && (
+                <div className="absolute left-0 top-full z-[90] w-fit max-w-[90vw]">
+                  <div
+                    className="overflow-hidden rounded-b-lg border border-slate-200 bg-white text-slate-800 shadow-xl transition-[opacity,transform] duration-150 ease-out"
+                    style={{
+                      opacity: categoryOpen ? 1 : 0,
+                      transform: categoryOpen
+                        ? "translateY(0)"
+                        : "translateY(-4px)",
+                      visibility: categoryOpen ? "visible" : "hidden",
+                    }}
+                    aria-hidden={!categoryOpen}
+                  >
                     <AllCategoriesMenu onClose={() => setCategoryOpen(false)} />
                   </div>
                 </div>
@@ -511,11 +552,11 @@ export default function MainNavbar() {
             </div>
 
             <Link href="/" className="transition hover:text-[#D6A419]">
-              Home
+              {t("home")}
             </Link>
 
             <Link href="/products" className="transition hover:text-[#D6A419]">
-              Products
+              {t("products")}
             </Link>
           </nav>
         </div>
@@ -529,7 +570,7 @@ export default function MainNavbar() {
           <button
             type="button"
             onClick={handleOpenMobileCategories}
-            aria-label="Open categories menu"
+            aria-label={t("openCategories")}
             aria-expanded={mobileCategoriesOpen}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
           >
@@ -555,7 +596,8 @@ export default function MainNavbar() {
                     {settings.siteName?.split(" ")[0] || "Aladin"}
                   </span>
                   <span className="block text-[9px] font-bold uppercase tracking-[1.5px] text-[#D6A419]">
-                    {settings.siteName?.split(" ").slice(1).join(" ") || "Global"}
+                    {settings.siteName?.split(" ").slice(1).join(" ") ||
+                      "Global"}
                   </span>
                 </div>
               </>
@@ -567,7 +609,7 @@ export default function MainNavbar() {
             type="button"
             data-account-area
             onClick={handleAccountToggle}
-            aria-label="Open account"
+            aria-label={t("openAccount")}
             aria-expanded={accountOpen}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
           >
@@ -577,7 +619,7 @@ export default function MainNavbar() {
           {/* COMPARE */}
           <Link
             href="/compare"
-            aria-label="Compare products"
+            aria-label={t("compare")}
             className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
           >
             <GitCompareArrows size={20} />
@@ -598,7 +640,7 @@ export default function MainNavbar() {
             <button
               type="button"
               onClick={handleOpenCart}
-              aria-label="Open cart"
+              aria-label={t("openCart")}
               className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
             >
               <ShoppingCart size={21} />
@@ -621,13 +663,13 @@ export default function MainNavbar() {
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search products..."
+            placeholder={t("searchProductsPlaceholder")}
             className="min-w-0 flex-1 bg-transparent px-3 text-xs text-slate-700 outline-none sm:text-sm"
           />
 
           <button
             type="submit"
-            aria-label="Search products"
+            aria-label={t("searchProducts")}
             className="flex w-10 shrink-0 items-center justify-center bg-[#D6A419] text-[#12233F] transition hover:bg-[#c69a12]"
           >
             <Search size={18} />
@@ -657,14 +699,14 @@ export default function MainNavbar() {
             className="flex shrink-0 items-center gap-1.5 transition hover:text-[#D6A419]"
           >
             <Tags size={15} />
-            Categories
+            {t("categories")}
           </Link>
 
           <Link
             href="/brands"
             className="shrink-0 transition hover:text-[#D6A419]"
           >
-            Brands
+            {t("brands")}
           </Link>
 
           <Link
@@ -672,7 +714,7 @@ export default function MainNavbar() {
             className="flex shrink-0 items-center gap-1.5 transition hover:text-[#D6A419]"
           >
             <BadgePercent size={15} className="text-[#D6A419]" />
-            Deals
+            {t("deals")}
           </Link>
         </nav>
       </header>
@@ -682,7 +724,7 @@ export default function MainNavbar() {
         <div className="fixed inset-0 z-[100] xl:hidden">
           <button
             type="button"
-            aria-label="Close categories menu"
+            aria-label={t("closeCategories")}
             onClick={() => setMobileCategoriesOpen(false)}
             className="absolute inset-0 h-full w-full bg-slate-950/50"
           />
@@ -691,20 +733,20 @@ export default function MainNavbar() {
             className="absolute left-0 top-0 flex h-full w-[320px] max-w-[88vw] flex-col bg-white text-slate-800 shadow-2xl"
             role="dialog"
             aria-modal="true"
-            aria-label="All categories"
+            aria-label={t("allCategories")}
           >
             <div className="flex h-[60px] shrink-0 items-center justify-between border-b border-white/10 bg-[#193653] px-4">
               <div className="flex items-center gap-2">
                 <Tags size={20} className="text-[#D6A419]" />
                 <h2 className="text-base font-bold text-white">
-                  All Categories
+                  {t("allCategories")}
                 </h2>
               </div>
 
               <button
                 type="button"
                 onClick={() => setMobileCategoriesOpen(false)}
-                aria-label="Close categories sidebar"
+                aria-label={t("closeCategoriesSidebar")}
                 className="flex h-9 w-9 items-center justify-center rounded-full text-white transition hover:bg-white/10"
               >
                 <X size={21} />
@@ -738,7 +780,7 @@ export default function MainNavbar() {
             <div className="flex h-[60px] shrink-0 items-center justify-between border-b border-white/10 bg-[#193653] px-4">
               <div className="flex items-center gap-2">
                 <User size={20} className="text-[#D6A419]" />
-                <h2 className="text-base font-bold text-white">My Account</h2>
+                <h2 className="text-base font-bold text-white">{t("myAccount")}</h2>
               </div>
 
               <button
@@ -763,7 +805,7 @@ export default function MainNavbar() {
         <CartSidebar
           isOpen={cartOpen}
           onClose={() => setCartOpen(false)}
-                    onCartChanged={handleCartChanged}
+          onCartChanged={handleCartChanged}
         />
       )}
     </>

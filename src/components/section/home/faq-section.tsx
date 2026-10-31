@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown, HelpCircle } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 type FAQItem = {
   id: string;
@@ -14,6 +15,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 export default function FAQSection() {
+  const { t } = useLanguage();
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const [loading, setLoading] = useState(true);
@@ -62,11 +64,11 @@ export default function FAQSection() {
 
           <div className="min-w-0">
             <h2 className="text-lg font-bold leading-tight text-[#12233F] sm:text-xl">
-              Frequently Asked Questions
+              {t("faqTitle")}
             </h2>
 
             <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
-              Everything you need to know before getting started
+              {t("faqSubtitle")}
             </p>
           </div>
         </div>
@@ -93,7 +95,7 @@ export default function FAQSection() {
         {/* EMPTY */}
         {!loading && !error && faqs.length === 0 && (
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-5 text-center text-xs text-slate-500 sm:rounded-xl sm:px-5 sm:py-6 sm:text-sm">
-            কোনো FAQ পাওয়া যায়নি।
+            {t("noFaqs")}
           </div>
         )}
 

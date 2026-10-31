@@ -6,6 +6,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Heart, Star, ShoppingCart, GitCompareArrows } from "lucide-react";
 import { useCompare } from "@/context/CompareContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { createClient } from "../../../../lib/supabase-client";
 
 type ProductCardProps = {
@@ -39,6 +40,7 @@ export default function ProductCard({
   flashSaleStock,
   isFlashSale = false,
 }: ProductCardProps) {
+  const { t } = useLanguage();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const { isInCompare, toggleCompare } = useCompare();
@@ -196,8 +198,8 @@ export default function ProductCard({
           <button
             type="button"
             onClick={handleToggleCompare}
-            aria-label={inCompare ? "Remove from compare" : "Add to compare"}
-            title={inCompare ? "তুলনা তালিকা থেকে সরান" : "তুলনা তালিকায় যোগ করুন"}
+            aria-label={inCompare ? t("removeFromCompare") : t("addToCompare")}
+            title={inCompare ? t("removeFromCompare") : t("addToCompare")}
             className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition ${
               inCompare
                 ? "bg-amber-100 text-amber-700 shadow-xs"
@@ -211,7 +213,7 @@ export default function ProductCard({
             type="button"
             onClick={handleAddToWishlist}
             disabled={isAddingToWishlist}
-            aria-label="Add to wishlist"
+            aria-label={t("addToWishlist")}
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 disabled:opacity-50"
           >
             <Heart size={14} />
@@ -275,11 +277,11 @@ export default function ProductCard({
         </div>
 
         <div className="mt-0.5 flex min-w-0 items-center justify-between gap-1 text-[9px] sm:text-[10px]">
-          <span className="truncate text-slate-500">MOQ: {moq}</span>
+          <span className="truncate text-slate-500">{t("moq")}: {moq}</span>
 
           {isFlashSale && (
             <span className="shrink-0 font-semibold text-rose-600">
-              {flashSaleStock ?? 0} left
+              {flashSaleStock ?? 0} {t("left")}
             </span>
           )}
         </div>
@@ -294,7 +296,7 @@ export default function ProductCard({
           <ShoppingCart size={13} className="shrink-0" />
 
           <span className="truncate">
-            {isAddingToCart ? "Adding..." : "Add to Cart"}
+            {isAddingToCart ? t("adding") : t("addToCart")}
           </span>
         </button>
       </div>

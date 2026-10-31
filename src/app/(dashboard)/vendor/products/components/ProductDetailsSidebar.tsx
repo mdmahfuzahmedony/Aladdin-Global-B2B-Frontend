@@ -1,6 +1,5 @@
 "use client";
 
-
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "@/components/common/ConfirmModal";
@@ -25,7 +24,7 @@ import { createClient } from "../../../../../../lib/supabase-client";
 const supabase = createClient();
 
 const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001"
 ).replace(/\/+$/, "");
 
 export type ProductCoupon = {
@@ -92,7 +91,12 @@ function getValidImageUrl(url?: string | null): string {
   if (!url || typeof url !== "string") return "";
   const trimmed = url.trim();
   if (!trimmed) return "";
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) {
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("data:") ||
+    trimmed.startsWith("blob:")
+  ) {
     return trimmed;
   }
   if (trimmed.startsWith("/")) {
@@ -108,11 +112,7 @@ function getErrorMessage(data: any, fallback: string): string {
 }
 
 function getCouponFromResponse(data: any): ProductCoupon | null {
-  const candidates = [
-    data?.data?.coupon,
-    data?.data,
-    data?.coupon,
-  ];
+  const candidates = [data?.data?.coupon, data?.data, data?.coupon];
 
   for (const candidate of candidates) {
     if (
@@ -178,9 +178,12 @@ export default function ProductDetailsSidebar({
       (async () => {
         try {
           const token = await getAccessToken();
-          const res = await fetch(`${API_BASE_URL}/api/vendors/me/products/${product.id}/coupon`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const res = await fetch(
+            `${API_BASE_URL}/api/vendors/me/products/${product.id}/coupon`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
           const data = await res.json().catch(() => null);
           if (res.ok) {
             const fetched = getCouponFromResponse(data);
@@ -205,9 +208,17 @@ export default function ProductDetailsSidebar({
 
   const images: string[] = rawImages
     .map((img: any) => (typeof img === "string" ? img : img?.url))
-    .filter((img: unknown): img is string => typeof img === "string" && img.trim().length > 0);
+    .filter(
+      (img: unknown): img is string =>
+        typeof img === "string" && img.trim().length > 0,
+    );
 
-  if (images.length === 0 && product.image && typeof product.image === "string" && product.image.trim().length > 0) {
+  if (
+    images.length === 0 &&
+    product.image &&
+    typeof product.image === "string" &&
+    product.image.trim().length > 0
+  ) {
     images.push(product.image.trim());
   }
 
@@ -289,9 +300,7 @@ export default function ProductDetailsSidebar({
     setShowCouponForm(true);
   }
 
-  async function handleCouponSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
+  async function handleCouponSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!product) return;
 
@@ -350,27 +359,31 @@ export default function ProductDetailsSidebar({
       setShowCouponForm(false);
       setEditingCoupon(false);
       setCouponMessage(
-        editingCoupon
-          ? "কুপন সফলভাবে আপডেট হয়েছে।"
-          : "কুপন সফলভাবে যোগ হয়েছে।",
+        editingCoupon ? "কুপন সফলভাবে আপডেট হয়েছে।" : "কুপন সফলভাবে যোগ হয়েছে।",
       );
 
       onCouponChange?.(product.id, savedCoupon);
     } catch (error: any) {
-      const errMsg = error instanceof Error ? error.message : "কুপন সংরক্ষণ করা যায়নি।";
+      const errMsg =
+        error instanceof Error ? error.message : "কুপন সংরক্ষণ করা যায়নি।";
       if (errMsg.includes("already has a coupon") || errMsg.includes("exist")) {
         try {
           const token = await getAccessToken();
-          const res = await fetch(`${API_BASE_URL}/api/vendors/me/products/${product.id}/coupon`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const res = await fetch(
+            `${API_BASE_URL}/api/vendors/me/products/${product.id}/coupon`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
           const data = await res.json().catch(() => null);
           const existingCoupon = getCouponFromResponse(data);
           if (existingCoupon) {
             setCoupon(existingCoupon);
             setShowCouponForm(false);
             setEditingCoupon(false);
-            setCouponMessage("বিদ্যমান কুপনটি লোড করা হয়েছে। আপনি চাইলে এডিট করতে পারেন।");
+            setCouponMessage(
+              "বিদ্যমান কুপনটি লোড করা হয়েছে। আপনি চাইলে এডিট করতে পারেন।",
+            );
             return;
           }
         } catch {}
@@ -407,12 +420,13 @@ export default function ProductDetailsSidebar({
       );
 
       setCouponMessage(
-        nextStatus
-          ? "কুপন চালু করা হয়েছে।"
-          : "কুপন বন্ধ করা হয়েছে।",
+        nextStatus ? "কুপন চালু করা হয়েছে।" : "কুপন বন্ধ করা হয়েছে।",
       );
 
-      onCouponChange?.(product.id, updatedCoupon ?? { ...coupon, isActive: nextStatus });
+      onCouponChange?.(
+        product.id,
+        updatedCoupon ?? { ...coupon, isActive: nextStatus },
+      );
     } catch (error) {
       setCouponError(
         error instanceof Error
@@ -447,9 +461,7 @@ export default function ProductDetailsSidebar({
       onCouponChange?.(product.id, null);
     } catch (error) {
       setCouponError(
-        error instanceof Error
-          ? error.message
-          : "কুপন মুছে ফেলা যায়নি।",
+        error instanceof Error ? error.message : "কুপন মুছে ফেলা যায়নি।",
       );
     } finally {
       setCouponSaving(false);
@@ -526,9 +538,7 @@ export default function ProductDetailsSidebar({
                     : "bg-red-50 text-red-600"
                 }`}
               >
-                {product.status === "ACTIVE"
-                  ? "In Stock"
-                  : "Out of Stock"}
+                {product.status === "ACTIVE" ? "In Stock" : "Out of Stock"}
               </span>
             </div>
 
@@ -672,10 +682,7 @@ export default function ProductDetailsSidebar({
 
               {!coupon && !showCouponForm && (
                 <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center">
-                  <TicketPercent
-                    size={28}
-                    className="mx-auto text-slate-400"
-                  />
+                  <TicketPercent size={28} className="mx-auto text-slate-400" />
                   <p className="mt-3 text-sm font-semibold text-slate-700">
                     এখনো কোনো কুপন নেই
                   </p>
@@ -710,8 +717,7 @@ export default function ProductDetailsSidebar({
                           Discount Amount
                         </p>
                         <p className="mt-1 text-2xl font-bold text-emerald-700">
-                          ৳
-                          {Number(coupon.discount).toLocaleString("en-BD")}
+                          ৳{Number(coupon.discount).toLocaleString("en-BD")}
                         </p>
                       </div>
 
@@ -733,9 +739,7 @@ export default function ProductDetailsSidebar({
                         Coupon Status
                       </p>
                       <p className="mt-1 text-[11px] text-slate-500">
-                        {coupon.isActive
-                          ? "কুপন চালু আছে"
-                          : "কুপন বন্ধ আছে"}
+                        {coupon.isActive ? "কুপন চালু আছে" : "কুপন বন্ধ আছে"}
                       </p>
                     </div>
 
@@ -747,9 +751,7 @@ export default function ProductDetailsSidebar({
                       disabled={couponSaving}
                       onClick={handleCouponToggle}
                       className={`relative h-6 w-11 shrink-0 rounded-full transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                        coupon.isActive
-                          ? "bg-emerald-600"
-                          : "bg-slate-300"
+                        coupon.isActive ? "bg-emerald-600" : "bg-slate-300"
                       }`}
                     >
                       <span
@@ -935,21 +937,21 @@ export default function ProductDetailsSidebar({
           </button>
         </div>
 
-      <ConfirmModal
-        isOpen={isDeleteCouponModalOpen}
-        onClose={() => setIsDeleteCouponModalOpen(false)}
-        onConfirm={async () => {
-          await handleCouponDelete();
-          setIsDeleteCouponModalOpen(false);
-          toast.success("কুপন সফলভাবে মুছে ফেলা হয়েছে!");
-        }}
-        isLoading={couponSaving}
-        title="কুপন মুছে ফেলতে চান?"
-        description={`আপনি কি নিশ্চিতভাবে "${coupon?.couponName}" কুপনটি মুছে ফেলতে চান?`}
-        confirmText="হ্যাঁ, মুছে ফেলুন"
-        cancelText="বাতিল"
-        variant="danger"
-      />
+        <ConfirmModal
+          isOpen={isDeleteCouponModalOpen}
+          onClose={() => setIsDeleteCouponModalOpen(false)}
+          onConfirm={async () => {
+            await handleCouponDelete();
+            setIsDeleteCouponModalOpen(false);
+            toast.success("কুপন সফলভাবে মুছে ফেলা হয়েছে!");
+          }}
+          isLoading={couponSaving}
+          title="কুপন মুছে ফেলতে চান?"
+          description={`আপনি কি নিশ্চিতভাবে "${coupon?.couponName}" কুপনটি মুছে ফেলতে চান?`}
+          confirmText="হ্যাঁ, মুছে ফেলুন"
+          cancelText="বাতিল"
+          variant="danger"
+        />
       </aside>
     </div>
   );
@@ -967,9 +969,7 @@ function InfoRow({
   return (
     <div className="flex items-start gap-3 border-b border-slate-100 py-3 last:border-0">
       <span className="mt-0.5 text-slate-400">{icon}</span>
-      <span className="w-28 shrink-0 text-xs text-slate-500">
-        {label}
-      </span>
+      <span className="w-28 shrink-0 text-xs text-slate-500">{label}</span>
       <span className="min-w-0 flex-1 break-words text-right text-sm font-medium text-[#12233F]">
         {value}
       </span>

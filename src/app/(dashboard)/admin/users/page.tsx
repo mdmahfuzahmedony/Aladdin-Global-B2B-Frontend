@@ -97,7 +97,7 @@ export type UserData = {
    MAIN PAGE
 ========================================================= */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 export default function UsersPage() {
   /* =======================================================
@@ -191,7 +191,7 @@ export default function UsersPage() {
         --------------------------------------------------- */
 
         const apiUrl =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
         console.log("🔥 Users API:", `${apiUrl}/api/users/admin/all-users`);
 
@@ -540,14 +540,21 @@ export default function UsersPage() {
 
         const res = await response.json();
         if (!response.ok) {
-          throw new Error(res?.error || res?.message || "ইউজার মুছে ফেলতে ব্যর্থ হয়েছে");
+          throw new Error(
+            res?.error || res?.message || "ইউজার মুছে ফেলতে ব্যর্থ হয়েছে",
+          );
         }
 
-        setUsers((prev) => prev.filter((user) => !selectedIds.includes(user.id)));
+        setUsers((prev) =>
+          prev.filter((user) => !selectedIds.includes(user.id)),
+        );
         if (selectedUser && selectedIds.includes(selectedUser.id)) {
           handleCloseSidePanel();
         }
-        toast.success(res?.message || `${selectedIds.length} জন ইউজার সফলভাবে ডাটাবেজ থেকে মুছে ফেলা হয়েছে!`);
+        toast.success(
+          res?.message ||
+            `${selectedIds.length} জন ইউজার সফলভাবে ডাটাবেজ থেকে মুছে ফেলা হয়েছে!`,
+        );
         setSelectedIds([]);
       } else if (deleteModal.userId) {
         const id = deleteModal.userId;
@@ -561,17 +568,28 @@ export default function UsersPage() {
 
         const res = await response.json();
         if (!response.ok) {
-          throw new Error(res?.error || res?.message || "ইউজার মুছে ফেলতে ব্যর্থ হয়েছে");
+          throw new Error(
+            res?.error || res?.message || "ইউজার মুছে ফেলতে ব্যর্থ হয়েছে",
+          );
         }
 
         setUsers((prev) => prev.filter((user) => user.id !== id));
-        setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
+        setSelectedIds((prev) =>
+          prev.filter((selectedId) => selectedId !== id),
+        );
         if (selectedUser?.id === id) {
           handleCloseSidePanel();
         }
-        toast.success(`ইউজার "${deleteModal.userName}" সফলভাবে ডাটাবেজ থেকে মুছে ফেলা হয়েছে!`);
+        toast.success(
+          `ইউজার "${deleteModal.userName}" সফলভাবে ডাটাবেজ থেকে মুছে ফেলা হয়েছে!`,
+        );
       }
-      setDeleteModal({ isOpen: false, userId: null, userName: "", isBulk: false });
+      setDeleteModal({
+        isOpen: false,
+        userId: null,
+        userName: "",
+        isBulk: false,
+      });
     } catch (err: any) {
       console.error("Delete user error:", err);
       toast.error(err?.message || "ইউজার মুছে ফেলতে সমস্যা হয়েছে");
@@ -834,7 +852,7 @@ export default function UsersPage() {
                 };
               }
               return u;
-            })
+            }),
           );
           setSelectedUser((prev) =>
             prev && prev.id === userId
@@ -845,7 +863,7 @@ export default function UsersPage() {
                     ? { vendor: { ...prev.vendor, status: vendorStatus } }
                     : {}),
                 }
-              : prev
+              : prev,
           );
         }}
       />
@@ -862,10 +880,21 @@ export default function UsersPage() {
 
       <ConfirmModal
         isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal({ isOpen: false, userId: null, userName: "", isBulk: false })}
+        onClose={() =>
+          setDeleteModal({
+            isOpen: false,
+            userId: null,
+            userName: "",
+            isBulk: false,
+          })
+        }
         onConfirm={handleDeleteConfirmed}
         isLoading={isDeleting}
-        title={deleteModal.isBulk ? "নির্বাচিত ইউজারগুলো মুছে ফেলতে চান?" : "ইউজার মুছে ফেলতে চান?"}
+        title={
+          deleteModal.isBulk
+            ? "নির্বাচিত ইউজারগুলো মুছে ফেলতে চান?"
+            : "ইউজার মুছে ফেলতে চান?"
+        }
         description={
           deleteModal.isBulk
             ? `আপনি কি নিশ্চিতভাবে ${deleteModal.userName} ডিলিট করতে চান? এই ইউজারের সমস্ত ডাটা স্থায়ীভাবে মুছে যাবে।`

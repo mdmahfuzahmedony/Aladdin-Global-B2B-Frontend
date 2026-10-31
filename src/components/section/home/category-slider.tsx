@@ -5,6 +5,8 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import CategoryCard from "@/components/cards/product/CategoryCard";
+import { useLanguage } from "@/context/LanguageContext";
+import { useAutoSlider } from "@/hooks/useAutoSlider";
 
 type CategoryItem = {
   id: string;
@@ -15,11 +17,12 @@ type CategoryItem = {
   productCount: number;
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 export default function CategorySlider() {
+  const { t } = useLanguage();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { start: autoStart, stop: autoStop } = useAutoSlider(scrollContainerRef);
 
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +42,10 @@ export default function CategorySlider() {
       left: direction === "left" ? -distance : distance,
       behavior: "smooth",
     });
+
+    // Pause auto-slide for 5s after manual navigation
+    autoStop();
+    setTimeout(autoStart, 5000);
   };
 
   useEffect(() => {
@@ -52,18 +59,18 @@ export default function CategorySlider() {
           {
             method: "GET",
             cache: "no-store",
-          }
+          },
         );
 
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(
-            result?.error || "Categories fetch করা যায়নি"
-          );
+          throw new Error(result?.error || "Categories fetch করা যায়নি");
         }
 
-        const list = Array.isArray(result?.data) ? (result.data as CategoryItem[]) : [];
+        const list = Array.isArray(result?.data)
+          ? (result.data as CategoryItem[])
+          : [];
         list.sort((a: CategoryItem, b: CategoryItem) => {
           const aIsGrocery = /grocer|মুদি/i.test(a.name);
           const bIsGrocery = /grocer|মুদি/i.test(b.name);
@@ -78,7 +85,7 @@ export default function CategorySlider() {
         setError(
           error instanceof Error
             ? error.message
-            : "Categories fetch করা যায়নি"
+            : "Categories fetch করা যায়নি",
         );
       } finally {
         setLoading(false);
@@ -95,11 +102,11 @@ export default function CategorySlider() {
         <div className="mb-3 flex items-center justify-between gap-2 sm:mb-5">
           <div className="min-w-0">
             <h2 className="font-[var(--font-poppins)] text-base font-bold leading-tight text-[#12233F] sm:text-xl">
-              Shop by Category
+              {t("shopByCategory")}
             </h2>
 
             <p className="mt-0.5 text-[11px] leading-4 text-slate-500 sm:mt-1 sm:text-sm">
-              Find products for your business faster
+              {t("findBusinessProducts")}
             </p>
           </div>
 
@@ -107,7 +114,7 @@ export default function CategorySlider() {
             href="/categories"
             className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#12233F] transition hover:text-blue-600 sm:text-sm"
           >
-            View All
+            {t("viewAllCategories")}
             <ArrowRight size={14} className="sm:h-4 sm:w-4" />
           </Link>
         </div>
@@ -138,7 +145,7 @@ export default function CategorySlider() {
             <button
               type="button"
               onClick={() => scroll("left")}
-              aria-label="Scroll categories left"
+              aria-label={t("scrollBrandsLeft")}
               className="absolute -left-3 z-10 hidden h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-md transition hover:bg-slate-50 md:flex sm:h-9 sm:w-9 lg:-left-4"
             >
               <ChevronLeft size={18} />
@@ -147,6 +154,8 @@ export default function CategorySlider() {
             {/* SCROLLABLE CATEGORIES */}
             <div
               ref={scrollContainerRef}
+              onMouseEnter={autoStop}
+              onMouseLeave={autoStart}
               className="
                 flex w-full min-w-0
                 gap-2 sm:gap-4
@@ -174,7 +183,7 @@ export default function CategorySlider() {
             <button
               type="button"
               onClick={() => scroll("right")}
-              aria-label="Scroll categories right"
+              aria-label={t("scrollBrandsRight")}
               className="absolute -right-3 z-10 hidden h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-md transition hover:bg-slate-50 md:flex sm:h-9 sm:w-9 lg:-right-4"
             >
               <ChevronRight size={18} />
@@ -185,7 +194,7 @@ export default function CategorySlider() {
         {/* EMPTY */}
         {!loading && !error && categories.length === 0 && (
           <div className="rounded-lg bg-white p-5 text-center text-xs text-slate-500 sm:rounded-xl sm:p-6 sm:text-sm">
-            কোনো category পাওয়া যায়নি।
+            {t("noCategoryFound")}
           </div>
         )}
       </div>

@@ -1,14 +1,8 @@
 "use client";
 
-
 import { useState } from "react";
 import type { FormEvent } from "react";
-import {
-  ArrowLeft,
-  Loader2,
-  Package,
-  Save,
-} from "lucide-react";
+import { ArrowLeft, Loader2, Package, Save } from "lucide-react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
@@ -94,9 +88,9 @@ export default function AddProductPage() {
     Record<string, any>
   >({});
 
-  const [customFields, setCustomFields] = useState<
-    ProductFieldDefinition[]
-  >([]);
+  const [customFields, setCustomFields] = useState<ProductFieldDefinition[]>(
+    [],
+  );
 
   // Product Coupon
   const [couponEnabled, setCouponEnabled] = useState(false);
@@ -117,9 +111,9 @@ export default function AddProductPage() {
     ],
   });
 
-  const [selectedPlacements, setSelectedPlacements] = useState<
-    PlacementType[]
-  >([]);
+  const [selectedPlacements, setSelectedPlacements] = useState<PlacementType[]>(
+    [],
+  );
 
   const [newArrival, setNewArrival] = useState<NewArrivalData>({
     badgeText: "",
@@ -160,10 +154,7 @@ export default function AddProductPage() {
     officialStore: false,
   });
 
-  const updateField = (
-    field: keyof ProductBasicInfo,
-    value: string,
-  ) => {
+  const updateField = (field: keyof ProductBasicInfo, value: string) => {
     setForm((prev) => ({
       ...prev,
       [field]: value,
@@ -215,12 +206,9 @@ export default function AddProductPage() {
       if (!Number.isFinite(Number(form.customerSalePrice))) {
         newErrors.push("Sale price must be a valid number.");
       } else if (
-        Number(form.customerSalePrice) >=
-        Number(form.customerRegularPrice)
+        Number(form.customerSalePrice) >= Number(form.customerRegularPrice)
       ) {
-        newErrors.push(
-          "Sale price must be less than the regular price.",
-        );
+        newErrors.push("Sale price must be less than the regular price.");
       } else if (Number(form.customerSalePrice) < 0) {
         newErrors.push("Sale price cannot be negative.");
       }
@@ -250,9 +238,7 @@ export default function AddProductPage() {
         !Number.isFinite(Number(couponDiscount)) ||
         Number(couponDiscount) <= 0
       ) {
-        newErrors.push(
-          "Coupon discount must be greater than 0.",
-        );
+        newErrors.push("Coupon discount must be greater than 0.");
       } else {
         const sellingPrice = hasValue(form.customerSalePrice)
           ? Number(form.customerSalePrice)
@@ -288,130 +274,88 @@ export default function AddProductPage() {
         !Number.isFinite(Number(delivery.weightKg)) ||
         Number(delivery.weightKg) <= 0
       ) {
-        newErrors.push(
-          "Delivery weight must be greater than 0.",
-        );
+        newErrors.push("Delivery weight must be greater than 0.");
       }
 
       if (!delivery.rates || delivery.rates.length === 0) {
-        newErrors.push(
-          "At least one delivery rate is required.",
-        );
+        newErrors.push("At least one delivery rate is required.");
       }
 
       delivery.rates.forEach((rate, index) => {
-      const label = `Delivery rate ${index + 1}`;
+        const label = `Delivery rate ${index + 1}`;
 
-      if (!hasValue(rate.minDistanceKm)) {
-        newErrors.push(
-          `${label}: minimum distance is required.`,
-        );
-      }
+        if (!hasValue(rate.minDistanceKm)) {
+          newErrors.push(`${label}: minimum distance is required.`);
+        }
 
-      if (!hasValue(rate.maxDistanceKm)) {
-        newErrors.push(
-          `${label}: maximum distance is required.`,
-        );
-      }
+        if (!hasValue(rate.maxDistanceKm)) {
+          newErrors.push(`${label}: maximum distance is required.`);
+        }
 
-      if (!hasValue(rate.firstKgCharge)) {
-        newErrors.push(
-          `${label}: first kg charge is required.`,
-        );
-      }
+        if (!hasValue(rate.firstKgCharge)) {
+          newErrors.push(`${label}: first kg charge is required.`);
+        }
 
-      if (!hasValue(rate.additionalKgCharge)) {
-        newErrors.push(
-          `${label}: additional kg charge is required.`,
-        );
-      }
+        if (!hasValue(rate.additionalKgCharge)) {
+          newErrors.push(`${label}: additional kg charge is required.`);
+        }
 
-      if (
-        hasValue(rate.minDistanceKm) &&
-        hasValue(rate.maxDistanceKm) &&
-        Number(rate.maxDistanceKm) < Number(rate.minDistanceKm)
-      ) {
-        newErrors.push(
-          `${label}: maximum distance cannot be less than minimum distance.`,
-        );
-      }
+        if (
+          hasValue(rate.minDistanceKm) &&
+          hasValue(rate.maxDistanceKm) &&
+          Number(rate.maxDistanceKm) < Number(rate.minDistanceKm)
+        ) {
+          newErrors.push(
+            `${label}: maximum distance cannot be less than minimum distance.`,
+          );
+        }
 
-      if (
-        hasValue(rate.minDistanceKm) &&
-        Number(rate.minDistanceKm) < 0
-      ) {
-        newErrors.push(
-          `${label}: minimum distance cannot be negative.`,
-        );
-      }
+        if (hasValue(rate.minDistanceKm) && Number(rate.minDistanceKm) < 0) {
+          newErrors.push(`${label}: minimum distance cannot be negative.`);
+        }
 
-      if (
-        hasValue(rate.maxDistanceKm) &&
-        Number(rate.maxDistanceKm) < 0
-      ) {
-        newErrors.push(
-          `${label}: maximum distance cannot be negative.`,
-        );
-      }
+        if (hasValue(rate.maxDistanceKm) && Number(rate.maxDistanceKm) < 0) {
+          newErrors.push(`${label}: maximum distance cannot be negative.`);
+        }
 
-      if (
-        hasValue(rate.firstKgCharge) &&
-        Number(rate.firstKgCharge) < 0
-      ) {
-        newErrors.push(
-          `${label}: first kg charge cannot be negative.`,
-        );
-      }
+        if (hasValue(rate.firstKgCharge) && Number(rate.firstKgCharge) < 0) {
+          newErrors.push(`${label}: first kg charge cannot be negative.`);
+        }
 
-      if (
-        hasValue(rate.additionalKgCharge) &&
-        Number(rate.additionalKgCharge) < 0
-      ) {
-        newErrors.push(
-          `${label}: additional kg charge cannot be negative.`,
-        );
-      }
-    });
+        if (
+          hasValue(rate.additionalKgCharge) &&
+          Number(rate.additionalKgCharge) < 0
+        ) {
+          newErrors.push(`${label}: additional kg charge cannot be negative.`);
+        }
+      });
     }
 
     if (isPlacementSelected("NEW_ARRIVAL")) {
       if (!hasValue(newArrival.badgeText)) {
-        newErrors.push(
-          "New Arrival badge text is required.",
-        );
+        newErrors.push("New Arrival badge text is required.");
       }
 
       if (!hasValue(newArrival.displayOrder)) {
-        newErrors.push(
-          "New Arrival display order is required.",
-        );
+        newErrors.push("New Arrival display order is required.");
       } else if (Number(newArrival.displayOrder) < 0) {
-        newErrors.push(
-          "New Arrival display order cannot be negative.",
-        );
+        newErrors.push("New Arrival display order cannot be negative.");
       }
 
       if (!newArrival.startDate) {
-        newErrors.push(
-          "New Arrival start date is required.",
-        );
+        newErrors.push("New Arrival start date is required.");
       }
 
       if (!newArrival.endDate) {
-        newErrors.push(
-          "New Arrival end date is required.",
-        );
+        newErrors.push("New Arrival end date is required.");
       }
 
       if (
         newArrival.startDate &&
         newArrival.endDate &&
-        new Date(newArrival.endDate) <=
-          new Date(newArrival.startDate)
+        new Date(newArrival.endDate) <= new Date(newArrival.startDate)
       ) {
-        newErrors.push(
-          "New Arrival end date must be after start date.",
-        );
+        newErrors.push("New Arrival end date must be after start date.");
       }
     }
 
@@ -419,17 +363,13 @@ export default function AddProductPage() {
       if (!hasValue(flashSale.flashSalePrice)) {
         newErrors.push("Flash Sale price is required.");
       } else if (Number(flashSale.flashSalePrice) < 0) {
-        newErrors.push(
-          "Flash Sale price cannot be negative.",
-        );
+        newErrors.push("Flash Sale price cannot be negative.");
       }
 
       if (!hasValue(flashSale.flashSaleStock)) {
         newErrors.push("Flash Sale stock is required.");
       } else if (Number(flashSale.flashSaleStock) < 0) {
-        newErrors.push(
-          "Flash Sale stock cannot be negative.",
-        );
+        newErrors.push("Flash Sale stock cannot be negative.");
       }
 
       if (!flashSale.startTime) {
@@ -443,99 +383,68 @@ export default function AddProductPage() {
       if (
         flashSale.startTime &&
         flashSale.endTime &&
-        new Date(flashSale.endTime) <=
-          new Date(flashSale.startTime)
+        new Date(flashSale.endTime) <= new Date(flashSale.startTime)
       ) {
-        newErrors.push(
-          "Flash Sale end time must be after start time.",
-        );
+        newErrors.push("Flash Sale end time must be after start time.");
       }
     }
 
     if (isPlacementSelected("FEATURED")) {
       if (!hasValue(featured.featuredBadgeText)) {
-        newErrors.push(
-          "Featured badge text is required.",
-        );
+        newErrors.push("Featured badge text is required.");
       }
 
       if (!hasValue(featured.bannerImage)) {
-        newErrors.push(
-          "Featured banner image is required.",
-        );
+        newErrors.push("Featured banner image is required.");
       }
 
       if (!hasValue(featured.displayOrder)) {
-        newErrors.push(
-          "Featured display order is required.",
-        );
+        newErrors.push("Featured display order is required.");
       } else if (Number(featured.displayOrder) < 0) {
-        newErrors.push(
-          "Featured display order cannot be negative.",
-        );
+        newErrors.push("Featured display order cannot be negative.");
       }
     }
 
     if (isPlacementSelected("TOP_SELLER")) {
       if (!hasValue(topSeller.unitsSold)) {
-        newErrors.push(
-          "Top Seller units sold is required.",
-        );
+        newErrors.push("Top Seller units sold is required.");
       } else if (Number(topSeller.unitsSold) < 0) {
-        newErrors.push(
-          "Top Seller units sold cannot be negative.",
-        );
+        newErrors.push("Top Seller units sold cannot be negative.");
       }
 
       if (!hasValue(topSeller.salesBadge)) {
-        newErrors.push(
-          "Top Seller sales badge is required.",
-        );
+        newErrors.push("Top Seller sales badge is required.");
       }
     }
 
     if (isPlacementSelected("TOP_RATED")) {
       if (!hasValue(topRated.averageRating)) {
-        newErrors.push(
-          "Top Rated average rating is required.",
-        );
+        newErrors.push("Top Rated average rating is required.");
       } else if (
         Number(topRated.averageRating) < 0 ||
         Number(topRated.averageRating) > 5
       ) {
-        newErrors.push(
-          "Top Rated average rating must be between 0 and 5.",
-        );
+        newErrors.push("Top Rated average rating must be between 0 and 5.");
       }
 
       if (!hasValue(topRated.totalReviews)) {
-        newErrors.push(
-          "Top Rated total reviews is required.",
-        );
+        newErrors.push("Top Rated total reviews is required.");
       } else if (Number(topRated.totalReviews) < 0) {
-        newErrors.push(
-          "Top Rated total reviews cannot be negative.",
-        );
+        newErrors.push("Top Rated total reviews cannot be negative.");
       }
 
       if (!hasValue(topRated.reviewSnippet)) {
-        newErrors.push(
-          "Top Rated review snippet is required.",
-        );
+        newErrors.push("Top Rated review snippet is required.");
       }
     }
 
     if (isPlacementSelected("TRUSTED")) {
       if (!hasValue(trusted.trustBadgeText)) {
-        newErrors.push(
-          "Trusted trust badge text is required.",
-        );
+        newErrors.push("Trusted trust badge text is required.");
       }
 
       if (!hasValue(trusted.warrantyInfo)) {
-        newErrors.push(
-          "Trusted warranty information is required.",
-        );
+        newErrors.push("Trusted warranty information is required.");
       }
     }
 
@@ -544,9 +453,7 @@ export default function AddProductPage() {
     return newErrors;
   };
 
-  const handleSubmit = async (
-    e: FormEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (isSaving) return;
@@ -554,9 +461,7 @@ export default function AddProductPage() {
     const validationErrors = validate();
 
     if (validationErrors.length > 0) {
-      toast.error(
-        "Please fix the required fields before continuing.",
-      );
+      toast.error("Please fix the required fields before continuing.");
       return;
     }
 
@@ -571,8 +476,7 @@ export default function AddProductPage() {
 
       // Uploaded image URLs are saved with the product.
       images: images.filter(
-        (image) =>
-          typeof image === "string" && image.trim().length > 0,
+        (image) => typeof image === "string" && image.trim().length > 0,
       ),
 
       attributes: productAttributes,
@@ -586,9 +490,7 @@ export default function AddProductPage() {
           }
         : null,
 
-      customerRegularPrice: hasValue(
-        form.customerRegularPrice,
-      )
+      customerRegularPrice: hasValue(form.customerRegularPrice)
         ? Number(form.customerRegularPrice)
         : null,
 
@@ -596,15 +498,11 @@ export default function AddProductPage() {
         ? Number(form.customerSalePrice)
         : null,
 
-      wholesalerRegularPrice: hasValue(
-        form.wholesalerRegularPrice,
-      )
+      wholesalerRegularPrice: hasValue(form.wholesalerRegularPrice)
         ? Number(form.wholesalerRegularPrice)
         : null,
 
-      wholesalerSalePrice: hasValue(
-        form.wholesalerSalePrice,
-      )
+      wholesalerSalePrice: hasValue(form.wholesalerSalePrice)
         ? Number(form.wholesalerSalePrice)
         : null,
 
@@ -612,12 +510,9 @@ export default function AddProductPage() {
         ? Number(form.dropshipPrice)
         : null,
 
-      affiliateCommissionType:
-        form.affiliateCommissionType || null,
+      affiliateCommissionType: form.affiliateCommissionType || null,
 
-      affiliateCommissionValue: hasValue(
-        form.affiliateCommissionValue,
-      )
+      affiliateCommissionValue: hasValue(form.affiliateCommissionValue)
         ? Number(form.affiliateCommissionValue)
         : null,
 
@@ -627,9 +522,7 @@ export default function AddProductPage() {
         scope: delivery.scope,
 
         weightKg:
-          delivery.scope === "UPAZILA_BASED"
-            ? Number(delivery.weightKg)
-            : null,
+          delivery.scope === "UPAZILA_BASED" ? Number(delivery.weightKg) : null,
 
         nationwideCharge:
           delivery.scope === "NATIONWIDE"
@@ -639,18 +532,10 @@ export default function AddProductPage() {
         rates:
           delivery.scope === "UPAZILA_BASED"
             ? delivery.rates.map((rate) => ({
-                minDistanceKm: Number(
-                  rate.minDistanceKm,
-                ),
-                maxDistanceKm: Number(
-                  rate.maxDistanceKm,
-                ),
-                firstKgCharge: Number(
-                  rate.firstKgCharge,
-                ),
-                additionalKgCharge: Number(
-                  rate.additionalKgCharge,
-                ),
+                minDistanceKm: Number(rate.minDistanceKm),
+                maxDistanceKm: Number(rate.maxDistanceKm),
+                firstKgCharge: Number(rate.firstKgCharge),
+                additionalKgCharge: Number(rate.additionalKgCharge),
               }))
             : [],
       },
@@ -658,12 +543,8 @@ export default function AddProductPage() {
       placements: {
         newArrival: isPlacementSelected("NEW_ARRIVAL")
           ? {
-              badgeText: String(
-                newArrival.badgeText ?? "",
-              ).trim(),
-              displayOrder: Number(
-                newArrival.displayOrder,
-              ),
+              badgeText: String(newArrival.badgeText ?? "").trim(),
+              displayOrder: Number(newArrival.displayOrder),
               startDate: newArrival.startDate,
               endDate: newArrival.endDate,
             }
@@ -671,35 +552,22 @@ export default function AddProductPage() {
 
         flashSale: isPlacementSelected("FLASH_SALE")
           ? {
-              flashSalePrice: Number(
-                flashSale.flashSalePrice,
-              ),
-              flashSaleStock: Number(
-                flashSale.flashSaleStock,
-              ),
+              flashSalePrice: Number(flashSale.flashSalePrice),
+              flashSaleStock: Number(flashSale.flashSaleStock),
               soldCount: 0,
               startTime: flashSale.startTime,
               endTime: flashSale.endTime,
               discountBadge:
-                String(
-                  flashSale.discountBadge ?? "",
-                ).trim() || null,
+                String(flashSale.discountBadge ?? "").trim() || null,
             }
           : null,
 
         featured: isPlacementSelected("FEATURED")
           ? {
               featuredBadgeText:
-                String(
-                  featured.featuredBadgeText ?? "",
-                ).trim() || null,
-              bannerImage:
-                String(
-                  featured.bannerImage ?? "",
-                ).trim() || null,
-              displayOrder: hasValue(
-                featured.displayOrder,
-              )
+                String(featured.featuredBadgeText ?? "").trim() || null,
+              bannerImage: String(featured.bannerImage ?? "").trim() || null,
+              displayOrder: hasValue(featured.displayOrder)
                 ? Number(featured.displayOrder)
                 : null,
             }
@@ -710,44 +578,29 @@ export default function AddProductPage() {
               unitsSold: hasValue(topSeller.unitsSold)
                 ? Number(topSeller.unitsSold)
                 : 0,
-              salesBadge:
-                String(
-                  topSeller.salesBadge ?? "",
-                ).trim() || null,
-              isExpressEligible:
-                topSeller.isExpressEligible,
+              salesBadge: String(topSeller.salesBadge ?? "").trim() || null,
+              isExpressEligible: topSeller.isExpressEligible,
             }
           : null,
 
         topRated: isPlacementSelected("TOP_RATED")
           ? {
-              averageRating: hasValue(
-                topRated.averageRating,
-              )
+              averageRating: hasValue(topRated.averageRating)
                 ? Number(topRated.averageRating)
                 : 0,
-              totalReviews: hasValue(
-                topRated.totalReviews,
-              )
+              totalReviews: hasValue(topRated.totalReviews)
                 ? Number(topRated.totalReviews)
                 : 0,
               reviewSnippet:
-                String(
-                  topRated.reviewSnippet ?? "",
-                ).trim() || null,
+                String(topRated.reviewSnippet ?? "").trim() || null,
             }
           : null,
 
         trusted: isPlacementSelected("TRUSTED")
           ? {
               trustBadgeText:
-                String(
-                  trusted.trustBadgeText ?? "",
-                ).trim() || null,
-              warrantyInfo:
-                String(
-                  trusted.warrantyInfo ?? "",
-                ).trim() || null,
+                String(trusted.trustBadgeText ?? "").trim() || null,
+              warrantyInfo: String(trusted.warrantyInfo ?? "").trim() || null,
               officialStore: trusted.officialStore,
             }
           : null,
@@ -775,28 +628,22 @@ export default function AddProductPage() {
       }
 
       const API_URL =
-        process.env.NEXT_PUBLIC_API_URL ||
-        "http://localhost:3001";
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
-      const response = await fetch(
-        `${API_URL}/api/products`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify(payload),
+      const response = await fetch(`${API_URL}/api/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
-      );
+        body: JSON.stringify(payload),
+      });
 
       const result = await response.json().catch(() => null);
 
       if (!response.ok || result?.success === false) {
         throw new Error(
-          result?.error ||
-            result?.message ||
-            "Failed to create product.",
+          result?.error || result?.message || "Failed to create product.",
         );
       }
 
@@ -805,9 +652,7 @@ export default function AddProductPage() {
       router.push("/vendor/products");
     } catch (error: unknown) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to create product.",
+        error instanceof Error ? error.message : "Failed to create product.",
       );
     } finally {
       setIsSaving(false);
@@ -847,9 +692,7 @@ export default function AddProductPage() {
             </div>
 
             <div>
-              <p className="text-[10px] text-slate-400">
-                Product Setup
-              </p>
+              <p className="text-[10px] text-slate-400">Product Setup</p>
 
               <p className="mt-0.5 text-[12px] font-bold text-[#12233F]">
                 Basic Information
@@ -888,9 +731,7 @@ export default function AddProductPage() {
               form={form}
               isCategoryOpen={isCategoryOpen}
               openCategoryIds={openCategoryIds}
-              onToggleCategory={() =>
-                setIsCategoryOpen((prev) => !prev)
-              }
+              onToggleCategory={() => setIsCategoryOpen((prev) => !prev)}
               onCategorySelect={(selected) => {
                 updateField("categoryId", selected.id);
                 setSelectedCategory(selected);
@@ -911,10 +752,7 @@ export default function AddProductPage() {
             />
 
             {/* Product images */}
-            <ProductImageUploader
-              images={images}
-              onChange={setImages}
-            />
+            <ProductImageUploader images={images} onChange={setImages} />
 
             <ProductPricing
               form={form}
@@ -922,15 +760,9 @@ export default function AddProductPage() {
               ownershipType="SELLER_PRODUCT"
             />
 
-            <ProductInventory
-              form={form}
-              onFieldChange={updateField}
-            />
+            <ProductInventory form={form} onFieldChange={updateField} />
 
-            <ProductDelivery
-              value={delivery}
-              onChange={setDelivery}
-            />
+            <ProductDelivery value={delivery} onChange={setDelivery} />
 
             <ProductPlacement
               selectedPlacements={selectedPlacements}

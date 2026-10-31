@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 
 export type SiteSettings = {
   siteName: string;
@@ -41,9 +47,13 @@ const SiteSettingsContext = createContext<SiteSettingsContextType>({
 const STORAGE_KEY = "aladin_site_settings";
 const EVENT_NAME = "aladin:settings_updated";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
-export function SiteSettingsProvider({ children }: { children: React.ReactNode }) {
+export function SiteSettingsProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [settings, setSettings] = useState<SiteSettings>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -116,25 +126,28 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
   }, [refreshSettings]);
 
   // 3. Listen for custom events across tabs or components
-  const updateLocalSettings = useCallback((newSettings: Partial<SiteSettings>) => {
-    setSettings((prev) => {
-      const merged = { ...prev, ...newSettings };
+  const updateLocalSettings = useCallback(
+    (newSettings: Partial<SiteSettings>) => {
+      setSettings((prev) => {
+        const merged = { ...prev, ...newSettings };
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        } catch {
+          // Ignore
+        }
+        return merged;
+      });
+
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        window.dispatchEvent(
+          new CustomEvent(EVENT_NAME, { detail: newSettings }),
+        );
       } catch {
         // Ignore
       }
-      return merged;
-    });
-
-    try {
-      window.dispatchEvent(
-        new CustomEvent(EVENT_NAME, { detail: newSettings })
-      );
-    } catch {
-      // Ignore
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     const handleCustomUpdate = (e: Event) => {

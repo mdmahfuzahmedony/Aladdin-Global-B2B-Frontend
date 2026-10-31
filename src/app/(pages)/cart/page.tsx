@@ -1,14 +1,13 @@
 "use client";
 
-
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../../lib/supabase-client";
 import { getValidImageUrl } from "../../../../lib/image-util";
+import { useLanguage } from "@/context/LanguageContext";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 import {
   ShoppingBag,
   Trash2,
@@ -63,17 +62,14 @@ const money = (amount: number) =>
 
 function getVendorId(item: CartItem): string | null {
   const id =
-    item.vendorId ??
-    item.vendorID ??
-    item.vendor?.id ??
-    item.vendor?.userId;
+    item.vendorId ?? item.vendorID ?? item.vendor?.id ?? item.vendor?.userId;
 
   return id ? String(id) : null;
 }
 
 function getRates(item: CartItem): DeliveryRate[] {
   return [...(item.deliverySettings?.rates ?? [])].sort(
-    (a, b) => Number(a.minDistanceKm) - Number(b.minDistanceKm)
+    (a, b) => Number(a.minDistanceKm) - Number(b.minDistanceKm),
   );
 }
 
@@ -121,8 +117,7 @@ function calculateDelivery(item: CartItem): DeliveryResult {
 
     const selectedRate = rates.find(
       (rate) =>
-        Number(rate.minDistanceKm) ===
-        Number(item.selectedRateMinDistanceKm)
+        Number(rate.minDistanceKm) === Number(item.selectedRateMinDistanceKm),
     );
 
     if (!selectedRate) {
@@ -178,6 +173,7 @@ function calculateDelivery(item: CartItem): DeliveryResult {
 
 export default function CartPage() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [items, setItems] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -192,9 +188,8 @@ export default function CartPage() {
             parsed.map((item: CartItem) => ({
               ...item,
               quantity: Math.max(1, Number(item.quantity) || 1),
-              selectedRateMinDistanceKm:
-                item.selectedRateMinDistanceKm ?? null,
-            }))
+              selectedRateMinDistanceKm: item.selectedRateMinDistanceKm ?? null,
+            })),
           );
           return;
         }
@@ -245,14 +240,17 @@ export default function CartPage() {
 
         const mapped: CartItem[] = serverItems.map((sItem: any) => {
           const product = sItem.product || {};
-          const regularPrice = Number(product.pricing?.customerRegularPrice ?? 0);
+          const regularPrice = Number(
+            product.pricing?.customerRegularPrice ?? 0,
+          );
           const salePrice =
             product.pricing?.customerSalePrice != null
               ? Number(product.pricing.customerSalePrice)
               : null;
           const price =
             salePrice != null && salePrice > 0 ? salePrice : regularPrice;
-          const rawImage = product.images?.[0] || product.image || sItem.image || "";
+          const rawImage =
+            product.images?.[0] || product.image || sItem.image || "";
           const image = getValidImageUrl(rawImage);
 
           return {
@@ -303,8 +301,8 @@ export default function CartPage() {
               ...item,
               quantity: newQuantity,
             }
-          : item
-      )
+          : item,
+      ),
     );
 
     try {
@@ -330,7 +328,7 @@ export default function CartPage() {
 
   const removeItem = async (id: string) => {
     const nextItems = items.filter(
-      (item) => item.id !== id && item.productId !== id
+      (item) => item.id !== id && item.productId !== id,
     );
     setItems(nextItems);
     localStorage.setItem("cart", JSON.stringify(nextItems));
@@ -377,8 +375,7 @@ export default function CartPage() {
         const sameItem = item.id === id;
 
         const sameVendor =
-          selectedVendorId !== null &&
-          getVendorId(item) === selectedVendorId;
+          selectedVendorId !== null && getVendorId(item) === selectedVendorId;
 
         if (
           item.deliverySettings?.scope === "UPAZILA_BASED" &&
@@ -386,8 +383,7 @@ export default function CartPage() {
         ) {
           // অন্য পণ্যে একই slab না থাকলে সেটি নির্বাচন করা হবে না।
           const matchingRate = getRates(item).some(
-            (rate) =>
-              Number(rate.minDistanceKm) === Number(minDistanceKm)
+            (rate) => Number(rate.minDistanceKm) === Number(minDistanceKm),
           );
 
           if (matchingRate) {
@@ -410,25 +406,19 @@ export default function CartPage() {
           sum +
           Math.max(0, Number(item.price) || 0) *
             Math.max(1, Number(item.quantity) || 1),
-        0
+        0,
       ),
-    [items]
+    [items],
   );
 
-  const deliveryResults = useMemo(
-    () => items.map(calculateDelivery),
-    [items]
-  );
+  const deliveryResults = useMemo(() => items.map(calculateDelivery), [items]);
 
   const deliveryReady =
     items.length > 0 &&
     deliveryResults.every((result) => result.charge !== null);
 
   const shippingFee = deliveryReady
-    ? deliveryResults.reduce(
-        (sum, result) => sum + (result.charge ?? 0),
-        0
-      )
+    ? deliveryResults.reduce((sum, result) => sum + (result.charge ?? 0), 0)
     : null;
 
   const total = subtotal + (shippingFee ?? 0);
@@ -436,9 +426,7 @@ export default function CartPage() {
   if (!loaded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f5f6fa]">
-        <p className="text-sm font-medium text-gray-500">
-          Loading cart...
-        </p>
+        <p className="text-sm font-medium text-gray-500">{t("loadingCart")}</p>
       </div>
     );
   }
@@ -448,20 +436,15 @@ export default function CartPage() {
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <div className="mb-2 flex items-center gap-2 text-xs text-gray-500">
-            <Link
-              href="/"
-              className="transition-colors hover:text-[#F59E0B]"
-            >
-              Home
+            <Link href="/" className="transition-colors hover:text-[#F59E0B]">
+              {t("homeBreadcrumb")}
             </Link>
             <ChevronRight size={12} />
-            <span className="font-semibold text-[#0F172A]">
-              Cart
-            </span>
+            <span className="font-semibold text-[#0F172A]">{t("cart")}</span>
           </div>
 
           <h1 className="text-2xl font-extrabold text-[#0F172A]">
-            Shopping Cart
+            {t("shoppingCart")}
           </h1>
         </div>
 
@@ -469,12 +452,10 @@ export default function CartPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6 lg:col-span-2">
               <div className="mb-2 flex items-center justify-between border-b border-gray-100 pb-4">
-                <h2 className="text-lg font-bold text-[#0F172A]">
-                  Cart Items
-                </h2>
+                <h2 className="text-lg font-bold text-[#0F172A]">{t("cartItems")}</h2>
 
                 <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-[#F59E0B]">
-                  {items.length} {items.length === 1 ? "Item" : "Items"}
+                  {items.length} {items.length === 1 ? t("item") : t("items")}
                 </span>
               </div>
 
@@ -489,7 +470,7 @@ export default function CartPage() {
                     ? items.filter(
                         (other) =>
                           getVendorId(other) === vendorId &&
-                          other.deliverySettings?.scope === "UPAZILA_BASED"
+                          other.deliverySettings?.scope === "UPAZILA_BASED",
                       )
                     : [item];
 
@@ -499,7 +480,7 @@ export default function CartPage() {
                       (other) =>
                         other.selectedRateMinDistanceKm != null &&
                         Number(other.selectedRateMinDistanceKm) ===
-                          Number(item.selectedRateMinDistanceKm)
+                          Number(item.selectedRateMinDistanceKm),
                     );
 
                   return (
@@ -514,14 +495,19 @@ export default function CartPage() {
                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                 onError={(event) => {
                                   event.currentTarget.style.display = "none";
-                                  const fallback = event.currentTarget.nextElementSibling as HTMLElement;
+                                  const fallback = event.currentTarget
+                                    .nextElementSibling as HTMLElement;
                                   if (fallback) fallback.style.display = "flex";
                                 }}
                               />
                             ) : null}
                             <div
                               className="items-center justify-center text-gray-300"
-                              style={{ display: getValidImageUrl(item.image) ? "none" : "flex" }}
+                              style={{
+                                display: getValidImageUrl(item.image)
+                                  ? "none"
+                                  : "flex",
+                              }}
                             >
                               <ShoppingBag size={28} />
                             </div>
@@ -533,7 +519,7 @@ export default function CartPage() {
                             </h3>
 
                             <p className="mt-1 text-xs text-gray-400">
-                              Product
+                              {t("product")}
                             </p>
 
                             <p className="mt-2 text-sm font-bold text-[#F59E0B]">
@@ -569,13 +555,13 @@ export default function CartPage() {
 
                           <div className="min-w-[90px] text-right">
                             <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-                              Total
+                              {t("total")}
                             </p>
 
                             <p className="mt-1 text-base font-extrabold text-[#0F172A]">
                               {money(
                                 (Number(item.price) || 0) *
-                                  (Number(item.quantity) || 1)
+                                  (Number(item.quantity) || 1),
                               )}
                             </p>
                           </div>
@@ -608,15 +594,13 @@ export default function CartPage() {
                                 if (event.target.value !== "") {
                                   selectRate(
                                     item.id,
-                                    Number(event.target.value)
+                                    Number(event.target.value),
                                   );
                                 }
                               }}
                               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm outline-none focus:border-[#F59E0B]"
                             >
-                              <option value="">
-                                স্ল্যাব নির্বাচন করুন
-                              </option>
+                              <option value="">স্ল্যাব নির্বাচন করুন</option>
 
                               {rates.map((rate) => (
                                 <option
@@ -641,8 +625,8 @@ export default function CartPage() {
 
                           {vendorId && sameVendorItems.length > 1 && (
                             <p className="mt-2 text-xs leading-5 text-blue-700">
-                              একই Vendor-এর পণ্যগুলোর জন্য একই স্ল্যাব
-                              ব্যবহার হবে।
+                              একই Vendor-এর পণ্যগুলোর জন্য একই স্ল্যাব ব্যবহার
+                              হবে।
                               {hasSharedSlab
                                 ? " স্ল্যাব নির্বাচন সংরক্ষিত আছে।"
                                 : " স্ল্যাব নির্বাচন করলে মিল থাকা স্ল্যাবগুলো একসঙ্গে আপডেট হবে।"}
@@ -662,7 +646,7 @@ export default function CartPage() {
                           {Number.isFinite(Number(settings.nationwideCharge))
                             ? money(
                                 Number(settings.nationwideCharge) *
-                                  Math.max(1, Number(item.quantity) || 1)
+                                  Math.max(1, Number(item.quantity) || 1),
                               )
                             : "চার্জ পাওয়া যায়নি"}
                         </div>
@@ -676,19 +660,19 @@ export default function CartPage() {
             <div className="space-y-6">
               <div className="sticky top-24 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                 <h2 className="mb-5 border-b border-gray-100 pb-4 text-lg font-bold text-[#0F172A]">
-                  Order Summary
+                  {t("orderSummary")}
                 </h2>
 
                 <div className="mb-6 space-y-4 text-sm">
                   <div className="flex items-center justify-between text-gray-600">
-                    <span>Subtotal</span>
+                    <span>{t("subtotal")}</span>
                     <span className="font-semibold text-[#0F172A]">
                       {money(subtotal)}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-3 text-gray-600">
-                    <span>Estimated Shipping</span>
+                    <span>{t("estimatedShipping")}</span>
                     <span className="text-right font-semibold text-[#0F172A]">
                       {shippingFee === null
                         ? "হিসাব করা যায়নি"
@@ -707,7 +691,7 @@ export default function CartPage() {
                   )}
 
                   <div className="flex items-center justify-between border-t border-dashed border-gray-200 pt-4 text-base font-bold text-[#0F172A]">
-                    <span>Total</span>
+                    <span>{t("total")}</span>
                     <span className="text-lg text-[#F59E0B]">
                       {money(total)}
                     </span>
@@ -720,7 +704,7 @@ export default function CartPage() {
                   onClick={() => router.push("/checkout")}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F59E0B] py-3.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#d97706] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Proceed to Checkout
+                  {t("checkout")}
                   <ArrowRight size={16} />
                 </button>
               </div>
@@ -733,18 +717,18 @@ export default function CartPage() {
             </div>
 
             <h2 className="mb-2 text-xl font-bold text-[#0F172A]">
-              Your Cart is Empty
+              {t("cartEmpty")}
             </h2>
 
             <p className="mb-6 text-sm text-gray-500">
-              Looks like you haven&apos;t added anything to your cart yet.
+              {t("emptyCartDescription")}
             </p>
 
             <Link
               href="/"
               className="inline-block rounded-xl bg-[#0F172A] px-8 py-3 text-sm font-bold text-white transition-colors hover:bg-slate-800"
             >
-              Start Shopping
+              {t("startShopping")}
             </Link>
           </div>
         )}

@@ -5,6 +5,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
+import { useLanguage } from "@/context/LanguageContext";
 
 type Product = {
   id: string;
@@ -22,6 +23,7 @@ type Product = {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 export default function FeaturedProducts() {
+  const { t } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -142,11 +144,11 @@ export default function FeaturedProducts() {
         <div className="mb-5 flex items-center justify-between gap-2">
           <div className="min-w-0">
             <h2 className="text-xl font-bold text-slate-900">
-              Featured Products
+              {t("featuredProducts")}
             </h2>
 
             <p className="mt-1 text-xs text-slate-500 sm:text-sm">
-              Specially selected products for you
+              {t("selectedForYou")}
             </p>
           </div>
 
@@ -155,7 +157,7 @@ export default function FeaturedProducts() {
               href="/products?placement=featured"
               className="hidden items-center gap-1 text-sm font-semibold text-[#12233F] sm:flex"
             >
-              View all
+              {t("viewAll")}
               <ArrowRight size={16} />
             </Link>
 
@@ -165,7 +167,7 @@ export default function FeaturedProducts() {
                 type="button"
                 onClick={scrollLeft}
                 className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 sm:h-9 sm:w-9"
-                aria-label="Previous products"
+                aria-label={t("previousProducts")}
               >
                 <ChevronLeft size={18} />
               </button>
@@ -174,7 +176,7 @@ export default function FeaturedProducts() {
                 type="button"
                 onClick={scrollRight}
                 className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 sm:h-9 sm:w-9"
-                aria-label="Next products"
+                aria-label={t("nextProducts")}
               >
                 <ChevronRight size={18} />
               </button>
@@ -196,11 +198,11 @@ export default function FeaturedProducts() {
         >
           {loading ? (
             <div className="col-span-full py-10 text-center text-sm text-slate-500">
-              Loading featured products...
+              {t("loadingFeatured")}
             </div>
           ) : products.length === 0 ? (
             <div className="col-span-full py-10 text-center text-sm text-slate-500">
-              No featured products found.
+              {t("noFeatured")}
             </div>
           ) : (
             products.map((product) => (
@@ -221,7 +223,7 @@ export default function FeaturedProducts() {
             href="/products?placement=featured"
             className="inline-flex items-center gap-1 text-xs font-semibold text-[#12233F]"
           >
-            View all products
+            {t("viewAllProducts")}
             <ArrowRight size={14} />
           </Link>
         </div>

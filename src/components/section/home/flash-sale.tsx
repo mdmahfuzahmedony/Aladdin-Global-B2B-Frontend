@@ -5,6 +5,7 @@ import { Zap, Clock, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
 import Link from "next/link";
 
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
+import { useLanguage } from "@/context/LanguageContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
@@ -23,6 +24,7 @@ type FlashProduct = {
 };
 
 export default function FlashSaleSection() {
+  const { t } = useLanguage();
   const [products, setProducts] = useState<FlashProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -231,9 +233,9 @@ export default function FlashSaleSection() {
             </div>
 
             <h2 className="flex items-center gap-2 font-[var(--font-poppins)] text-lg font-bold text-[#12233F] sm:text-xl">
-              Flash Sale
+              {t("flashSale")}
               <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-600 sm:text-xs">
-                Live Now
+                {t("liveNow")}
               </span>
             </h2>
           </div>
@@ -242,7 +244,7 @@ export default function FlashSaleSection() {
           <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 sm:gap-2 sm:rounded-xl sm:px-3 sm:py-2">
             <Clock size={14} className="shrink-0 text-rose-600 sm:h-4 sm:w-4" />
             <span className="text-[10px] font-semibold text-slate-600 sm:text-xs">
-              Ending in:
+              {t("endingIn")}
             </span>
             <div className="flex items-center gap-1 font-mono text-[10px] font-bold text-rose-600 sm:text-xs">
               <span className="rounded bg-rose-50 px-1 py-0.5 sm:px-1.5 sm:py-1">
@@ -263,7 +265,7 @@ export default function FlashSaleSection() {
         {/* Second Row: Subtitle / Description & View All / Controls */}
         <div className="flex items-center justify-between gap-2 border-t border-slate-200/60 pt-2.5">
           <p className="text-xs text-slate-500 sm:text-sm">
-            Grab these limited deals before they run out!
+            {t("limitedDeals")}
           </p>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -272,7 +274,7 @@ export default function FlashSaleSection() {
   href="/products?type=flash-sale"
   className="hidden items-center gap-1 text-sm font-semibold text-[#12233F] transition hover:text-rose-600 sm:flex"
 >
-  View all
+  {t("viewAll")}
   <ArrowRight size={16} />
 </Link>
 
@@ -283,7 +285,7 @@ export default function FlashSaleSection() {
                 type="button"
                 onClick={scrollLeft}
                 className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 sm:h-9 sm:w-9"
-                aria-label="Previous products"
+                aria-label={t("previousProducts")}
               >
                 <ChevronLeft size={18} />
               </button>
@@ -292,7 +294,7 @@ export default function FlashSaleSection() {
                 type="button"
                 onClick={scrollRight}
                 className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 sm:h-9 sm:w-9"
-                aria-label="Next products"
+                aria-label={t("nextProducts")}
               >
                 <ChevronRight size={18} />
               </button>
@@ -316,11 +318,11 @@ export default function FlashSaleSection() {
       >
         {loading ? (
           <div className="col-span-full py-10 text-center text-sm text-slate-500">
-            Loading flash sale products...
+            {t("loadingFlashSale")}
           </div>
         ) : products.length === 0 ? (
           <div className="col-span-full py-10 text-center text-sm text-slate-500">
-            No active flash sale products.
+            {t("noFlashSale")}
           </div>
         ) : (
           products.map((product) => (
@@ -354,7 +356,7 @@ export default function FlashSaleSection() {
           href="/flash-sale"
           className="inline-flex items-center gap-1 text-xs font-semibold text-[#12233F]"
         >
-          View all products
+          {t("viewAllProducts")}
           <ArrowRight size={14} />
         </Link>
       </div>

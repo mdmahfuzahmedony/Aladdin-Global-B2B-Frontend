@@ -75,11 +75,14 @@ const KNOWN_LABELS: Record<string, string> = {
   // Biscuits & Bakery
   biscuitType: "Biscuit Type",
   breadType: "Bread Type",
+  bakeryProductType: "Bakery Product Type",
   bunType: "Bun Type",
   cakeType: "Cake Type",
   pastryType: "Pastry Type",
   cookieType: "Cookie Type",
   flavor: "Flavor / Taste",
+  filling: "Filling",
+  sweetness: "Sweetness",
   netWeight: "Net Weight",
   weightUnit: "Weight Unit",
   packType: "Packaging Type",
@@ -109,14 +112,21 @@ const KNOWN_LABELS: Record<string, string> = {
   origin: "Origin / Farm Source",
 
   // Beverages
+  beverageType: "Beverage Type",
+  productType: "Product Type",
   teaType: "Tea Variety",
   coffeeType: "Coffee Variety",
   drinkType: "Drink Type",
+  juiceType: "Juice Type",
   caffeineContent: "Caffeine Content",
+  caffeineLevel: "Caffeine Level",
+  mineralContent: "Mineral Content",
+  electrolyteContent: "Electrolyte Content",
   netVolume: "Net Volume",
   volume: "Volume / Net Qty",
   packaging: "Packaging Type",
   source: "Source",
+  sugarLevel: "Sugar Level",
   phLevel: "pH Level",
   carbonated: "Carbonated",
   roastLevel: "Roast Level",
@@ -694,7 +704,7 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
 
   // 2. Domain-Specific Groups
   if (domain === "BAKERY_BISCUITS") {
-    const foodRows = buildRows(["biscuitType", "breadType", "cakeType", "cookieType", "flavor", "texture", "keyIngredients", "allergenInfo"]);
+    const foodRows = buildRows(["bakeryProductType", "biscuitType", "breadType", "cakeType", "cookieType", "flavor", "filling", "sweetness", "texture", "keyIngredients", "allergenInfo"]);
     if (foodRows.length > 0) {
       groups.push({
         id: "bakery-details",
@@ -744,7 +754,7 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
       });
     }
   } else if (domain === "BEVERAGES") {
-    const bevRows = buildRows(["teaType", "coffeeType", "drinkType", "flavor", "fruitType", "caffeineContent", "roastLevel"]);
+    const bevRows = buildRows(["beverageType", "teaType", "coffeeType", "drinkType", "juiceType", "productType", "flavor", "fruitType", "caffeineContent", "caffeineLevel", "roastLevel", "mineralContent", "electrolyteContent", "preparation", "sugarLevel"]);
     if (bevRows.length > 0) {
       groups.push({
         id: "bev-flavor",

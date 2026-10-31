@@ -25,7 +25,7 @@ import AdminStatCard from "@/components/cards/AdminStatCard";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
 import { createClient } from "../../../../../lib/supabase-client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 const supabase = createClient();
 
 type ReportCategory =
@@ -321,7 +321,8 @@ export default function ReportsPage() {
   const generatePDFReportHTML = () => {
     const periodInfo = getPeriodInfo(period);
     const siteName = settings.siteName || "Aladin Global B2B";
-    const supportEmail = settings.supportEmail || "support@aladdinglobalb2b.com";
+    const supportEmail =
+      settings.supportEmail || "support@aladdinglobalb2b.com";
     const contactNumber = settings.contactNumber || "01322-130929";
     const address =
       settings.address ||
@@ -881,8 +882,8 @@ export default function ReportsPage() {
           </h1>
 
           <p className="mt-1 text-sm text-slate-500">
-            Monitor real-time marketplace performance, sales trends and
-            download audit statements.
+            Monitor real-time marketplace performance, sales trends and download
+            audit statements.
           </p>
         </div>
 
@@ -1179,8 +1180,7 @@ export default function ReportsPage() {
                 color: "bg-emerald-500",
                 textColor: "text-emerald-700",
                 pct: Math.round(
-                  (reportData.orderSummary.completed /
-                    totalOrdersCalculated) *
+                  (reportData.orderSummary.completed / totalOrdersCalculated) *
                     100,
                 ),
               },
@@ -1190,8 +1190,7 @@ export default function ReportsPage() {
                 color: "bg-blue-500",
                 textColor: "text-blue-700",
                 pct: Math.round(
-                  (reportData.orderSummary.processing /
-                    totalOrdersCalculated) *
+                  (reportData.orderSummary.processing / totalOrdersCalculated) *
                     100,
                 ),
               },
@@ -1201,8 +1200,7 @@ export default function ReportsPage() {
                 color: "bg-amber-400",
                 textColor: "text-amber-700",
                 pct: Math.round(
-                  (reportData.orderSummary.pending /
-                    totalOrdersCalculated) *
+                  (reportData.orderSummary.pending / totalOrdersCalculated) *
                     100,
                 ),
               },
@@ -1212,8 +1210,7 @@ export default function ReportsPage() {
                 color: "bg-rose-500",
                 textColor: "text-rose-700",
                 pct: Math.round(
-                  (reportData.orderSummary.cancelled /
-                    totalOrdersCalculated) *
+                  (reportData.orderSummary.cancelled / totalOrdersCalculated) *
                     100,
                 ),
               },
@@ -1318,7 +1315,10 @@ export default function ReportsPage() {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-xs text-slate-400">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-12 text-center text-xs text-slate-400"
+                  >
                     রিপোর্ট ডেটা লোড হচ্ছে...
                   </td>
                 </tr>

@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { X, Send, Store, AlertCircle, ShieldAlert, Check } from "lucide-react";
 import { createClient } from "../../../../../../lib/supabase-client";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 interface Props {
   isOpen: boolean;
@@ -34,10 +34,10 @@ export default function RequestStoreChangeModal({
   const [newOwnerName, setNewOwnerName] = useState(currentData.ownerName || "");
   const [newPhone, setNewPhone] = useState(currentData.phone || "");
   const [newCategory, setNewCategory] = useState(
-    currentData.businessCategory || ""
+    currentData.businessCategory || "",
   );
   const [newTradeLicense, setNewTradeLicense] = useState(
-    currentData.tradeLicenseNumber || ""
+    currentData.tradeLicenseNumber || "",
   );
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -64,7 +64,9 @@ export default function RequestStoreChangeModal({
         trimmedTradeLicense !== (currentData.tradeLicenseNumber || ""));
 
     if (!hasChange) {
-      toast.warning("দয়া করে পরিবর্তন করার জন্য কমপক্ষে একটি নতুন তথ্য প্রদান করুন।");
+      toast.warning(
+        "দয়া করে পরিবর্তন করার জন্য কমপক্ষে একটি নতুন তথ্য প্রদান করুন।",
+      );
       return;
     }
 
@@ -95,9 +97,16 @@ export default function RequestStoreChangeModal({
             Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
-            storeName: trimmedStoreName !== currentData.storeName ? trimmedStoreName : undefined,
-            ownerName: trimmedOwnerName !== currentData.ownerName ? trimmedOwnerName : undefined,
-            phone: trimmedPhone !== currentData.phone ? trimmedPhone : undefined,
+            storeName:
+              trimmedStoreName !== currentData.storeName
+                ? trimmedStoreName
+                : undefined,
+            ownerName:
+              trimmedOwnerName !== currentData.ownerName
+                ? trimmedOwnerName
+                : undefined,
+            phone:
+              trimmedPhone !== currentData.phone ? trimmedPhone : undefined,
             businessCategory:
               trimmedCategory !== currentData.businessCategory
                 ? trimmedCategory
@@ -108,17 +117,19 @@ export default function RequestStoreChangeModal({
                 : undefined,
             reason: trimmedReason,
           }),
-        }
+        },
       );
 
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error || result.message || "অনুরোধ পাঠানো সম্ভব হয়নি।");
+        throw new Error(
+          result.error || result.message || "অনুরোধ পাঠানো সম্ভব হয়নি।",
+        );
       }
 
       toast.success(
-        "তথ্য পরিবর্তনের অনুরোধ সফলভাবে অ্যাডমিনের কাছে পাঠানো হয়েছে!"
+        "তথ্য পরিবর্তনের অনুরোধ সফলভাবে অ্যাডমিনের কাছে পাঠানো হয়েছে!",
       );
       onSuccess();
       onClose();
@@ -165,12 +176,18 @@ export default function RequestStoreChangeModal({
         </div>
 
         {/* Modal Body / Form */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="p-5 space-y-4 max-h-[80vh] overflow-y-auto"
+        >
           {/* Important Notice Banner */}
           <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900 flex items-start gap-2.5">
             <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
             <div className="leading-relaxed text-[11.5px]">
-              <span className="font-bold">সতর্কবার্তা:</span> রেজিস্ট্রেশনকালীন মূল তথ্যসমূহ (যেমন: স্টোরের নাম, ফোন, মালিকের নাম ইত্যাদি) পরিবর্তনের জন্য অ্যাডমিনের অনুমোদন প্রয়োজন। আপনি সাবমিট করলে অ্যাডমিনের কাছে একটি নোটিফিকেশন পৌঁছাবে।
+              <span className="font-bold">সতর্কবার্তা:</span> রেজিস্ট্রেশনকালীন
+              মূল তথ্যসমূহ (যেমন: স্টোরের নাম, ফোন, মালিকের নাম ইত্যাদি)
+              পরিবর্তনের জন্য অ্যাডমিনের অনুমোদন প্রয়োজন। আপনি সাবমিট করলে
+              অ্যাডমিনের কাছে একটি নোটিফিকেশন পৌঁছাবে।
             </div>
           </div>
 
@@ -238,7 +255,8 @@ export default function RequestStoreChangeModal({
           {/* Reason */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              পরিবর্তনের কারণ (Reason for Change) <span className="text-red-500">*</span>:
+              পরিবর্তনের কারণ (Reason for Change){" "}
+              <span className="text-red-500">*</span>:
             </label>
             <textarea
               rows={3}

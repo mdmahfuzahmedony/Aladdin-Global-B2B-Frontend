@@ -45,7 +45,7 @@ export default function CartSidebar({
   const [loading, setLoading] = useState(false);
 
   const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
   const getAccessToken = async () => {
     const {
@@ -175,7 +175,7 @@ export default function CartSidebar({
               (it: any) =>
                 it.id !== itemId &&
                 it.productId !== itemId &&
-                it.cartItemId !== itemId
+                it.cartItemId !== itemId,
             );
             localStorage.setItem("cart", JSON.stringify(updated));
           }
@@ -249,7 +249,8 @@ export default function CartSidebar({
 
                 const price = salePrice ?? regularPrice;
 
-                const rawImage = item.product.images?.[0] || (item.product as any).image || "";
+                const rawImage =
+                  item.product.images?.[0] || (item.product as any).image || "";
                 const image = getValidImageUrl(rawImage);
 
                 return (
@@ -265,7 +266,8 @@ export default function CartSidebar({
                           className="h-full w-full object-cover"
                           onError={(event) => {
                             event.currentTarget.style.display = "none";
-                            const fallback = event.currentTarget.nextElementSibling as HTMLElement;
+                            const fallback = event.currentTarget
+                              .nextElementSibling as HTMLElement;
                             if (fallback) fallback.style.display = "flex";
                           }}
                         />

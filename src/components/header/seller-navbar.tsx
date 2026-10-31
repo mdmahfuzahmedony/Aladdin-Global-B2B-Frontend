@@ -1,6 +1,5 @@
 "use client";
 
-
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -14,9 +13,7 @@ import {
 } from "lucide-react";
 import { createClient } from "../../../lib/supabase-client";
 
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type VendorProfile = {
   storeName?: string | null;
@@ -62,18 +59,16 @@ function getVendorData(payload: unknown): VendorProfile | null {
       typeof item.vendorName === "string"
         ? item.vendorName
         : typeof item.fullName === "string"
-        ? item.fullName
-        : typeof item.full_name === "string"
-          ? item.full_name
-          : typeof item.name === "string"
-            ? item.name
-            : null;
+          ? item.fullName
+          : typeof item.full_name === "string"
+            ? item.full_name
+            : typeof item.name === "string"
+              ? item.name
+              : null;
 
-    const email =
-      typeof item.email === "string" ? item.email : null;
+    const email = typeof item.email === "string" ? item.email : null;
 
-    const status =
-      typeof item.status === "string" ? item.status : null;
+    const status = typeof item.status === "string" ? item.status : null;
 
     if (storeName || fullName || email) {
       return {
@@ -123,12 +118,9 @@ export function SellerNavbar() {
       const metadata = session.user.user_metadata ?? {};
 
       const metadataName =
-        (typeof metadata.fullName === "string" &&
-          metadata.fullName) ||
-        (typeof metadata.full_name === "string" &&
-          metadata.full_name) ||
-        (typeof metadata.name === "string" &&
-          metadata.name) ||
+        (typeof metadata.fullName === "string" && metadata.fullName) ||
+        (typeof metadata.full_name === "string" && metadata.full_name) ||
+        (typeof metadata.name === "string" && metadata.name) ||
         "";
 
       const userEmail = session.user.email ?? "";
@@ -141,17 +133,14 @@ export function SellerNavbar() {
         setVendorName(userEmail.split("@")[0]);
       }
 
-      const response = await fetch(
-        `${API_URL}/api/vendors/store/settings`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            Accept: "application/json",
-          },
-          cache: "no-store",
+      const response = await fetch(`${API_URL}/api/vendors/store/settings`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          Accept: "application/json",
         },
-      );
+        cache: "no-store",
+      });
 
       const payload = await response.json().catch(() => null);
 
@@ -162,9 +151,7 @@ export function SellerNavbar() {
           setStoreName(vendor.storeName.trim());
         }
 
-        const apiName =
-          vendor?.fullName?.trim() ||
-          vendor?.name?.trim();
+        const apiName = vendor?.fullName?.trim() || vendor?.name?.trim();
 
         if (apiName) setVendorName(apiName);
         if (vendor?.email) setEmail(vendor.email);
@@ -218,10 +205,7 @@ export function SellerNavbar() {
     <header className="relative z-40 flex min-h-16 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 sm:px-6">
       {/* Search */}
       <div className="flex min-w-0 w-full max-w-sm items-center gap-2 rounded-lg bg-slate-100 px-3 py-2">
-        <Search
-          size={16}
-          className="shrink-0 text-slate-400"
-        />
+        <Search size={16} className="shrink-0 text-slate-400" />
 
         <input
           type="text"
@@ -256,10 +240,7 @@ export function SellerNavbar() {
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#12233F] text-[13px] font-semibold text-white">
               {loading ? (
-                <Loader2
-                  size={15}
-                  className="animate-spin"
-                />
+                <Loader2 size={15} className="animate-spin" />
               ) : (
                 initials
               )}
@@ -298,10 +279,7 @@ export function SellerNavbar() {
               >
                 <div className="border-b border-slate-100 px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <Store
-                      size={15}
-                      className="shrink-0 text-slate-400"
-                    />
+                    <Store size={15} className="shrink-0 text-slate-400" />
 
                     <p className="truncate text-[12px] font-semibold text-slate-800">
                       {storeName}
@@ -319,10 +297,7 @@ export function SellerNavbar() {
                   )}
 
                   {loadError && (
-                    <p
-                      role="status"
-                      className="mt-2 text-[11px] text-red-600"
-                    >
+                    <p role="status" className="mt-2 text-[11px] text-red-600">
                       {loadError}
                     </p>
                   )}
@@ -349,17 +324,12 @@ export function SellerNavbar() {
                   className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[13px] text-[#D64545] hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {signingOut ? (
-                    <Loader2
-                      size={15}
-                      className="animate-spin"
-                    />
+                    <Loader2 size={15} className="animate-spin" />
                   ) : (
                     <LogOut size={15} />
                   )}
 
-                  {signingOut
-                    ? "সাইন আউট হচ্ছে..."
-                    : "সাইন আউট"}
+                  {signingOut ? "সাইন আউট হচ্ছে..." : "সাইন আউট"}
                 </button>
               </div>
             </>

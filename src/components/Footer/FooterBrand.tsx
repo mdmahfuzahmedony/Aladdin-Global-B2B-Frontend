@@ -2,9 +2,11 @@
 
 import { FooterSocial } from "./FooterSocial";
 import { useSiteSettings } from "../../context/SiteSettingsContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function FooterBrand() {
   const { settings } = useSiteSettings();
+  const { t } = useLanguage();
 
   return (
     <div className="max-w-md">
@@ -33,7 +35,7 @@ export function FooterBrand() {
 
       <div className="space-y-2 text-xs text-slate-600 sm:text-sm">
         <p>
-          📞 <strong className="text-[#12233F]">Call us (10AM–9PM):</strong>{" "}
+          📞 <strong className="text-[#12233F]">{t("callUsHours")}</strong>{" "}
           <a
             href={`tel:${settings.contactNumber || "01322-130929"}`}
             className="hover:text-amber-600 transition"
@@ -43,7 +45,7 @@ export function FooterBrand() {
         </p>
 
         <p>
-          ✉️ <strong className="text-[#12233F]">Email:</strong>{" "}
+          ✉️ <strong className="text-[#12233F]">{t("email")}</strong>{" "}
           <a
             href={`mailto:${settings.supportEmail || "support@aladdinglobalb2b.com"}`}
             className="hover:text-amber-600 transition"
@@ -53,7 +55,7 @@ export function FooterBrand() {
         </p>
 
         <p>
-          📍 <strong className="text-[#12233F]">Address:</strong>{" "}
+          📍 <strong className="text-[#12233F]">{t("address")}</strong>{" "}
           <span>
             {settings.address ||
               "Holding No: Gohata, Road Jashore, Jashore, Bangladesh — 7400"}

@@ -1,5 +1,5 @@
-"use client";
 
+"use client";
 
 import { useEffect, useState } from "react";
 import type { ElementType } from "react";
@@ -12,6 +12,8 @@ import {
   Truck,
   RotateCcw,
 } from "lucide-react";
+
+import { useLanguage } from "@/context/LanguageContext";
 
 type CardVariant =
   | "blue"
@@ -68,6 +70,15 @@ const styles: Record<
   },
 };
 
+const featureTranslationKeys = [
+  ["emiAvailable", "flexiblePayments"],
+  ["genuineProducts", "authenticGuaranteed"],
+  ["expressDelivery", "fastSecureDelivery"],
+  ["officialWarranty", "manufacturerWarranty"],
+  ["bestPrice", "valueForMoney"],
+  ["easyReturns", "hassleFreeReturns"],
+] as const;
+
 const features: FeatureItem[] = [
   {
     title: "EMI Policy Available",
@@ -115,71 +126,104 @@ function TrustFeatureCard({ feature }: TrustFeatureCardProps) {
   const Icon = feature.icon;
   const s = styles[feature.variant] ?? styles.blue;
 
-return (
-  <div
-    className={`
-      relative h-[130px] sm:h-[154px] w-full min-w-0 overflow-hidden
-      rounded-2xl border p-3
-      ${s.card}
-      transition-all duration-200
-      hover:-translate-y-0.5 hover:shadow-md
-    `}
-  >
-    <div className="relative z-10 flex h-full flex-col items-center justify-center text-center">
-      {/* Icon */}
-      <div
-        className={`
-          mb-2 flex h-9 w-9 shrink-0 items-center justify-center
-          rounded-xl sm:h-10 sm:w-10
-          ${s.icon}
-        `}
-      >
-        <Icon size={20} strokeWidth={2} />
-      </div>
-
-      {/* Title */}
-      <p
-        title={feature.title}
-        className="line-clamp-2 w-full break-words text-[12px] font-bold leading-4 text-[#12233F] sm:text-[13px] sm:leading-5"
-      >
-        {feature.title}
-      </p>
-
-      {/* Description */}
-      <p
-        title={feature.description}
-        className="mt-1 line-clamp-2 w-full break-words text-[11px] leading-4 text-slate-600"
-      >
-        {feature.description}
-      </p>
-    </div>
-
-    {/* Decorative circle */}
+  return (
     <div
       className={`
-        pointer-events-none absolute -bottom-8 -right-8
-        h-24 w-24 rounded-full
-        ${s.circle}
+        relative h-[130px] w-full min-w-0 overflow-hidden
+        rounded-2xl border p-2 sm:h-[154px] sm:p-3
+        ${s.card}
+        transition-all duration-200
+        hover:-translate-y-0.5 hover:shadow-md
       `}
-    />
-  </div>
-);
+    >
+      <div className="relative z-10 flex h-full flex-col items-center justify-center text-center">
+        <div
+          className={`
+            mb-2 flex h-9 w-9 shrink-0 items-center justify-center
+            rounded-xl sm:h-10 sm:w-10
+            ${s.icon}
+          `}
+        >
+          <Icon size={20} strokeWidth={2} />
+        </div>
 
+        <p
+          title={feature.title}
+          className="line-clamp-2 w-full break-words text-[12px] font-bold leading-4 text-[#12233F] sm:text-[13px] sm:leading-5"
+        >
+          {feature.title}
+        </p>
+
+        <p
+          title={feature.description}
+          className="mt-1 line-clamp-2 w-full break-words text-[11px] leading-4 text-slate-600"
+        >
+          {feature.description}
+        </p>
+      </div>
+
+      <div
+        className={`
+          pointer-events-none absolute -bottom-8 -right-8
+          h-24 w-24 rounded-full
+          ${s.circle}
+        `}
+      />
+    </div>
+  );
 }
 
 export default function TrustFeatures() {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const { t } = useLanguage();
 
-  const cardsPerSlide = 2;
-  const totalSlides = Math.ceil(features.length / cardsPerSlide);
+  // মোবাইল ও PC-র স্লাইড আলাদাভাবে চলবে
+  const [mobileIndex, setMobileIndex] = useState(0);
+  const [desktopIndex, setDesktopIndex] = useState(0);
 
+  const mobileVisible = Math.min(2, features.length);
+  const desktopVisible = Math.min(5, features.length);
+
+  const mobileMaxIndex = Math.max(
+    0,
+    features.length - mobileVisible
+  );
+
+  const desktopMaxIndex = Math.max(
+    0,
+    features.length - desktopVisible
+  );
+
+  const translatedFeatures = features.map((feature, index) => ({
+    ...feature,
+    title: t(featureTranslationKeys[index][0]),
+    description: t(featureTranslationKeys[index][1]),
+  }));
+
+  // মোবাইল: ২টি কার্ড দেখাবে, একটি করে স্লাইড হবে
   useEffect(() => {
+    if (mobileMaxIndex === 0) return;
+
     const interval = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % totalSlides);
+      setMobileIndex((current) =>
+        current >= mobileMaxIndex ? 0 : current + 1
+      );
     }, 2500);
 
     return () => window.clearInterval(interval);
-  }, [totalSlides]);
+  }, [mobileMaxIndex]);
+
+  // PC/Laptop: ৫টি কার্ড দেখাবে, একটি করে স্লাইড হবে
+  useEffect(() => {
+    if (desktopMaxIndex === 0) return;
+
+    const interval = window.setInterval(() => {
+      setDesktopIndex((current) =>
+        current >= desktopMaxIndex ? 0 : current + 1
+      );
+    }, 2500);
+
+    return () => window.clearInterval(interval);
+  }, [desktopMaxIndex]);
 
   return (
     <section className="overflow-hidden bg-[#f5f6fa] py-6 sm:py-8">
@@ -189,15 +233,15 @@ export default function TrustFeatures() {
           <div
             className="flex items-stretch transition-transform duration-700 ease-in-out"
             style={{
-              width: `${totalSlides * 100}%`,
+              width: `${(features.length / mobileVisible) * 100}%`,
               transform: `translateX(-${
-                activeIndex * (100 / totalSlides)
+                mobileIndex * (100 / features.length)
               }%)`,
             }}
           >
-            {features.map((feature) => (
+            {translatedFeatures.map((feature, index) => (
               <div
-                key={feature.title}
+                key={index}
                 className="min-w-0 px-1"
                 style={{
                   flex: `0 0 ${100 / features.length}%`,
@@ -209,14 +253,29 @@ export default function TrustFeatures() {
           </div>
         </div>
 
-        {/* Desktop: ৬টি কার্ড একসঙ্গে */}
-        <div className="hidden grid-cols-2 gap-4 sm:grid sm:grid-cols-3 lg:grid-cols-6">
-          {features.map((feature) => (
-            <TrustFeatureCard
-              key={feature.title}
-              feature={feature}
-            />
-          ))}
+        {/* PC/Laptop: একসঙ্গে ৫টি কার্ড */}
+        <div className="hidden overflow-hidden sm:block">
+          <div
+            className="flex items-stretch transition-transform duration-700 ease-in-out"
+            style={{
+              width: `${(features.length / desktopVisible) * 100}%`,
+              transform: `translateX(-${
+                desktopIndex * (100 / features.length)
+              }%)`,
+            }}
+          >
+            {translatedFeatures.map((feature, index) => (
+              <div
+                key={index}
+                className="min-w-0 px-2"
+                style={{
+                  flex: `0 0 ${100 / features.length}%`,
+                }}
+              >
+                <TrustFeatureCard feature={feature} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

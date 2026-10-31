@@ -98,14 +98,18 @@ type UserSidePanelProps = {
   user: UserData | null;
   isOpen: boolean;
   onClose: () => void;
-  onStatusChange?: (userId: string, newStatus: string, vendorStatus?: string) => void;
+  onStatusChange?: (
+    userId: string,
+    newStatus: string,
+    vendorStatus?: string,
+  ) => void;
 };
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 export default function UserSidePanel({
   user,
@@ -133,12 +137,15 @@ export default function UserSidePanel({
           data: { session },
         } = await supabase.auth.getSession();
 
-        const response = await fetch(`${API_BASE_URL}/api/users/admin/${user.id}`, {
-          headers: {
-            Authorization: `Bearer ${session?.access_token || ""}`,
-            "Content-Type": "application/json",
+        const response = await fetch(
+          `${API_BASE_URL}/api/users/admin/${user.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session?.access_token || ""}`,
+              "Content-Type": "application/json",
+            },
           },
-        });
+        );
 
         if (response.ok) {
           const json = await response.json();
@@ -183,7 +190,8 @@ export default function UserSidePanel({
       vendor: richData.vendor || user.vendor,
       affiliate: richData.affiliate || user.affiliate,
       wholesaler: richData.wholesaler || user.wholesaler,
-      managerPermissions: richData.managerPermissions || user.managerPermissions,
+      managerPermissions:
+        richData.managerPermissions || user.managerPermissions,
       _count: richData._count || user._count,
     };
   }, [user, richData]);
@@ -195,7 +203,10 @@ export default function UserSidePanel({
   /* =======================================================
      STATUS UPDATE HANDLER
   ======================================================= */
-  const handleUpdateUserStatus = async (newStatus: string, approveVendor: boolean) => {
+  const handleUpdateUserStatus = async (
+    newStatus: string,
+    approveVendor: boolean,
+  ) => {
     if (!mergedUser || updatingStatus) return;
     try {
       setUpdatingStatus(true);
@@ -209,34 +220,43 @@ export default function UserSidePanel({
       }
 
       // 1. Update user status
-      const userRes = await fetch(`${API_BASE_URL}/api/users/admin/${mergedUser.id}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
+      const userRes = await fetch(
+        `${API_BASE_URL}/api/users/admin/${mergedUser.id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
         },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      );
 
       const userJson = await userRes.json();
       if (!userRes.ok) {
         throw new Error(
-          userJson?.error || userJson?.message || "ইউজার স্ট্যাটাস পরিবর্তন ব্যর্থ হয়েছে"
+          userJson?.error ||
+            userJson?.message ||
+            "ইউজার স্ট্যাটাস পরিবর্তন ব্যর্থ হয়েছে",
         );
       }
 
       // 2. If vendor exists and approveVendor is true, update vendor status
       let newVendorStatus: string | undefined;
       if (mergedUser.vendor?.id && approveVendor) {
-        const vendorStatusTarget = newStatus === "ACTIVE" ? "APPROVED" : "SUSPENDED";
-        const vRes = await fetch(`${API_BASE_URL}/api/vendors/${mergedUser.vendor.id}/status`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
+        const vendorStatusTarget =
+          newStatus === "ACTIVE" ? "APPROVED" : "SUSPENDED";
+        const vRes = await fetch(
+          `${API_BASE_URL}/api/vendors/${mergedUser.vendor.id}/status`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ status: vendorStatusTarget }),
           },
-          body: JSON.stringify({ status: vendorStatusTarget }),
-        });
+        );
 
         if (vRes.ok) {
           newVendorStatus = vendorStatusTarget;
@@ -256,7 +276,7 @@ export default function UserSidePanel({
                 ? { vendor: { ...prev.vendor, status: newVendorStatus } }
                 : {}),
             }
-          : prev
+          : prev,
       );
     } catch (err: any) {
       toast.error(err?.message || "স্ট্যাটাস আপডেট করতে সমস্যা হয়েছে");
@@ -384,15 +404,17 @@ export default function UserSidePanel({
                     mergedUser.status === "ACTIVE"
                       ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                       : mergedUser.status === "PENDING"
-                      ? "bg-amber-50 text-amber-700 border border-amber-200"
-                      : "bg-red-50 text-red-700 border border-red-200"
+                        ? "bg-amber-50 text-amber-700 border border-amber-200"
+                        : "bg-red-50 text-red-700 border border-red-200"
                   }`}
                 >
                   {mergedUser.status}
                 </span>
                 {mergedUser.vendor?.status && (
                   <span className="text-xs text-slate-500">
-                    (Vendor: <b className="text-slate-700">{mergedUser.vendor.status}</b>)
+                    (Vendor:{" "}
+                    <b className="text-slate-700">{mergedUser.vendor.status}</b>
+                    )
                   </span>
                 )}
               </div>
@@ -408,7 +430,9 @@ export default function UserSidePanel({
                   onClick={() => handleUpdateUserStatus("ACTIVE", true)}
                   className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
                 >
-                  {updatingStatus ? "Processing..." : "✓ Approve Account & Seller"}
+                  {updatingStatus
+                    ? "Processing..."
+                    : "✓ Approve Account & Seller"}
                 </button>
                 <button
                   type="button"
@@ -432,7 +456,8 @@ export default function UserSidePanel({
               </button>
             )}
 
-            {(mergedUser.status === "SUSPENDED" || mergedUser.status === "BANNED") && (
+            {(mergedUser.status === "SUSPENDED" ||
+              mergedUser.status === "BANNED") && (
               <button
                 type="button"
                 disabled={updatingStatus}

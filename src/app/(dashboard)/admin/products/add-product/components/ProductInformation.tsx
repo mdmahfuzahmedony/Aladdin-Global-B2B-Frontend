@@ -1,63 +1,45 @@
 "use client";
 
-
 import { useEffect, useMemo, useState } from "react";
 
-import type {
-  ComponentType,
-  Dispatch,
-  SetStateAction,
-} from "react";
+import type { ComponentType, Dispatch, SetStateAction } from "react";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 import ProductDescriptionEditor from "./product-field/ProductDescriptionEditor";
+import { getFashionFieldComponent } from "./product-field/Fashion/fieldRegistry";
 
 import type { ProductBasicInfo } from "../components/product-placement/types";
 
 import { createClient } from "../../../../../../../lib/supabase-client";
 
-// Fashion
-import Shirt from "./product-field/Fashion/Man/Shirt";
-import Panjabi from "./product-field/Fashion/Man/Panjabi";
-import Pant from "./product-field/Fashion/Man/Pant";
-import Shoes from "./product-field/Fashion/Man/Shoes";
-import Sandal from "./product-field/Fashion/Man/Sandal";
-import Cap from "./product-field/Fashion/Man/Cap";
-import Watch from "./product-field/Fashion/Man/Watch";
-import Saree from "./product-field/Fashion/women/Saree";
-import ThreePiece from "./product-field/Fashion/women/Three-piece";
-import Bag from "./product-field/Fashion/women/Bag";
-import Jewelry from "./product-field/Fashion/women/Jewelry";
-
 // Grocery - Bakery & Biscuits
-import Biscuits from "./product-field/Grocery/Bakery/Biscuits";
 import Bread from "./product-field/Grocery/Bakery/Bread";
-import Bun from "./product-field/Grocery/Bakery/Bun";
-import Cake from "./product-field/Grocery/Bakery/Cakse";
-import Cookies from "./product-field/Grocery/Bakery/Cookies";
-import Pastry from "./product-field/Grocery/Bakery/Pastry";
-import Toast from "./product-field/Grocery/Bakery/Toast";
-import Sweets from "./product-field/Grocery/Bakery/Sweets";
-import Chocolate from "./product-field/Grocery/Bakery/Chocolate";
-import Candy from "./product-field/Grocery/Bakery/Candy";
+import CakeSweetsPies from "./product-field/Grocery/Bakery/CakeSweetsPies";
+import ToastBakeryBiscuits from "./product-field/Grocery/Bakery/ToastBakeryBiscuits";
 
 // Grocery - Beverages
-import Tea from "./product-field/Grocery/Beverages/Tea";
-import Coffee from "./product-field/Grocery/Beverages/Coffee";
 import Juice from "./product-field/Grocery/Beverages/Juice";
-import MineralWater from "./product-field/Grocery/Beverages/MineralWater";
+import MineralDrinks from "./product-field/Grocery/Beverages/MineralDrinks";
 import SoftDrinks from "./product-field/Grocery/Beverages/SoftDrinks";
-import EnergyDrinks from "./product-field/Grocery/Beverages/Energy Drinks";
+import EnergyDrinks from "./product-field/Grocery/Beverages/EnergyDrinks";
+import SportsDrinks from "./product-field/Grocery/Beverages/SportsDrinks";
+import SyrupsPowderDrinks from "./product-field/Grocery/Beverages/SyrupsPowderDrinks";
+import TeaCoffee from "./product-field/Grocery/Beverages/TeaCoffee";
 
 // Grocery - Cooking & Essentials
-import Rice from "./product-field/Grocery/cooking and essential/Rice/Rice";
-import Dal from "./product-field/Grocery/cooking and essential/Rice/Dal";
-import Flour from "./product-field/Grocery/cooking and essential/Rice/Flour";
-import SoybeanOil from "./product-field/Grocery/cooking and essential/Oil/SoybeanOil";
-import MustardOil from "./product-field/Grocery/cooking and essential/Oil/MustardOil";
-import OliveOil from "./product-field/Grocery/cooking and essential/Oil/OliveOil";
-import Ghee from "./product-field/Grocery/cooking and essential/Oil/Ghee";
+import Rice from "./product-field/Grocery/cooking and essential/Rice";
+import LentilsChola from "./product-field/Grocery/cooking and essential/LentilsChola";
+import AttaFlours from "./product-field/Grocery/cooking and essential/AttaFlours";
+import SaltSugar from "./product-field/Grocery/cooking and essential/SaltSugar";
+import CookingOil from "./product-field/Grocery/cooking and essential/Oil";
+import SemaiSuji from "./product-field/Grocery/cooking and essential/SemaiSuji";
+import CookingSpices from "./product-field/Grocery/cooking and essential/Spices";
+import ReadyMix from "./product-field/Grocery/cooking and essential/ReadyMix";
+import ColorsFlavours from "./product-field/Grocery/cooking and essential/ColorsFlavours";
+import BakingIngredients from "./product-field/Grocery/cooking and essential/BakingIngredients";
+import Oats from "./product-field/Grocery/cooking and essential/Oats";
+import LeafyGreens from "./product-field/Grocery/cooking and essential/LeafyGreens";
 
 // Grocery - Spices & Salt
 import Salt from "./product-field/Grocery/Spices & Salt/Salt";
@@ -70,25 +52,96 @@ import GaramMasala from "./product-field/Grocery/Spices & Salt/Garam Masala";
 // Grocery - Dairy, Eggs, Meat, Produce
 import Milk from "./product-field/Grocery/Dairy & Eggs/Dairy/Milk";
 import Eggs from "./product-field/Grocery/Dairy & Eggs/Eggs/Chicken Eggs";
-import Beef from "./product-field/Grocery/cooking and essential/Meat & Fish/Beef";
-import Chicken from "./product-field/Grocery/cooking and essential/Meat & Fish/Chicken";
-import Mutton from "./product-field/Grocery/cooking and essential/Meat & Fish/Mutton";
-import Fish from "./product-field/Grocery/cooking and essential/Meat & Fish/Fish";
-import Fruits from "./product-field/Grocery/cooking and essential/Fresh Produce/Fruits";
-import Vegetables from "./product-field/Grocery/cooking and essential/Fresh Produce/Vegetables";
+import DairyGhee from "./product-field/Grocery/Dairy & Eggs/Dairy/Ghee";
+import ButterSourCream from "./product-field/Grocery/Dairy & Eggs/Dairy/Butters Sour Cream";
+import Cheese from "./product-field/Grocery/Dairy & Eggs/Dairy/Cheese";
+import CondensedMilkCream from "./product-field/Grocery/Dairy & Eggs/Dairy/Condensed Milk and Cream";
+import YogurtCurdsSweets from "./product-field/Grocery/Dairy & Eggs/Dairy/yofurt,curds and weets";
+import Laban from "./product-field/Grocery/Dairy & Eggs/Dairy/laban";
+import Lassi from "./product-field/Grocery/Dairy & Eggs/Dairy/Lacchi";
+import Borhani from "./product-field/Grocery/Dairy & Eggs/Dairy/Borhani";
+import IceCream from "./product-field/Grocery/Dairy & Eggs/Dairy/Ice Cream";
+import Matha from "./product-field/Grocery/Dairy & Eggs/Dairy/Matha";
+import UHTLiquidMilkPowder from "./product-field/Grocery/Dairy & Eggs/Dairy/UHT Liquid Milk Powder";
+import DuckEggs from "./product-field/Grocery/Dairy & Eggs/Eggs/Duck Eggs";
+import QuailEggs from "./product-field/Grocery/Dairy & Eggs/Eggs/Quail Eggs";
+import FreshFish from "./product-field/Grocery/Meat & Fish/Fresh Fish";
+import WaterFish from "./product-field/Grocery/Meat & Fish/Fresh Fish/Water Fish";
+import SeaFish from "./product-field/Grocery/Meat & Fish/Fresh Fish/Sea Fish";
+import DriedFish from "./product-field/Grocery/Meat & Fish/Fresh Fish/Dried Fish";
+import FrozenFish from "./product-field/Grocery/Meat & Fish/Fresh Fish/Frozen Fish";
+import ReadyToCookFish from "./product-field/Grocery/Meat & Fish/Fresh Fish/Ready-to-Cook Fish";
+import FreshMeat from "./product-field/Grocery/Meat & Fish/Fresh Meat";
+import FrozenMeat from "./product-field/Grocery/Meat & Fish/Fresh Meat/Frozen Meat";
+import CookReadyMeat from "./product-field/Grocery/Meat & Fish/Fresh Meat/Cook-Ready Meat";
+import Fruits from "./product-field/Grocery/Fruits and Vagetable/FreshFruits";
+import Vegetables from "./product-field/Grocery/Fruits and Vagetable/FreshVegetables";
+import FreshFruits from "./product-field/Grocery/Fruits and Vagetable/FreshFruits";
+import FreshVegetables from "./product-field/Grocery/Fruits and Vagetable/FreshVegetables";
 
 // Grocery - Snacks & Packaged
 import Chips from "./product-field/Grocery/Snacks/Chips";
 import Noodles from "./product-field/Grocery/Snacks/Noodles";
-import Honey from "./product-field/Grocery/Canned & Packaged Food/Honey";
-import Jam from "./product-field/Grocery/Canned & Packaged Food/Jam";
-import Pickles from "./product-field/Grocery/Canned & Packaged Food/Pickles";
-import Sauces from "./product-field/Grocery/Canned & Packaged Food/Sauces";
+import CandyChocolate from "./product-field/Grocery/Snacks/CandyChocolate";
+import DriedFruitsNuts from "./product-field/Grocery/Snacks/DriedFruitsNuts";
+import ConfectioneryCandyChocolate from "./product-field/Grocery/Confectionneries/Candy and choclate";
+import ConfectioneryDriedFruitsNutsSeeds from "./product-field/Grocery/Confectionneries/DriedFruites-Nuts-Seeds";
+import Honey from "./product-field/Grocery/Canned & Packaged/Honey";
+import Jam from "./product-field/Grocery/Canned & Packaged/Jam";
+import Pickles from "./product-field/Grocery/Canned & Packaged/Pickles";
+import Sauces from "./product-field/Grocery/Canned & Packaged/Sauces";
+import ParathaRoti from "./product-field/Grocery/Frozen Canned/ParathaRoti";
+import FrozenSnacks from "./product-field/Grocery/Frozen Canned/FrozenSnacks";
+import FrozenFishMeat from "./product-field/Grocery/Frozen Canned/FrozenFishMeat";
+import FrozenFruitsVegetables from "./product-field/Grocery/Frozen Canned/FrozenFruitsVegetables";
+import MushroomCan from "./product-field/Grocery/Frozen Canned/MushroomCan";
+import VegetableCan from "./product-field/Grocery/Frozen Canned/VegetableCan";
+import FishCan from "./product-field/Grocery/Frozen Canned/FishCan";
+import CannedFruitsSweets from "./product-field/Grocery/Frozen Canned/CannedFruitsSweets";
 
 // Grocery - Household, Pet Care & General
 import Cleaning from "./product-field/Grocery/Londry and household/Cleaning";
+import Dishwashing from "./product-field/Grocery/Londry and household/Dishwashing";
+import WashingPowder from "./product-field/Grocery/Londry and household/WashingPowder";
+import WashingLiquid from "./product-field/Grocery/Londry and household/WashingLiquid";
+import ToiletCleaners from "./product-field/Grocery/Londry and household/ToiletCleaners";
+import FloorCleaners from "./product-field/Grocery/Londry and household/FloorCleaners";
+import AirFresheners from "./product-field/Grocery/Londry and household/AirFresheners";
+import GlassCleaners from "./product-field/Grocery/Londry and household/GlassCleaners";
+import WoodCleaners from "./product-field/Grocery/Londry and household/WoodCleaners";
+import PestControl from "./product-field/Grocery/Londry and household/PestControl";
+import CleaningAccessories from "./product-field/Grocery/Londry and household/CleaningAccessories";
+import PapersTissues from "./product-field/Grocery/Londry and household/PapersTissues";
+import TrashBinBasket from "./product-field/Grocery/Londry and household/TrashBinBasket";
+import TrashBagDisposables from "./product-field/Grocery/Londry and household/TrashBagDisposables";
+import ShoeCare from "./product-field/Grocery/Londry and household/ShoeCare";
 import PetFood from "./product-field/Grocery/Pet care/PetFood";
-import GroceryGeneral from "./product-field/Grocery/GroceryGeneral";
+import BirdOtherPetFood from "./product-field/Grocery/Pet care/BirdOtherPetFood";
+import CatFood from "./product-field/Grocery/Pet care/CatFood";
+import DogFood from "./product-field/Grocery/Pet care/DogFood";
+import PetAccessories from "./product-field/Grocery/Pet care/PetAccessories";
+import PetHealthCare from "./product-field/Grocery/Pet care/PetHealthCare";
+import RabbitFood from "./product-field/Grocery/Pet care/RabbitFood";
+
+import BiryaniPulao from "./product-field/Grocery/Homemade and Resturent/BiryaniPulao";
+import Burgers from "./product-field/Grocery/Homemade and Resturent/Burgers";
+import Pizzas from "./product-field/Grocery/Homemade and Resturent/Pizzas";
+import Pasta from "./product-field/Grocery/Homemade and Resturent/Pasta";
+import Sandwiches from "./product-field/Grocery/Homemade and Resturent/Sandwiches";
+import SoupsStews from "./product-field/Grocery/Homemade and Resturent/SoupsStews";
+import FriedFoods from "./product-field/Grocery/Homemade and Resturent/FriedFoods";
+import RoastChickenBeef from "./product-field/Grocery/Homemade and Resturent/RoastChickenBeef";
+import GroceryGeneral from "./product-field/Grocery/Homemade and Resturent/GroceryGeneral";
+
+// Grocery - Breakfast
+import BreakfastBread from "./product-field/Grocery/BreakFast/Bread";
+import Cereals from "./product-field/Grocery/BreakFast/cereals";
+import BreakfastHoney from "./product-field/Grocery/BreakFast/Honey";
+import Granola from "./product-field/Grocery/BreakFast/Granala";
+import BreakfastSpreads from "./product-field/Grocery/BreakFast/Dips-Sppeads-Suuces";
+import JamJelly from "./product-field/Grocery/BreakFast/Jam-jelly";
+import LocalBreakfast from "./product-field/Grocery/BreakFast/LocalBreakfast";
+import OatmealGrits from "./product-field/Grocery/BreakFast/Oatmeats and grits";
 
 const supabase = createClient();
 
@@ -106,62 +159,54 @@ export type Category = {
 type ProductSpecificComponent = ComponentType<any>;
 
 const PRODUCT_COMPONENTS: Record<string, ProductSpecificComponent> = {
-  // Fashion
-  shirt: Shirt,
-  panjabi: Panjabi,
-  pant: Pant,
-  shoes: Shoes,
-  sandal: Sandal,
-  cap: Cap,
-  watch: Watch,
-  saree: Saree,
-  "three-piece": ThreePiece,
-  bag: Bag,
-  jewelry: Jewelry,
-
   // Bakery & Biscuits
-  biscuits: Biscuits,
-  biscuit: Biscuits,
-  biscute: Biscuits,
-  cookies: Cookies,
-  cookie: Cookies,
+  biscuits: ToastBakeryBiscuits,
+  biscuit: ToastBakeryBiscuits,
+  biscute: ToastBakeryBiscuits,
+  cookies: ToastBakeryBiscuits,
+  cookie: ToastBakeryBiscuits,
   bread: Bread,
-  bun: Bun,
-  cake: Cake,
-  cakes: Cake,
-  pastry: Pastry,
-  toast: Toast,
-  sweets: Sweets,
-  sweet: Sweets,
-  chocolate: Chocolate,
-  chocolates: Chocolate,
-  candy: Candy,
+  bun: CakeSweetsPies,
+  cake: CakeSweetsPies,
+  cakes: CakeSweetsPies,
+  pastry: CakeSweetsPies,
+  pie: CakeSweetsPies,
+  pies: CakeSweetsPies,
+  toast: ToastBakeryBiscuits,
+  sweets: CakeSweetsPies,
+  sweet: CakeSweetsPies,
+  "cakes-and-sweets-pies": CakeSweetsPies,
+  "toast-and-bakery-biscuits": ToastBakeryBiscuits,
 
   // Beverages
-  tea: Tea,
-  coffee: Coffee,
+  tea: TeaCoffee,
+  coffee: TeaCoffee,
+  "tea-and-coffee": TeaCoffee,
   juice: Juice,
-  "mineral-water": MineralWater,
-  water: MineralWater,
+  "mineral-drinks": MineralDrinks,
+  "mineral-water": MineralDrinks,
+  water: MineralDrinks,
   "soft-drinks": SoftDrinks,
   beverage: SoftDrinks,
   beverages: SoftDrinks,
   drinks: SoftDrinks,
   "energy-drinks": EnergyDrinks,
+  "sports-drinks": SportsDrinks,
+  "syrups-and-powder-drinks": SyrupsPowderDrinks,
 
   // Cooking & Essentials
   rice: Rice,
-  dal: Dal,
-  daal: Dal,
-  flour: Flour,
-  atta: Flour,
-  maida: Flour,
-  suji: Flour,
-  oil: SoybeanOil,
-  "soybean-oil": SoybeanOil,
-  "mustard-oil": MustardOil,
-  "olive-oil": OliveOil,
-  ghee: Ghee,
+  dal: LentilsChola,
+  daal: LentilsChola,
+  flour: AttaFlours,
+  atta: AttaFlours,
+  maida: AttaFlours,
+  suji: SemaiSuji,
+  oil: CookingOil,
+  "soybean-oil": CookingOil,
+  "mustard-oil": CookingOil,
+  "olive-oil": CookingOil,
+  ghee: CookingOil,
   salt: Salt,
   chili: Chili,
   turmeric: Turmeric,
@@ -179,21 +224,30 @@ const PRODUCT_COMPONENTS: Record<string, ProductSpecificComponent> = {
   egg: Eggs,
 
   // Meat & Fish
-  beef: Beef,
-  chicken: Chicken,
-  mutton: Mutton,
-  meat: Beef,
-  fish: Fish,
+  beef: FreshMeat,
+  chicken: CookReadyMeat,
+  mutton: FreshMeat,
+  meat: FreshMeat,
+  fish: FreshFish,
 
   // Produce
   fruits: Fruits,
   fruit: Fruits,
+  "fresh-fruits": FreshFruits,
   vegetables: Vegetables,
   vegetable: Vegetables,
+  "fresh-vegetables": FreshVegetables,
 
   // Snacks & Packaged
   chips: Chips,
   crisps: Chips,
+  "candy-and-chocolate": CandyChocolate,
+  chocolate: CandyChocolate,
+  candy: CandyChocolate,
+  toffee: CandyChocolate,
+  "dried-fruits-nuts": DriedFruitsNuts,
+  "dried-fruits-and-nuts": DriedFruitsNuts,
+  nuts: DriedFruitsNuts,
   noodles: Noodles,
   noodle: Noodles,
   pasta: Noodles,
@@ -205,18 +259,129 @@ const PRODUCT_COMPONENTS: Record<string, ProductSpecificComponent> = {
   sauces: Sauces,
   sauce: Sauces,
   ketchup: Sauces,
+  "paratha-and-roti": ParathaRoti,
+  "frozen-snacks": FrozenSnacks,
+  "frozen-fish-and-meat": FrozenFishMeat,
+  "frozen-fruits-and-vegetables": FrozenFruitsVegetables,
+  "mushroom-can": MushroomCan,
+  "vegetable-can": VegetableCan,
+  "fish-can": FishCan,
+  "canned-fruits-and-sweets": CannedFruitsSweets,
 
   // Household & Pet
   cleaning: Cleaning,
+  "cleaning-and-detergents": Cleaning,
+  "cleaning-supplies": Cleaning,
   detergent: Cleaning,
   household: Cleaning,
+  dishwashing: Dishwashing,
+  "washing-powder": WashingPowder,
+  "washing-liquid": WashingLiquid,
+  "toilet-cleaners": ToiletCleaners,
+  "floor-cleaners": FloorCleaners,
+  "air-fresheners": AirFresheners,
+  "glass-cleaners": GlassCleaners,
+  "wood-cleaners": WoodCleaners,
+  "pest-control": PestControl,
+  "cleaning-accessories": CleaningAccessories,
+  "papers-and-tissues": PapersTissues,
+  "trash-bin-and-basket": TrashBinBasket,
+  "trash-bag-and-disposables": TrashBagDisposables,
+  "shoe-care": ShoeCare,
   "pet-food": PetFood,
   "pet-care": PetFood,
   pet: PetFood,
+  "bird-and-other-pet-food": BirdOtherPetFood,
+  "cat-food": CatFood,
+  "dog-food": DogFood,
+  "pet-accessories": PetAccessories,
+  "pet-halth-care": PetHealthCare,
+  "rabbit-food": RabbitFood,
+  "biryani-and-pulao": BiryaniPulao,
+  burgers: Burgers,
+  pizzas: Pizzas,
+  sandwiches: Sandwiches,
+  "soups-and-stews": SoupsStews,
+  "fried-foods": FriedFoods,
+  "roast-chicken-and-roast-beef": RoastChickenBeef,
 
   // General Grocery Fallback
   grocery: GroceryGeneral,
   food: GroceryGeneral,
+};
+
+const DAIRY_EGG_COMPONENTS: Record<string, ProductSpecificComponent> = {
+  milk: Milk,
+  ghee: DairyGhee,
+  "butter-and-sour-cream": ButterSourCream,
+  cheese: Cheese,
+  "condensed-milk-and-cream": CondensedMilkCream,
+  "uht-and-liquid-milk-and-milk-powder": UHTLiquidMilkPowder,
+  "yogurt-curds-and-sweets": YogurtCurdsSweets,
+  laban: Laban,
+  "lablacchi-or-lassi": Lassi,
+  lassi: Lassi,
+  borhani: Borhani,
+  "ice-cream": IceCream,
+  matha: Matha,
+  "chicken-eggs": Eggs,
+  "duck-eggs": DuckEggs,
+  "quail-eggs": QuailEggs,
+};
+
+const COOKING_ESSENTIAL_COMPONENTS: Record<string, ProductSpecificComponent> = {
+  rice: Rice,
+  dal: LentilsChola,
+  daal: LentilsChola,
+  "lentils-and-chola": LentilsChola,
+  "atta-and-flours": AttaFlours,
+  flour: AttaFlours,
+  atta: AttaFlours,
+  maida: AttaFlours,
+  "salt-and-sugar": SaltSugar,
+  salt: Salt,
+  sugar: SaltSugar,
+  oil: CookingOil,
+  "soybean-oil": CookingOil,
+  "mustard-oil": CookingOil,
+  "olive-oil": CookingOil,
+  "sunflower-oil": CookingOil,
+  ghee: CookingOil,
+  "shemai-and-suji": SemaiSuji,
+  shemai: SemaiSuji,
+  semai: SemaiSuji,
+  suji: SemaiSuji,
+  "ready-mix": ReadyMix,
+  spices: CookingSpices,
+  spice: CookingSpices,
+  chili: Chili,
+  turmeric: Turmeric,
+  coriander: Coriander,
+  cumin: Cumin,
+  "garam-masala": GaramMasala,
+  "colors-and-flavours": ColorsFlavours,
+  "baking-ingredients": BakingIngredients,
+  oats: Oats,
+  fruits: Fruits,
+  "leafy-greens": LeafyGreens,
+  vegetables: Vegetables,
+};
+
+const FISH_MEAT_COMPONENTS: Record<string, ProductSpecificComponent> = {
+  "fresh-fish": FreshFish,
+  "water-fish": WaterFish,
+  "sea-fish": SeaFish,
+  "dried-fish": DriedFish,
+  "frozen-fish": FrozenFish,
+  "ready-to-cook-fish": ReadyToCookFish,
+  "fresh-meat": FreshMeat,
+  "frozen-meat": FrozenMeat,
+  "cook-ready-meat": CookReadyMeat,
+};
+
+const CONFECTIONERY_COMPONENTS: Record<string, ProductSpecificComponent> = {
+  "candy-and-chocolate": ConfectioneryCandyChocolate,
+  "dried-fruits-nuts-and-seeds": ConfectioneryDriedFruitsNutsSeeds,
 };
 
 function normalizeCategoryName(name: string) {
@@ -230,17 +395,225 @@ function normalizeCategoryName(name: string) {
 
 function findComponentForCategory(
   category: Category | undefined,
-  categories: Category[]
+  categories: Category[],
 ): ProductSpecificComponent | null {
   if (!category?.name) return null;
 
   const key = normalizeCategoryName(category.name);
   const rawLower = category.name.toLowerCase();
 
+  const parentNames: string[] = [];
+  let parentId = category.parentId;
+  while (parentId) {
+    const parent = categories.find((item) => item.id === parentId);
+    if (!parent) break;
+    parentNames.push(parent.name);
+    parentId = parent.parentId;
+  }
+
+  const isDairyEggsCategory =
+    key === "dairy-and-eggs" ||
+    parentNames.some((name) => normalizeCategoryName(name) === "dairy-and-eggs");
+  if (isDairyEggsCategory) {
+    if (key === "dairy-and-eggs" || key === "dairy" || key === "eggs") return null;
+
+    for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
+      if (name === "dairy-and-eggs") break;
+
+      const component = DAIRY_EGG_COMPONENTS[name];
+      if (component) return component;
+    }
+
+    return null;
+  }
+
+  const isFishMeatCategory =
+    key === "fish-and-meat" ||
+    key === "meat-and-fish" ||
+    parentNames.some((name) => {
+      const parentKey = normalizeCategoryName(name);
+      return parentKey === "fish-and-meat" || parentKey === "meat-and-fish";
+    });
+  if (isFishMeatCategory) {
+    if (key === "fish-and-meat" || key === "meat-and-fish") return null;
+
+    for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
+      if (name === "fish-and-meat" || name === "meat-and-fish") break;
+
+      const component = FISH_MEAT_COMPONENTS[name];
+      if (component) return component;
+    }
+
+    return null;
+  }
+
+  const isConfectioneriesCategory =
+    key === "confectioneries" ||
+    parentNames.some((name) => normalizeCategoryName(name) === "confectioneries");
+  if (isConfectioneriesCategory) {
+    if (key === "confectioneries") return null;
+
+    for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
+      if (name === "confectioneries") break;
+
+      const component = CONFECTIONERY_COMPONENTS[name];
+      if (component) return component;
+    }
+
+    return null;
+  }
+
+  const isCookingEssentialsCategory =
+    key === "cooking-essentials" ||
+    key === "cooking-and-essentials" ||
+    parentNames.some((name) => {
+      const parentKey = normalizeCategoryName(name);
+      return parentKey === "cooking-essentials" || parentKey === "cooking-and-essentials";
+    });
+  if (isCookingEssentialsCategory) {
+    if (key === "cooking-essentials" || key === "cooking-and-essentials") return null;
+
+    for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
+      if (name === "cooking-essentials" || name === "cooking-and-essentials") break;
+
+      const component = COOKING_ESSENTIAL_COMPONENTS[name];
+      if (component) return component;
+    }
+
+    return null;
+  }
+
+  const isCannedFrozenCategory =
+    key === "canned-and-frozen" ||
+    parentNames.some((name) => normalizeCategoryName(name) === "canned-and-frozen");
+  if (isCannedFrozenCategory) {
+    if (key === "canned-and-frozen") return null;
+
+    for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
+      if (name === "canned-and-frozen") break;
+
+      const component = PRODUCT_COMPONENTS[name];
+      if (component) return component;
+    }
+
+    return null;
+  }
+
+  const isLaundryHouseholdCategory =
+    key === "laundry-and-household" ||
+    parentNames.some((name) => normalizeCategoryName(name) === "laundry-and-household");
+  if (isLaundryHouseholdCategory) {
+    if (key === "laundry-and-household") return null;
+
+    for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
+      if (name === "laundry-and-household") break;
+
+      const component = PRODUCT_COMPONENTS[name];
+      if (component) return component;
+    }
+
+    return null;
+  }
+
+  const isPetCareCategory = parentNames.some(
+    (name) => normalizeCategoryName(name) === "pet-care",
+  );
+  if (isPetCareCategory) {
+    for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
+      if (name === "pet-care") break;
+
+      const component = PRODUCT_COMPONENTS[name];
+      if (component) return component;
+    }
+
+    return null;
+  }
+
+  const isHomemadeRestaurantCategory =
+    key === "homemade-and-restaurant" ||
+    parentNames.some((name) => normalizeCategoryName(name) === "homemade-and-restaurant");
+  if (isHomemadeRestaurantCategory) {
+    if (key === "homemade-and-restaurant") return null;
+    if (key === "pasta") return Pasta;
+
+    for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
+      if (name === "homemade-and-restaurant") break;
+
+      const component = PRODUCT_COMPONENTS[name];
+      if (component) return component;
+    }
+
+    return null;
+  }
+
+  const isBakeryCategory = parentNames.some(
+    (name) => normalizeCategoryName(name) === "bakery",
+  );
+  if (isBakeryCategory) {
+    if (key === "bread") return Bread;
+    if (key === "cakes-and-sweets-pies") return CakeSweetsPies;
+    if (key === "toast-and-bakery-biscuits") return ToastBakeryBiscuits;
+    return null;
+  }
+
+  const isBeverageCategory = parentNames.some(
+    (name) => normalizeCategoryName(name) === "beverages",
+  );
+  if (isBeverageCategory) {
+    for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
+      if (name === "beverages") break;
+
+      const component = PRODUCT_COMPONENTS[name];
+      if (component) return component;
+    }
+
+    return null;
+  }
+
+  const isSnacksCategory = parentNames.some(
+    (name) => normalizeCategoryName(name) === "snacks-and-confectioneries",
+  );
+  if (isSnacksCategory) {
+    for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
+      if (name === "snacks-and-confectioneries") break;
+
+      const component = PRODUCT_COMPONENTS[name];
+      if (component) return component;
+    }
+
+    return null;
+  }
+
+  const isBreakfastCategory = parentNames.some(
+    (name) => normalizeCategoryName(name) === "breakfast",
+  );
+  if (isBreakfastCategory) {
+    if (key.includes("cereal")) return Cereals;
+    if (key.includes("granola") || key.includes("granala")) return Granola;
+    if (
+      key.includes("oatmeal") ||
+      key.includes("oatmeat") ||
+      key.includes("grit") ||
+      key === "oats"
+    )
+      return OatmealGrits;
+    if (key.includes("jam") || key.includes("jelly")) return JamJelly;
+    if (key.includes("honey") || rawLower.includes("মধু"))
+      return BreakfastHoney;
+    if (key.includes("spread") || key.includes("dip") || key.includes("sauce"))
+      return BreakfastSpreads;
+    if (key.includes("local-breakfast")) return LocalBreakfast;
+    if (key.includes("bread") || key.includes("ruti") || key.includes("roti"))
+      return BreakfastBread;
+  }
+
   // 1. Direct match in registry
   if (PRODUCT_COMPONENTS[key]) {
     return PRODUCT_COMPONENTS[key];
   }
+
+  const fashionComponent = getFashionFieldComponent(category.name, parentNames);
+  if (fashionComponent) return fashionComponent;
 
   // Helper matcher for words/tokens separated by '-'
   const hasWord = (word: string) =>
@@ -275,7 +648,7 @@ function findComponentForCategory(
     return PetFood;
   }
 
-  // 3. Biscuits & Cookies & Bakery
+  // 3. Bakery
   if (
     key.includes("biscuit") ||
     key.includes("biscute") ||
@@ -283,78 +656,147 @@ function findComponentForCategory(
     hasWord("cracker") ||
     hasWord("crackers")
   ) {
-    return Biscuits;
+    return ToastBakeryBiscuits;
   }
-  if (key.includes("cookie")) return Cookies;
-  if (hasWord("toast")) return Toast;
+  if (key.includes("cookie")) return ToastBakeryBiscuits;
+  if (hasWord("toast")) return ToastBakeryBiscuits;
   if (hasWord("bread") || hasWord("ruti") || hasWord("roti")) return Bread;
-  if (hasWord("bun")) return Bun;
-  if (hasWord("cake") || hasWord("cakes")) return Cake;
-  if (hasWord("pastry")) return Pastry;
-  if (hasWord("sweet") || hasWord("sweets") || rawLower.includes("মিষ্টি")) return Sweets;
-  if (key.includes("choc") || hasWord("candy") || hasWord("toffee")) return Chocolate;
+  if (
+    hasWord("bun") ||
+    hasWord("cake") ||
+    hasWord("cakes") ||
+    hasWord("pastry") ||
+    hasWord("pie") ||
+    hasWord("pies") ||
+    hasWord("sweet") ||
+    hasWord("sweets") ||
+    rawLower.includes("মিষ্টি")
+  )
+    return CakeSweetsPies;
 
   // 4. Beverages
-  if (hasWord("tea") || rawLower.includes("চা") || key.includes("black-tea") || key.includes("green-tea")) return Tea;
-  if (hasWord("coffee")) return Coffee;
+  if (
+    hasWord("tea") ||
+    rawLower.includes("চা") ||
+    key.includes("black-tea") ||
+    key.includes("green-tea")
+  )
+    return TeaCoffee;
+  if (hasWord("coffee")) return TeaCoffee;
   if (hasWord("juice")) return Juice;
-  if (hasWord("water") || rawLower.includes("পানি")) return MineralWater;
+  if (hasWord("water") || rawLower.includes("পানি")) return MineralDrinks;
   if (hasWord("energy") || key.includes("energy-drink")) return EnergyDrinks;
-  if (hasWord("drink") || hasWord("drinks") || hasWord("beverage") || hasWord("beverages") || hasWord("soda")) return SoftDrinks;
+  if (
+    hasWord("drink") ||
+    hasWord("drinks") ||
+    hasWord("beverage") ||
+    hasWord("beverages") ||
+    hasWord("soda")
+  )
+    return SoftDrinks;
 
   // 5. Cooking, Grains & Oil
-  if (hasWord("rice") || hasWord("chal") || hasWord("chawl") || rawLower.includes("চাল")) return Rice;
-  if (hasWord("dal") || hasWord("daal") || hasWord("lentil") || rawLower.includes("ডাল")) return Dal;
-  if (hasWord("atta") || hasWord("flour") || hasWord("maida") || hasWord("suji") || rawLower.includes("আটা") || rawLower.includes("ময়দা")) return Flour;
-  if (hasWord("mustard") || key.includes("mustard-oil")) return MustardOil;
-  if (hasWord("olive") || key.includes("olive-oil")) return OliveOil;
-  if (hasWord("oil") || hasWord("tel") || rawLower.includes("তেল") || key.includes("soybean-oil")) return SoybeanOil;
-  if (hasWord("ghee") || rawLower.includes("ঘি")) return Ghee;
+  if (
+    hasWord("rice") ||
+    hasWord("chal") ||
+    hasWord("chawl") ||
+    rawLower.includes("চাল")
+  )
+    return Rice;
+  if (
+    hasWord("dal") ||
+    hasWord("daal") ||
+    hasWord("lentil") ||
+    rawLower.includes("ডাল")
+  )
+    return LentilsChola;
+  if (
+    hasWord("atta") ||
+    hasWord("flour") ||
+    hasWord("maida") ||
+    hasWord("suji") ||
+    rawLower.includes("আটা") ||
+    rawLower.includes("ময়দা")
+  )
+    return AttaFlours;
+  if (hasWord("mustard") || key.includes("mustard-oil")) return CookingOil;
+  if (hasWord("olive") || key.includes("olive-oil")) return CookingOil;
+  if (
+    hasWord("oil") ||
+    hasWord("tel") ||
+    rawLower.includes("তেল") ||
+    key.includes("soybean-oil")
+  )
+    return CookingOil;
+  if (hasWord("ghee") || rawLower.includes("ঘি")) return CookingOil;
 
   // 6. Spices & Salt
   if (hasWord("salt") || rawLower.includes("লবণ")) return Salt;
-  if (hasWord("chili") || hasWord("chilli") || rawLower.includes("মরিচ")) return Chili;
+  if (hasWord("chili") || hasWord("chilli") || rawLower.includes("মরিচ"))
+    return Chili;
   if (hasWord("turmeric") || rawLower.includes("হলুদ")) return Turmeric;
   if (hasWord("coriander") || rawLower.includes("ধনিয়া")) return Coriander;
   if (hasWord("cumin") || rawLower.includes("জিরা")) return Cumin;
-  if (hasWord("masala") || hasWord("spice") || hasWord("spices") || rawLower.includes("মসলা")) return GaramMasala;
+  if (
+    hasWord("masala") ||
+    hasWord("spice") ||
+    hasWord("spices") ||
+    rawLower.includes("মসলা")
+  )
+    return GaramMasala;
 
   // 7. Dairy & Eggs
-  if (hasWord("milk") || hasWord("dairy") || rawLower.includes("দুধ")) return Milk;
-  if (hasWord("egg") || hasWord("eggs") || rawLower.includes("ডিম") || key.includes("chicken-egg")) return Eggs;
+  if (hasWord("milk") || hasWord("dairy") || rawLower.includes("দুধ"))
+    return Milk;
+  if (
+    hasWord("egg") ||
+    hasWord("eggs") ||
+    rawLower.includes("ডিম") ||
+    key.includes("chicken-egg")
+  )
+    return Eggs;
 
   // 8. Meat & Fish
-  if (hasWord("beef") || rawLower.includes("গরু")) return Beef;
-  if (hasWord("chicken") || rawLower.includes("মুরগি")) return Chicken;
-  if (hasWord("mutton") || rawLower.includes("খাসি")) return Mutton;
-  if (hasWord("fish") || rawLower.includes("মাছ")) return Fish;
+  if (hasWord("beef") || rawLower.includes("গরু")) return FreshMeat;
+  if (hasWord("chicken") || rawLower.includes("মুরগি")) return CookReadyMeat;
+  if (hasWord("mutton") || rawLower.includes("খাসি")) return FreshMeat;
+  if (hasWord("fish") || rawLower.includes("মাছ")) return FreshFish;
 
   // 9. Fresh Produce
-  if (hasWord("fruit") || hasWord("fruits") || rawLower.includes("ফল")) return Fruits;
-  if (hasWord("vegetable") || hasWord("vegetables") || rawLower.includes("সবজি")) return Vegetables;
+  if (hasWord("fruit") || hasWord("fruits") || rawLower.includes("ফল"))
+    return Fruits;
+  if (
+    hasWord("vegetable") ||
+    hasWord("vegetables") ||
+    rawLower.includes("সবজি")
+  )
+    return Vegetables;
 
   // 10. Snacks & Packaged Food
-  if (hasWord("chip") || hasWord("chips") || hasWord("crisp") || hasWord("nacho")) return Chips;
-  if (hasWord("noodle") || hasWord("noodles") || hasWord("pasta") || hasWord("macaroni") || hasWord("maggi") || hasWord("ramen")) return Noodles;
+  if (
+    hasWord("chip") ||
+    hasWord("chips") ||
+    hasWord("crisp") ||
+    hasWord("nacho")
+  )
+    return Chips;
+  if (
+    hasWord("noodle") ||
+    hasWord("noodles") ||
+    hasWord("pasta") ||
+    hasWord("macaroni") ||
+    hasWord("maggi") ||
+    hasWord("ramen")
+  )
+    return Noodles;
   if (hasWord("honey") || rawLower.includes("মধু")) return Honey;
   if (hasWord("jam") || hasWord("jelly")) return Jam;
-  if (hasWord("pickle") || hasWord("pickles") || rawLower.includes("আচার")) return Pickles;
-  if (hasWord("sauce") || hasWord("sauces") || hasWord("ketchup")) return Sauces;
+  if (hasWord("pickle") || hasWord("pickles") || rawLower.includes("আচার"))
+    return Pickles;
+  if (hasWord("sauce") || hasWord("sauces") || hasWord("ketchup"))
+    return Sauces;
 
-  // 11. Fashion
-  if (hasWord("shirt")) return Shirt;
-  if (hasWord("panjabi")) return Panjabi;
-  if (hasWord("pant")) return Pant;
-  if (hasWord("shoe") || hasWord("shoes")) return Shoes;
-  if (hasWord("sandal") || hasWord("sandals")) return Sandal;
-  if (hasWord("cap") || hasWord("caps")) return Cap;
-  if (hasWord("watch") || hasWord("watches")) return Watch;
-  if (hasWord("saree") || hasWord("shari") || rawLower.includes("শাড়ি")) return Saree;
-  if (key.includes("three-piece")) return ThreePiece;
-  if (hasWord("bag") || hasWord("bags")) return Bag;
-  if (hasWord("jewelry") || hasWord("jewellery")) return Jewelry;
-
-  // 12. Ancestor / Parent Check
+  // Ancestor / Parent Check
   let currentParentId = category.parentId;
   while (currentParentId) {
     const parent = categories.find((c) => c.id === currentParentId);
@@ -405,9 +847,7 @@ function CategoryTreeItem({
   onToggleCategory,
   onSelectCategory,
 }: CategoryTreeItemProps) {
-  const children = categories.filter(
-    (item) => item.parentId === category.id,
-  );
+  const children = categories.filter((item) => item.parentId === category.id);
 
   const hasChildren = children.length > 0;
   const isOpen = openCategoryIds.includes(category.id);
@@ -436,15 +876,9 @@ function CategoryTreeItem({
       >
         {hasChildren ? (
           isOpen ? (
-            <ChevronDown
-              size={15}
-              className="shrink-0 text-slate-400"
-            />
+            <ChevronDown size={15} className="shrink-0 text-slate-400" />
           ) : (
-            <ChevronRight
-              size={15}
-              className="shrink-0 text-slate-400"
-            />
+            <ChevronRight size={15} className="shrink-0 text-slate-400" />
           )
         ) : (
           <span className="w-[15px] shrink-0" />
@@ -538,32 +972,25 @@ export default function ProductInformation({
         }
 
         const API_BASE_URL =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
-        const response = await fetch(
-          `${API_BASE_URL}/api/categories`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-              "Content-Type": "application/json",
-            },
+        const response = await fetch(`${API_BASE_URL}/api/categories`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
           },
-        );
+        });
 
         const data = await response.json();
 
         if (!response.ok) {
           throw new Error(
-            data?.error ||
-              data?.message ||
-              "Failed to load categories.",
+            data?.error || data?.message || "Failed to load categories.",
           );
         }
 
-        const categoryList = Array.isArray(data?.data)
-          ? data.data
-          : [];
+        const categoryList = Array.isArray(data?.data) ? data.data : [];
 
         if (mounted) {
           setCategories(categoryList);
@@ -609,26 +1036,20 @@ export default function ProductInformation({
       return undefined;
     }
 
-    return categories.find(
-      (category) => category.id === form.categoryId,
-    );
+    return categories.find((category) => category.id === form.categoryId);
   }, [categories, form.categoryId]);
 
   const getAncestorIds = (categoryId: string) => {
     const ancestorIds: string[] = [];
 
-    let current = categories.find(
-      (category) => category.id === categoryId,
-    );
+    let current = categories.find((category) => category.id === categoryId);
 
     while (current?.parentId) {
       ancestorIds.push(current.parentId);
 
       const parentId = current.parentId;
 
-      current = categories.find(
-        (category) => category.id === parentId,
-      );
+      current = categories.find((category) => category.id === parentId);
     }
 
     return ancestorIds;
@@ -674,11 +1095,7 @@ export default function ProductInformation({
     findDescendants(category.id);
 
     setOpenCategoryIds((prev) =>
-      prev.filter(
-        (id) =>
-          id !== category.id &&
-          !descendantIds.includes(id),
-      ),
+      prev.filter((id) => id !== category.id && !descendantIds.includes(id)),
     );
   };
 
@@ -728,9 +1145,7 @@ export default function ProductInformation({
             id="product-title"
             type="text"
             value={form.title ?? ""}
-            onChange={(event) =>
-              onTitleChange(event.target.value)
-            }
+            onChange={(event) => onTitleChange(event.target.value)}
             placeholder="Enter product title"
             className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-[#D6A419]"
           />
@@ -749,9 +1164,7 @@ export default function ProductInformation({
             id="product-slug"
             type="text"
             value={form.slug ?? ""}
-            onChange={(event) =>
-              onFieldChange("slug", event.target.value)
-            }
+            onChange={(event) => onFieldChange("slug", event.target.value)}
             placeholder="product-slug"
             className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-[#D6A419]"
           />
@@ -770,9 +1183,7 @@ export default function ProductInformation({
             id="product-sku"
             type="text"
             value={form.sku ?? ""}
-            onChange={(event) =>
-              onFieldChange("sku", event.target.value)
-            }
+            onChange={(event) => onFieldChange("sku", event.target.value)}
             placeholder="Enter product SKU"
             className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-[#D6A419]"
           />
@@ -791,10 +1202,7 @@ export default function ProductInformation({
             id="short-description"
             value={form.shortDescription ?? ""}
             onChange={(event) =>
-              onFieldChange(
-                "shortDescription",
-                event.target.value,
-              )
+              onFieldChange("shortDescription", event.target.value)
             }
             placeholder="Write a short description..."
             rows={4}
@@ -810,9 +1218,7 @@ export default function ProductInformation({
 
           <ProductDescriptionEditor
             value={form.description ?? ""}
-            onChange={(value: string) =>
-              onFieldChange("description", value)
-            }
+            onChange={(value: string) => onFieldChange("description", value)}
           />
         </div>
 
@@ -827,21 +1233,12 @@ export default function ProductInformation({
             onClick={onToggleCategory}
             className="flex h-10 w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 text-left text-xs text-slate-700 outline-none transition hover:border-slate-300 focus:border-[#D6A419]"
           >
-            <span>
-              {selectedCategory?.name ||
-                "Select product category"}
-            </span>
+            <span>{selectedCategory?.name || "Select product category"}</span>
 
             {isCategoryOpen ? (
-              <ChevronDown
-                size={16}
-                className="text-slate-400"
-              />
+              <ChevronDown size={16} className="text-slate-400" />
             ) : (
-              <ChevronRight
-                size={16}
-                className="text-slate-400"
-              />
+              <ChevronRight size={16} className="text-slate-400" />
             )}
           </button>
 
@@ -914,6 +1311,7 @@ export default function ProductInformation({
               <ProductSpecificComponent
                 value={productAttributes}
                 onChange={setProductAttributes}
+                categoryName={selectedCategory?.name ?? ""}
               />
             ) : (
               <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
@@ -944,9 +1342,7 @@ export default function ProductInformation({
               aria-checked={couponEnabled}
               onClick={handleCouponToggle}
               className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-                couponEnabled
-                  ? "bg-[#D6A419]"
-                  : "bg-slate-300"
+                couponEnabled ? "bg-[#D6A419]" : "bg-slate-300"
               }`}
             >
               <span
@@ -973,9 +1369,7 @@ export default function ProductInformation({
                   value={couponName}
                   onChange={(event) =>
                     setCouponName(
-                      event.target.value
-                        .toUpperCase()
-                        .replace(/\s+/g, ""),
+                      event.target.value.toUpperCase().replace(/\s+/g, ""),
                     )
                   }
                   placeholder="e.g. SAVE50"
@@ -999,9 +1393,7 @@ export default function ProductInformation({
                   min="0.01"
                   step="0.01"
                   value={couponDiscount}
-                  onChange={(event) =>
-                    setCouponDiscount(event.target.value)
-                  }
+                  onChange={(event) => setCouponDiscount(event.target.value)}
                   placeholder="e.g. 50"
                   required={couponEnabled}
                   className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-[#D6A419]"
@@ -1013,9 +1405,7 @@ export default function ProductInformation({
               </div>
 
               <div className="rounded-lg bg-white p-3">
-                <p className="text-xs text-slate-500">
-                  Coupon Preview
-                </p>
+                <p className="text-xs text-slate-500">Coupon Preview</p>
 
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <span className="break-all text-sm font-bold text-slate-800">

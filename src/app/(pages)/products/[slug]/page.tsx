@@ -14,7 +14,7 @@ import ProductGallery from "../components/ProductGallery";
 import ProductBreadcrumb from "../components/ProductBreadcrumb";
 import FrequentlyBought from "../components/FrequentlyBought";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type Props = {
   params: Promise<{
@@ -458,30 +458,34 @@ export default function ProductDetailsPage({ params }: Props) {
         // SELLER METRICS
         const vendorData = item.vendor as any;
         const positiveSellerRating =
-          vendorData?.positiveSellerRating !== undefined && Number(vendorData.positiveSellerRating) > 0
+          vendorData?.positiveSellerRating !== undefined &&
+          Number(vendorData.positiveSellerRating) > 0
             ? Number(vendorData.positiveSellerRating)
             : item.reviews?.length
-            ? Math.round(
-                (item.reviews.filter((r: any) => Number(r.rating) >= 4).length /
-                  item.reviews.length) *
-                  100
-              )
-            : 96;
+              ? Math.round(
+                  (item.reviews.filter((r: any) => Number(r.rating) >= 4)
+                    .length /
+                    item.reviews.length) *
+                    100,
+                )
+              : 96;
 
         const shippingOnTime =
-          vendorData?.shippingOnTime !== undefined && Number(vendorData.shippingOnTime) > 0
+          vendorData?.shippingOnTime !== undefined &&
+          Number(vendorData.shippingOnTime) > 0
             ? Number(vendorData.shippingOnTime)
             : 98;
 
         const averageVendorRating =
-          vendorData?.averageRating !== undefined && Number(vendorData.averageRating) > 0
+          vendorData?.averageRating !== undefined &&
+          Number(vendorData.averageRating) > 0
             ? Number(vendorData.averageRating)
             : 4.8;
 
         const totalVendorReviews =
           vendorData?.totalReviews !== undefined
             ? Number(vendorData.totalReviews)
-            : (item.reviews?.length || 0);
+            : item.reviews?.length || 0;
 
         // FINAL PRODUCT
 
@@ -494,10 +498,26 @@ export default function ProductDetailsPage({ params }: Props) {
           subcategory: item.attributes?.subcategory || undefined,
 
           sku: String(item.sku ?? ""),
-          brand: item.brand?.name || (typeof item.attributes?.brand === "string" ? item.attributes.brand : undefined),
-          stock: item.stockQuantity !== undefined && item.stockQuantity !== null ? Number(item.stockQuantity) : undefined,
-          soldCount: item.totalSold !== undefined ? Number(item.totalSold) : item.soldCount !== undefined ? Number(item.soldCount) : undefined,
-          shortDescription: item.shortDescription || (typeof item.attributes?.shortDescription === "string" ? item.attributes.shortDescription : undefined),
+          brand:
+            item.brand?.name ||
+            (typeof item.attributes?.brand === "string"
+              ? item.attributes.brand
+              : undefined),
+          stock:
+            item.stockQuantity !== undefined && item.stockQuantity !== null
+              ? Number(item.stockQuantity)
+              : undefined,
+          soldCount:
+            item.totalSold !== undefined
+              ? Number(item.totalSold)
+              : item.soldCount !== undefined
+                ? Number(item.soldCount)
+                : undefined,
+          shortDescription:
+            item.shortDescription ||
+            (typeof item.attributes?.shortDescription === "string"
+              ? item.attributes.shortDescription
+              : undefined),
           attributes: item.attributes || null,
 
           sellerName,

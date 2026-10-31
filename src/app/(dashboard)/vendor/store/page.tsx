@@ -26,7 +26,7 @@ import {
 import RequestStoreChangeModal from "./components/RequestStoreChangeModal";
 import { createClient } from "../../../../../lib/supabase-client";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 const STORE_SETTINGS_URL = `${API_BASE_URL}/api/vendors/store/settings`;
 const STORE_IMAGE_UPLOAD_URL = `${API_BASE_URL}/api/uploads/store-image`;
@@ -100,7 +100,9 @@ export default function StoreSettingsPage() {
 
   // Store Change Request state
   const [isChangeModalOpen, setIsChangeModalOpen] = useState(false);
-  const [pendingChangeRequest, setPendingChangeRequest] = useState<any | null>(null);
+  const [pendingChangeRequest, setPendingChangeRequest] = useState<any | null>(
+    null,
+  );
 
   const loadChangeRequests = async () => {
     try {
@@ -111,7 +113,7 @@ export default function StoreSettingsPage() {
           method: "GET",
           headers: { ...authHeaders },
           cache: "no-store",
-        }
+        },
       );
       const res = await response.json();
       if (res?.success) {
@@ -526,7 +528,6 @@ export default function StoreSettingsPage() {
         {/* HEADER */}
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-           
             <div className="min-w-0">
               <h1 className="text-xl font-bold leading-7 tracking-tight text-[#12233F]">
                 Store Settings
@@ -593,10 +594,15 @@ export default function StoreSettingsPage() {
                 <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50/80 p-3.5 text-xs text-amber-950 space-y-1.5 shadow-2xs">
                   <div className="flex items-center gap-2 font-bold text-amber-900">
                     <Clock3 size={16} className="text-amber-600 shrink-0" />
-                    <span>আপনার একটি তথ্য পরিবর্তনের অনুরোধ অ্যাডমিন পর্যালোচনায় রয়েছে</span>
+                    <span>
+                      আপনার একটি তথ্য পরিবর্তনের অনুরোধ অ্যাডমিন পর্যালোচনায়
+                      রয়েছে
+                    </span>
                   </div>
                   <p className="text-[11.5px] text-amber-800 leading-relaxed">
-                    আপনার আবেদনের পরিপ্রেক্ষিতে অ্যাডমিন পর্যালোচনা করছেন। অ্যাডমিন অনুমোদন দিলে আপনার তথ্য স্বয়ংক্রিয়ভাবে আপডেট হয়ে যাবে।
+                    আপনার আবেদনের পরিপ্রেক্ষিতে অ্যাডমিন পর্যালোচনা করছেন।
+                    অ্যাডমিন অনুমোদন দিলে আপনার তথ্য স্বয়ংক্রিয়ভাবে আপডেট হয়ে
+                    যাবে।
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2 text-[11px] pt-1.5 border-t border-amber-200/80">
                     {pendingChangeRequest.storeName && (
@@ -616,7 +622,8 @@ export default function StoreSettingsPage() {
                     )}
                     {pendingChangeRequest.businessCategory && (
                       <span className="rounded-md bg-white px-2 py-0.5 border border-amber-200 text-slate-800">
-                        নতুন ক্যাটাগরি: <b>{pendingChangeRequest.businessCategory}</b>
+                        নতুন ক্যাটাগরি:{" "}
+                        <b>{pendingChangeRequest.businessCategory}</b>
                       </span>
                     )}
                   </div>
@@ -1137,33 +1144,33 @@ export default function StoreSettingsPage() {
               </button>
             </div>
           </div>
-        <ConfirmModal
-          isOpen={isResetModalOpen}
-          onClose={() => setIsResetModalOpen(false)}
-          onConfirm={() => window.location.reload()}
-          title="পরিবর্তন বাতিল করতে চান?"
-          description="আপনি কি নিশ্চিতভাবে আপনার সকল পরিবর্তন বাতিল করতে চান? পেজটি রিলোড হবে।"
-          confirmText="হ্যাঁ, বাতিল করুন"
-          cancelText="ফিরে যান"
-          variant="warning"
-        />
+          <ConfirmModal
+            isOpen={isResetModalOpen}
+            onClose={() => setIsResetModalOpen(false)}
+            onConfirm={() => window.location.reload()}
+            title="পরিবর্তন বাতিল করতে চান?"
+            description="আপনি কি নিশ্চিতভাবে আপনার সকল পরিবর্তন বাতিল করতে চান? পেজটি রিলোড হবে।"
+            confirmText="হ্যাঁ, বাতিল করুন"
+            cancelText="ফিরে যান"
+            variant="warning"
+          />
 
-        <RequestStoreChangeModal
-          isOpen={isChangeModalOpen}
-          onClose={() => setIsChangeModalOpen(false)}
-          currentData={{
-            storeName,
-            phone,
-            businessCategory,
-            tradeLicenseNumber,
-            nidNumber,
-            taxIdentificationNumber,
-          }}
-          onSuccess={() => {
-            setRefreshTrigger((prev) => prev + 1);
-            void loadChangeRequests();
-          }}
-        />
+          <RequestStoreChangeModal
+            isOpen={isChangeModalOpen}
+            onClose={() => setIsChangeModalOpen(false)}
+            currentData={{
+              storeName,
+              phone,
+              businessCategory,
+              tradeLicenseNumber,
+              nidNumber,
+              taxIdentificationNumber,
+            }}
+            onSuccess={() => {
+              setRefreshTrigger((prev) => prev + 1);
+              void loadChangeRequests();
+            }}
+          />
         </div>
       </div>
     </div>

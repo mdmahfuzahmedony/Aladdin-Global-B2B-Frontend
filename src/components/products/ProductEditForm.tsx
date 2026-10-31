@@ -37,8 +37,7 @@ import ProductDelivery, {
 import ProductImageUploader from "@/app/(dashboard)/admin/products/add-product/components/product-field/ProductImageUploader";
 import { createClient } from "../../../lib/supabase-client";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type VendorOption = {
   id: string;
@@ -113,11 +112,17 @@ export default function ProductEditForm({
   // Category
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [openCategoryIds, setOpenCategoryIds] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<Category | undefined>(undefined);
+  const [selectedCategory, setSelectedCategory] = useState<
+    Category | undefined
+  >(undefined);
 
   // Dynamic Attributes & Custom fields
-  const [productAttributes, setProductAttributes] = useState<Record<string, any>>({});
-  const [customFields, setCustomFields] = useState<ProductFieldDefinition[]>([]);
+  const [productAttributes, setProductAttributes] = useState<
+    Record<string, any>
+  >({});
+  const [customFields, setCustomFields] = useState<ProductFieldDefinition[]>(
+    [],
+  );
 
   // Coupon
   const [couponEnabled, setCouponEnabled] = useState(false);
@@ -140,7 +145,9 @@ export default function ProductEditForm({
   });
 
   // Placements
-  const [selectedPlacements, setSelectedPlacements] = useState<PlacementType[]>([]);
+  const [selectedPlacements, setSelectedPlacements] = useState<PlacementType[]>(
+    [],
+  );
   const [newArrival, setNewArrival] = useState<NewArrivalData>({
     badgeText: "",
     displayOrder: "",
@@ -176,16 +183,20 @@ export default function ProductEditForm({
   });
 
   // Admin Ownership
-  const [ownershipType, setOwnershipType] = useState<ProductOwnershipType>("MY_STORE");
+  const [ownershipType, setOwnershipType] =
+    useState<ProductOwnershipType>("MY_STORE");
   const [selectedSellerId, setSelectedSellerId] = useState("");
   const [vendors, setVendors] = useState<VendorOption[]>([]);
   const [isLoadingVendors, setIsLoadingVendors] = useState(false);
   const [myVendor, setMyVendor] = useState<VendorOption | null>(null);
 
-  const updateField = useCallback((field: keyof ProductBasicInfo, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    setErrors([]);
-  }, []);
+  const updateField = useCallback(
+    (field: keyof ProductBasicInfo, value: string) => {
+      setForm((prev) => ({ ...prev, [field]: value }));
+      setErrors([]);
+    },
+    [],
+  );
 
   const handleTitleChange = useCallback((value: string) => {
     setForm((prev) => ({
@@ -200,7 +211,7 @@ export default function ProductEditForm({
     setSelectedPlacements((prev) =>
       prev.includes(placement)
         ? prev.filter((item) => item !== placement)
-        : [...prev, placement]
+        : [...prev, placement],
     );
   };
 
@@ -216,7 +227,9 @@ export default function ProductEditForm({
       try {
         setIsLoadingVendors(true);
         const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!session?.access_token) return;
 
         const res = await fetch(`${API_BASE_URL}/api/vendors`, {
@@ -263,7 +276,9 @@ export default function ProductEditForm({
 
       try {
         const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!session?.access_token) {
           router.push("/login");
           return;
@@ -277,12 +292,14 @@ export default function ProductEditForm({
               Accept: "application/json",
             },
             cache: "no-store",
-          }
+          },
         );
 
         const json = await res.json().catch(() => null);
         if (!res.ok || !json?.success || !json?.data) {
-          throw new Error(json?.error || json?.message || "Product পাওয়া যায়নি।");
+          throw new Error(
+            json?.error || json?.message || "Product পাওয়া যায়নি।",
+          );
         }
 
         if (cancelled) return;
@@ -305,15 +322,23 @@ export default function ProductEditForm({
           customerSalePrice: String(p.pricing?.customerSalePrice ?? ""),
           sellerRegularPrice: String(p.pricing?.sellerRegularPrice ?? ""),
           sellerSalePrice: String(p.pricing?.sellerSalePrice ?? ""),
-          wholesalerRegularPrice: String(p.pricing?.wholesalerRegularPrice ?? ""),
+          wholesalerRegularPrice: String(
+            p.pricing?.wholesalerRegularPrice ?? "",
+          ),
           wholesalerSalePrice: String(p.pricing?.wholesalerSalePrice ?? ""),
           dropshipPrice: String(p.pricing?.dropshipPrice ?? ""),
           affiliateCommissionType: p.pricing?.affiliateCommissionType || "",
-          affiliateCommissionValue: String(p.pricing?.affiliateCommissionValue ?? ""),
+          affiliateCommissionValue: String(
+            p.pricing?.affiliateCommissionValue ?? "",
+          ),
         });
 
         if (Array.isArray(p.images)) {
-          setImages(p.images.filter((img: unknown) => typeof img === "string" && img.trim()));
+          setImages(
+            p.images.filter(
+              (img: unknown) => typeof img === "string" && img.trim(),
+            ),
+          );
         }
 
         if (p.category) {
@@ -341,7 +366,8 @@ export default function ProductEditForm({
           setDelivery({
             scope: ds.scope === "NATIONWIDE" ? "NATIONWIDE" : "UPAZILA_BASED",
             weightKg: ds.weightKg != null ? String(ds.weightKg) : "",
-            nationwideCharge: ds.nationwideCharge != null ? String(ds.nationwideCharge) : "",
+            nationwideCharge:
+              ds.nationwideCharge != null ? String(ds.nationwideCharge) : "",
             rates: Array.isArray(ds.rates)
               ? ds.rates.map((r: any) => ({
                   minDistanceKm: String(r.minDistanceKm ?? ""),
@@ -357,7 +383,9 @@ export default function ProductEditForm({
         if (p.coupon) {
           setCouponEnabled(true);
           setCouponName(p.coupon.couponName || "");
-          setCouponDiscount(p.coupon.discount != null ? String(p.coupon.discount) : "");
+          setCouponDiscount(
+            p.coupon.discount != null ? String(p.coupon.discount) : "",
+          );
         } else {
           setCouponEnabled(false);
           setCouponName("");
@@ -372,10 +400,14 @@ export default function ProductEditForm({
             badgeText: p.newArrivalAttribute.badgeText || "",
             displayOrder: String(p.newArrivalAttribute.displayOrder ?? ""),
             startDate: p.newArrivalAttribute.startDate
-              ? new Date(p.newArrivalAttribute.startDate).toISOString().slice(0, 10)
+              ? new Date(p.newArrivalAttribute.startDate)
+                  .toISOString()
+                  .slice(0, 10)
               : "",
             endDate: p.newArrivalAttribute.endDate
-              ? new Date(p.newArrivalAttribute.endDate).toISOString().slice(0, 10)
+              ? new Date(p.newArrivalAttribute.endDate)
+                  .toISOString()
+                  .slice(0, 10)
               : "",
           });
         }
@@ -385,10 +417,14 @@ export default function ProductEditForm({
             flashSalePrice: String(p.flashSaleAttribute.flashSalePrice ?? ""),
             flashSaleStock: String(p.flashSaleAttribute.flashSaleStock ?? ""),
             startTime: p.flashSaleAttribute.startTime
-              ? new Date(p.flashSaleAttribute.startTime).toISOString().slice(0, 16)
+              ? new Date(p.flashSaleAttribute.startTime)
+                  .toISOString()
+                  .slice(0, 16)
               : "",
             endTime: p.flashSaleAttribute.endTime
-              ? new Date(p.flashSaleAttribute.endTime).toISOString().slice(0, 16)
+              ? new Date(p.flashSaleAttribute.endTime)
+                  .toISOString()
+                  .slice(0, 16)
               : "",
             discountBadge: p.flashSaleAttribute.discountBadge || "",
           });
@@ -396,7 +432,10 @@ export default function ProductEditForm({
         if (p.featuredAttribute) {
           activePlacements.push("FEATURED");
           setFeatured({
-            featuredBadgeText: p.featuredAttribute.featuredBadgeText || p.featuredAttribute.badgeText || "",
+            featuredBadgeText:
+              p.featuredAttribute.featuredBadgeText ||
+              p.featuredAttribute.badgeText ||
+              "",
             bannerImage: p.featuredAttribute.bannerImage || "",
             displayOrder: String(p.featuredAttribute.displayOrder ?? ""),
           });
@@ -404,8 +443,15 @@ export default function ProductEditForm({
         if (p.topSellerAttribute) {
           activePlacements.push("TOP_SELLER");
           setTopSeller({
-            unitsSold: String(p.topSellerAttribute.unitsSold ?? p.topSellerAttribute.soldCount ?? ""),
-            salesBadge: p.topSellerAttribute.salesBadge || p.topSellerAttribute.badgeText || "",
+            unitsSold: String(
+              p.topSellerAttribute.unitsSold ??
+                p.topSellerAttribute.soldCount ??
+                "",
+            ),
+            salesBadge:
+              p.topSellerAttribute.salesBadge ||
+              p.topSellerAttribute.badgeText ||
+              "",
             isExpressEligible: Boolean(p.topSellerAttribute.isExpressEligible),
           });
         }
@@ -435,7 +481,9 @@ export default function ProductEditForm({
       } catch (err) {
         if (!cancelled) {
           setFetchError(
-            err instanceof Error ? err.message : "Product লোড করতে সমস্যা হয়েছে।"
+            err instanceof Error
+              ? err.message
+              : "Product লোড করতে সমস্যা হয়েছে।",
           );
         }
       } finally {
@@ -477,30 +525,49 @@ export default function ProductEditForm({
     }
 
     const stock = Number(form.stockQuantity);
-    if (!hasValue(form.stockQuantity) || !Number.isInteger(stock) || stock < 0) {
+    if (
+      !hasValue(form.stockQuantity) ||
+      !Number.isInteger(stock) ||
+      stock < 0
+    ) {
       list.push("Stock quantity must be a non-negative whole number.");
     }
 
     if (couponEnabled) {
-      if (!hasValue(couponName)) list.push("Coupon name is required when coupon is enabled.");
+      if (!hasValue(couponName))
+        list.push("Coupon name is required when coupon is enabled.");
       const discount = Number(couponDiscount);
-      if (!hasValue(couponDiscount) || !Number.isFinite(discount) || discount <= 0) {
+      if (
+        !hasValue(couponDiscount) ||
+        !Number.isFinite(discount) ||
+        discount <= 0
+      ) {
         list.push("Coupon discount must be greater than 0.");
       }
     }
 
     if (delivery.scope === "NATIONWIDE") {
       const charge = Number(delivery.nationwideCharge);
-      if (!hasValue(delivery.nationwideCharge) || !Number.isFinite(charge) || charge < 0) {
+      if (
+        !hasValue(delivery.nationwideCharge) ||
+        !Number.isFinite(charge) ||
+        charge < 0
+      ) {
         list.push("Nationwide delivery charge must be 0 or greater.");
       }
     } else if (delivery.scope === "UPAZILA_BASED") {
       const weight = Number(delivery.weightKg);
-      if (!hasValue(delivery.weightKg) || !Number.isFinite(weight) || weight <= 0) {
+      if (
+        !hasValue(delivery.weightKg) ||
+        !Number.isFinite(weight) ||
+        weight <= 0
+      ) {
         list.push("Product weight (kg) must be greater than 0.");
       }
       if (!delivery.rates || delivery.rates.length === 0) {
-        list.push("At least one delivery distance slab is required for Upazila-based delivery.");
+        list.push(
+          "At least one delivery distance slab is required for Upazila-based delivery.",
+        );
       }
     }
 
@@ -522,7 +589,9 @@ export default function ProductEditForm({
 
     try {
       const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.access_token) {
         router.push("/login");
         return;
@@ -536,19 +605,35 @@ export default function ProductEditForm({
         description: form.description,
         stockQuantity: Number(form.stockQuantity),
         categoryId: form.categoryId,
-        images: images.filter((img) => typeof img === "string" && img.trim().length > 0),
+        images: images.filter(
+          (img) => typeof img === "string" && img.trim().length > 0,
+        ),
         attributes: productAttributes,
         customFields,
 
-        customerRegularPrice: form.customerRegularPrice ? Number(form.customerRegularPrice) : null,
-        customerSalePrice: form.customerSalePrice ? Number(form.customerSalePrice) : null,
-        sellerRegularPrice: form.sellerRegularPrice ? Number(form.sellerRegularPrice) : null,
-        sellerSalePrice: form.sellerSalePrice ? Number(form.sellerSalePrice) : null,
-        wholesalerRegularPrice: form.wholesalerRegularPrice ? Number(form.wholesalerRegularPrice) : null,
-        wholesalerSalePrice: form.wholesalerSalePrice ? Number(form.wholesalerSalePrice) : null,
+        customerRegularPrice: form.customerRegularPrice
+          ? Number(form.customerRegularPrice)
+          : null,
+        customerSalePrice: form.customerSalePrice
+          ? Number(form.customerSalePrice)
+          : null,
+        sellerRegularPrice: form.sellerRegularPrice
+          ? Number(form.sellerRegularPrice)
+          : null,
+        sellerSalePrice: form.sellerSalePrice
+          ? Number(form.sellerSalePrice)
+          : null,
+        wholesalerRegularPrice: form.wholesalerRegularPrice
+          ? Number(form.wholesalerRegularPrice)
+          : null,
+        wholesalerSalePrice: form.wholesalerSalePrice
+          ? Number(form.wholesalerSalePrice)
+          : null,
         dropshipPrice: form.dropshipPrice ? Number(form.dropshipPrice) : null,
         affiliateCommissionType: form.affiliateCommissionType || null,
-        affiliateCommissionValue: form.affiliateCommissionValue ? Number(form.affiliateCommissionValue) : null,
+        affiliateCommissionValue: form.affiliateCommissionValue
+          ? Number(form.affiliateCommissionValue)
+          : null,
 
         coupon: couponEnabled
           ? {
@@ -560,8 +645,12 @@ export default function ProductEditForm({
 
         deliverySettings: {
           scope: delivery.scope,
-          weightKg: delivery.scope === "NATIONWIDE" ? null : Number(delivery.weightKg),
-          nationwideCharge: delivery.scope === "NATIONWIDE" ? Number(delivery.nationwideCharge) : null,
+          weightKg:
+            delivery.scope === "NATIONWIDE" ? null : Number(delivery.weightKg),
+          nationwideCharge:
+            delivery.scope === "NATIONWIDE"
+              ? Number(delivery.nationwideCharge)
+              : null,
           rates:
             delivery.scope === "NATIONWIDE"
               ? []
@@ -589,19 +678,25 @@ export default function ProductEditForm({
                 soldCount: 0,
                 startTime: flashSale.startTime,
                 endTime: flashSale.endTime,
-                discountBadge: String(flashSale.discountBadge ?? "").trim() || null,
+                discountBadge:
+                  String(flashSale.discountBadge ?? "").trim() || null,
               }
             : null,
           featured: isPlacementSelected("FEATURED")
             ? {
-                featuredBadgeText: String(featured.featuredBadgeText ?? "").trim() || null,
+                featuredBadgeText:
+                  String(featured.featuredBadgeText ?? "").trim() || null,
                 bannerImage: String(featured.bannerImage ?? "").trim() || null,
-                displayOrder: hasValue(featured.displayOrder) ? Number(featured.displayOrder) : null,
+                displayOrder: hasValue(featured.displayOrder)
+                  ? Number(featured.displayOrder)
+                  : null,
               }
             : null,
           topSeller: isPlacementSelected("TOP_SELLER")
             ? {
-                unitsSold: hasValue(topSeller.unitsSold) ? Number(topSeller.unitsSold) : 0,
+                unitsSold: hasValue(topSeller.unitsSold)
+                  ? Number(topSeller.unitsSold)
+                  : 0,
                 salesBadge: String(topSeller.salesBadge ?? "").trim() || null,
                 isExpressEligible: topSeller.isExpressEligible,
               }
@@ -610,12 +705,14 @@ export default function ProductEditForm({
             ? {
                 averageRating: Number(topRated.averageRating || 0),
                 totalReviews: Number(topRated.totalReviews || 0),
-                reviewSnippet: String(topRated.reviewSnippet ?? "").trim() || null,
+                reviewSnippet:
+                  String(topRated.reviewSnippet ?? "").trim() || null,
               }
             : null,
           trusted: isPlacementSelected("TRUSTED")
             ? {
-                trustBadgeText: String(trusted.trustBadgeText ?? "").trim() || null,
+                trustBadgeText:
+                  String(trusted.trustBadgeText ?? "").trim() || null,
                 warrantyInfo: String(trusted.warrantyInfo ?? "").trim() || null,
                 officialStore: Boolean(trusted.officialStore),
               }
@@ -636,13 +733,15 @@ export default function ProductEditForm({
             Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       const json = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(json?.error || json?.message || "Product update করা যায়নি।");
+        throw new Error(
+          json?.error || json?.message || "Product update করা যায়নি।",
+        );
       }
 
       setSaveSuccess("Product সফলভাবে update করা হয়েছে!");
@@ -670,7 +769,9 @@ export default function ProductEditForm({
     return (
       <div className="flex min-h-[500px] flex-col items-center justify-center p-8 text-center">
         <Loader2 size={36} className="animate-spin text-[#12233F]" />
-        <p className="mt-4 text-sm font-semibold text-slate-600">Product-এর তথ্য লোড হচ্ছে...</p>
+        <p className="mt-4 text-sm font-semibold text-slate-600">
+          Product-এর তথ্য লোড হচ্ছে...
+        </p>
       </div>
     );
   }
@@ -681,7 +782,9 @@ export default function ProductEditForm({
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-500">
           <Package size={28} />
         </div>
-        <h2 className="text-lg font-bold text-[#12233F]">Product লোড করা যায়নি</h2>
+        <h2 className="text-lg font-bold text-[#12233F]">
+          Product লোড করা যায়নি
+        </h2>
         <p className="mt-2 text-sm text-slate-500">{fetchError}</p>
         <button
           type="button"
@@ -711,7 +814,9 @@ export default function ProductEditForm({
             </button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold text-[#12233F]">Edit Product</h1>
+                <h1 className="text-lg font-bold text-[#12233F]">
+                  Edit Product
+                </h1>
                 {role === "ADMIN" ? (
                   <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700">
                     Admin Mode
@@ -723,7 +828,8 @@ export default function ProductEditForm({
                 )}
               </div>
               <p className="text-xs text-slate-400">
-                Product ID: <span className="font-mono text-slate-600">{productId}</span>
+                Product ID:{" "}
+                <span className="font-mono text-slate-600">{productId}</span>
               </p>
             </div>
           </div>
@@ -740,7 +846,9 @@ export default function ProductEditForm({
             <button
               type="button"
               onClick={(e) => {
-                const formElem = document.getElementById("product-edit-form") as HTMLFormElement;
+                const formElem = document.getElementById(
+                  "product-edit-form",
+                ) as HTMLFormElement;
                 if (formElem) formElem.requestSubmit();
               }}
               disabled={isSaving}
@@ -776,7 +884,10 @@ export default function ProductEditForm({
             </p>
             <ul className="list-disc space-y-1 pl-5">
               {errors.map((error, idx) => (
-                <li key={`${error}-${idx}`} className="text-xs leading-5 text-rose-600">
+                <li
+                  key={`${error}-${idx}`}
+                  className="text-xs leading-5 text-rose-600"
+                >
                   {error}
                 </li>
               ))}
@@ -788,7 +899,9 @@ export default function ProductEditForm({
         {role === "ADMIN" && (
           <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
             <div className="mb-4">
-              <h2 className="text-sm font-bold text-[#12233F]">Product Owner (Vendor)</h2>
+              <h2 className="text-sm font-bold text-[#12233F]">
+                Product Owner (Vendor)
+              </h2>
               <p className="mt-1 text-xs text-slate-400">
                 এই প্রোডাক্টটি কোন সেলার/ভেন্ডরের আওতায় থাকবে তা নির্বাচন করুন।
               </p>
@@ -809,7 +922,9 @@ export default function ProductEditForm({
               >
                 <div
                   className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                    ownershipType === "MY_STORE" ? "bg-[#12233F] text-white" : "bg-slate-100 text-slate-500"
+                    ownershipType === "MY_STORE"
+                      ? "bg-[#12233F] text-white"
+                      : "bg-slate-100 text-slate-500"
                   }`}
                 >
                   <Store size={20} />
@@ -833,13 +948,17 @@ export default function ProductEditForm({
               >
                 <div
                   className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                    ownershipType === "SELLER_PRODUCT" ? "bg-[#12233F] text-white" : "bg-slate-100 text-slate-500"
+                    ownershipType === "SELLER_PRODUCT"
+                      ? "bg-[#12233F] text-white"
+                      : "bg-slate-100 text-slate-500"
                   }`}
                 >
                   <UserRound size={20} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-[#12233F]">Seller Product</p>
+                  <p className="text-xs font-bold text-[#12233F]">
+                    Seller Product
+                  </p>
                   <p className="mt-0.5 text-[11px] text-slate-400">
                     Product belongs to an external vendor.
                   </p>
@@ -850,10 +969,14 @@ export default function ProductEditForm({
             {ownershipType === "SELLER_PRODUCT" && (
               <div className="mt-4 border-t border-slate-100 pt-4">
                 <label className="mb-2 block text-xs font-semibold text-slate-700">
-                  Select Seller / Vendor <span className="text-rose-500">*</span>
+                  Select Seller / Vendor{" "}
+                  <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <UserRound size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <UserRound
+                    size={15}
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
                   <select
                     value={selectedSellerId}
                     onChange={(e) => setSelectedSellerId(e.target.value)}
@@ -861,7 +984,9 @@ export default function ProductEditForm({
                     className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-10 text-xs text-slate-700 outline-none transition focus:border-[#D6A419] disabled:bg-slate-50"
                   >
                     <option value="">
-                      {isLoadingVendors ? "Loading vendors..." : "Select a seller"}
+                      {isLoadingVendors
+                        ? "Loading vendors..."
+                        : "Select a seller"}
                     </option>
                     {vendors.map((v) => (
                       <option key={v.id} value={v.id}>
@@ -869,7 +994,10 @@ export default function ProductEditForm({
                       </option>
                     ))}
                   </select>
-                  <ChevronDown size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <ChevronDown
+                    size={15}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
                 </div>
               </div>
             )}
@@ -903,10 +1031,7 @@ export default function ProductEditForm({
               />
 
               {/* Product Images with Uploader */}
-              <ProductImageUploader
-                images={images}
-                onChange={setImages}
-              />
+              <ProductImageUploader images={images} onChange={setImages} />
 
               <ProductPricing
                 form={form}
@@ -914,15 +1039,9 @@ export default function ProductEditForm({
                 ownershipType={ownershipType}
               />
 
-              <ProductInventory
-                form={form}
-                onFieldChange={updateField}
-              />
+              <ProductInventory form={form} onFieldChange={updateField} />
 
-              <ProductDelivery
-                value={delivery}
-                onChange={setDelivery}
-              />
+              <ProductDelivery value={delivery} onChange={setDelivery} />
 
               <ProductPlacement
                 selectedPlacements={selectedPlacements}

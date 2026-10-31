@@ -241,7 +241,9 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
         {label}
       </span>
 
-      <span className="break-words text-sm text-slate-700">{value || "â€”"}</span>
+      <span className="break-words text-sm text-slate-700">
+        {value || "â€”"}
+      </span>
     </div>
   );
 }
@@ -374,16 +376,18 @@ export default function VendorDetailsSidebar({
             status,
             adminNote: status === "REJECTED" ? rejectionNote : undefined,
           }),
-        }
+        },
       );
       const res = await response.json();
       if (!response.ok || !res.success) {
-        throw new Error(res?.error || res?.message || "কার্যক্রম সম্পন্ন করা যায়নি");
+        throw new Error(
+          res?.error || res?.message || "কার্যক্রম সম্পন্ন করা যায়নি",
+        );
       }
       toast.success(
         status === "APPROVED"
           ? "দোকানের তথ্য পরিবর্তন অনুমোদিত হয়েছে!"
-          : "তথ্য পরিবর্তন অনুরোধটি বাতিল করা হয়েছে।"
+          : "তথ্য পরিবর্তন অনুরোধটি বাতিল করা হয়েছে।",
       );
       setShowRejectInput(false);
       setRejectionNote("");
@@ -408,18 +412,25 @@ export default function VendorDetailsSidebar({
       setUpdatingStatus(newStatus);
       const token = await getAccessToken();
 
-      const response = await fetch(`${API_BASE_URL}/api/vendors/${vendorId}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${API_BASE_URL}/api/vendors/${vendorId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
         },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      );
 
       const res = await response.json();
       if (!response.ok) {
-        throw new Error(res?.message || res?.error || "à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦¬à§à¦¯à¦°à§à¦¥ à¦¹à§Ÿà§‡à¦›à§‡");
+        throw new Error(
+          res?.message ||
+            res?.error ||
+            "à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦¬à§à¦¯à¦°à§à¦¥ à¦¹à§Ÿà§‡à¦›à§‡",
+        );
       }
 
       setData((prev) =>
@@ -431,24 +442,31 @@ export default function VendorDetailsSidebar({
                 status: newStatus,
               },
             }
-          : null
+          : null,
       );
 
       const messages: Record<string, string> = {
-        APPROVED: "à¦­à§‡à¦¨à§à¦¡à¦° à¦¸à¦«à¦²à¦­à¦¾à¦¬à§‡ à¦…à¦¨à§à¦®à§‹à¦¦à¦¨ à¦•à¦°à¦¾ à¦¹à§Ÿà§‡à¦›à§‡!",
+        APPROVED:
+          "à¦­à§‡à¦¨à§à¦¡à¦° à¦¸à¦«à¦²à¦­à¦¾à¦¬à§‡ à¦…à¦¨à§à¦®à§‹à¦¦à¦¨ à¦•à¦°à¦¾ à¦¹à§Ÿà§‡à¦›à§‡!",
         REJECTED: "à¦­à§‡à¦¨à§à¦¡à¦° à¦¬à¦¾à¦¤à¦¿à¦² à¦•à¦°à¦¾ à¦¹à§Ÿà§‡à¦›à§‡",
-        SUSPENDED: "à¦­à§‡à¦¨à§à¦¡à¦° à¦¸à¦¾à¦®à§Ÿà¦¿à¦•à¦­à¦¾à¦¬à§‡ à¦¸à§à¦¥à¦—à¦¿à¦¤ à¦•à¦°à¦¾ à¦¹à§Ÿà§‡à¦›à§‡",
+        SUSPENDED:
+          "à¦­à§‡à¦¨à§à¦¡à¦° à¦¸à¦¾à¦®à§Ÿà¦¿à¦•à¦­à¦¾à¦¬à§‡ à¦¸à§à¦¥à¦—à¦¿à¦¤ à¦•à¦°à¦¾ à¦¹à§Ÿà§‡à¦›à§‡",
       };
-      toast.success(messages[newStatus] || "à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦¸à¦«à¦² à¦¹à§Ÿà§‡à¦›à§‡!");
+      toast.success(
+        messages[newStatus] ||
+          "à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦¸à¦«à¦² à¦¹à§Ÿà§‡à¦›à§‡!",
+      );
 
       onStatusChange?.(vendorId, newStatus);
     } catch (err: any) {
-      toast.error(err?.message || "à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸ à¦†à¦ªà¦¡à§‡à¦Ÿ à¦•à¦°à¦¤à§‡ à¦¸à¦®à¦¸à§à¦¯à¦¾ à¦¹à§Ÿà§‡à¦›à§‡");
+      toast.error(
+        err?.message ||
+          "à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸ à¦†à¦ªà¦¡à§‡à¦Ÿ à¦•à¦°à¦¤à§‡ à¦¸à¦®à¦¸à§à¦¯à¦¾ à¦¹à§Ÿà§‡à¦›à§‡",
+      );
     } finally {
       setUpdatingStatus(null);
     }
   };
-
 
   useEffect(() => {
     if (!vendorId) {
@@ -648,14 +666,17 @@ export default function VendorDetailsSidebar({
                           পরিবর্তন অনুরোধ
                         </span>
                         <span className="text-[11px] font-medium text-amber-800">
-                          {new Date(data.pendingChangeRequest.createdAt).toLocaleDateString("bn-BD")}
+                          {new Date(
+                            data.pendingChangeRequest.createdAt,
+                          ).toLocaleDateString("bn-BD")}
                         </span>
                       </div>
                       <h4 className="mt-1 text-sm font-bold text-slate-800">
                         দোকানের তথ্য পরিবর্তনের আবেদন
                       </h4>
                       <p className="mt-0.5 text-xs text-slate-600">
-                        নিচের পরিবর্তিত তথ্যগুলো যাচাই করে অনুমোদন বা বাতিল করুন।
+                        নিচের পরিবর্তিত তথ্যগুলো যাচাই করে অনুমোদন বা বাতিল
+                        করুন।
                       </p>
                     </div>
                   </div>
@@ -673,9 +694,14 @@ export default function VendorDetailsSidebar({
                           </div>
                           <div className="mt-1 flex items-center gap-2">
                             <span className="line-through text-slate-400">
-                              {data.pendingChangeRequest.oldStoreName || data.vendor?.storeName || "—"}
+                              {data.pendingChangeRequest.oldStoreName ||
+                                data.vendor?.storeName ||
+                                "—"}
                             </span>
-                            <ArrowRight size={12} className="shrink-0 text-amber-500" />
+                            <ArrowRight
+                              size={12}
+                              className="shrink-0 text-amber-500"
+                            />
                             <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">
                               {data.pendingChangeRequest.storeName}
                             </span>
@@ -690,9 +716,14 @@ export default function VendorDetailsSidebar({
                           </div>
                           <div className="mt-1 flex items-center gap-2">
                             <span className="line-through text-slate-400">
-                              {data.pendingChangeRequest.oldOwnerName || data.owner?.fullName || "—"}
+                              {data.pendingChangeRequest.oldOwnerName ||
+                                data.owner?.fullName ||
+                                "—"}
                             </span>
-                            <ArrowRight size={12} className="shrink-0 text-amber-500" />
+                            <ArrowRight
+                              size={12}
+                              className="shrink-0 text-amber-500"
+                            />
                             <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">
                               {data.pendingChangeRequest.ownerName}
                             </span>
@@ -707,9 +738,14 @@ export default function VendorDetailsSidebar({
                           </div>
                           <div className="mt-1 flex items-center gap-2">
                             <span className="line-through text-slate-400">
-                              {data.pendingChangeRequest.oldPhone || data.owner?.phone || "—"}
+                              {data.pendingChangeRequest.oldPhone ||
+                                data.owner?.phone ||
+                                "—"}
                             </span>
-                            <ArrowRight size={12} className="shrink-0 text-amber-500" />
+                            <ArrowRight
+                              size={12}
+                              className="shrink-0 text-amber-500"
+                            />
                             <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">
                               {data.pendingChangeRequest.phone}
                             </span>
@@ -724,9 +760,14 @@ export default function VendorDetailsSidebar({
                           </div>
                           <div className="mt-1 flex items-center gap-2">
                             <span className="line-through text-slate-400">
-                              {data.pendingChangeRequest.oldBusinessCategory || data.vendor?.businessCategory || "—"}
+                              {data.pendingChangeRequest.oldBusinessCategory ||
+                                data.vendor?.businessCategory ||
+                                "—"}
                             </span>
-                            <ArrowRight size={12} className="shrink-0 text-amber-500" />
+                            <ArrowRight
+                              size={12}
+                              className="shrink-0 text-amber-500"
+                            />
                             <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">
                               {data.pendingChangeRequest.businessCategory}
                             </span>
@@ -741,9 +782,13 @@ export default function VendorDetailsSidebar({
                           </div>
                           <div className="mt-1 flex items-center gap-2">
                             <span className="line-through text-slate-400">
-                              {data.pendingChangeRequest.oldTradeLicenseNumber || "—"}
+                              {data.pendingChangeRequest
+                                .oldTradeLicenseNumber || "—"}
                             </span>
-                            <ArrowRight size={12} className="shrink-0 text-amber-500" />
+                            <ArrowRight
+                              size={12}
+                              className="shrink-0 text-amber-500"
+                            />
                             <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">
                               {data.pendingChangeRequest.tradeLicenseNumber}
                             </span>
@@ -787,13 +832,16 @@ export default function VendorDetailsSidebar({
                         </a>
                         <a
                           href={`https://wa.me/${internationalPhone}?text=${encodeURIComponent(
-                            `আসসালামু আলাইকুম, আলাদিন গ্লোবাল প্ল্যাটফর্ম থেকে আপনার দোকানের তথ্য পরিবর্তনের আবেদনের বিষয়ে যোগাযোগ করা হয়েছে।`
+                            `আসসালামু আলাইকুম, আলাদিন গ্লোবাল প্ল্যাটফর্ম থেকে আপনার দোকানের তথ্য পরিবর্তনের আবেদনের বিষয়ে যোগাযোগ করা হয়েছে।`,
                           )}`}
                           target="_blank"
                           rel="noreferrer"
                           className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-800 shadow-2xs transition hover:bg-emerald-100"
                         >
-                          <MessageSquare size={13} className="text-emerald-700" />
+                          <MessageSquare
+                            size={13}
+                            className="text-emerald-700"
+                          />
                           WhatsApp চ্যাট
                         </a>
                       </div>
@@ -810,7 +858,9 @@ export default function VendorDetailsSidebar({
                         className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
                       >
                         <CheckCircle size={14} />
-                        {isReviewingChange ? "প্রক্রিয়াধীন..." : "অনুমোদন করুন"}
+                        {isReviewingChange
+                          ? "প্রক্রিয়াধীন..."
+                          : "অনুমোদন করুন"}
                       </button>
 
                       <button
@@ -842,7 +892,9 @@ export default function VendorDetailsSidebar({
                           disabled={isReviewingChange}
                           className="mt-2 w-full rounded-lg bg-red-600 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-50"
                         >
-                          {isReviewingChange ? "বাতিল করা হচ্ছে..." : "নিশ্চিতভাবে বাতিল করুন"}
+                          {isReviewingChange
+                            ? "বাতিল করা হচ্ছে..."
+                            : "নিশ্চিতভাবে বাতিল করুন"}
                         </button>
                       </div>
                     )}
@@ -949,7 +1001,11 @@ export default function VendorDetailsSidebar({
                 <InfoRow
                   label="Account Status"
                   value={
-                    data.owner ? <StatusPill value={data.owner.status} /> : "â€”"
+                    data.owner ? (
+                      <StatusPill value={data.owner.status} />
+                    ) : (
+                      "â€”"
+                    )
                   }
                 />
               </Section>
@@ -1382,7 +1438,9 @@ export default function VendorDetailsSidebar({
                     className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
                   >
                     <CheckCircle size={14} />
-                    {updatingStatus === "APPROVED" ? "à¦…à¦¨à§à¦®à§‹à¦¦à¦¨ à¦¹à¦šà§à¦›à§‡..." : "Approve Seller"}
+                    {updatingStatus === "APPROVED"
+                      ? "à¦…à¦¨à§à¦®à§‹à¦¦à¦¨ à¦¹à¦šà§à¦›à§‡..."
+                      : "Approve Seller"}
                   </button>
 
                   <button
@@ -1392,7 +1450,9 @@ export default function VendorDetailsSidebar({
                     className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
                   >
                     <Ban size={14} />
-                    {updatingStatus === "REJECTED" ? "à¦¬à¦¾à¦¤à¦¿à¦² à¦¹à¦šà§à¦›à§‡..." : "Reject"}
+                    {updatingStatus === "REJECTED"
+                      ? "à¦¬à¦¾à¦¤à¦¿à¦² à¦¹à¦šà§à¦›à§‡..."
+                      : "Reject"}
                   </button>
                 </>
               )}
@@ -1405,7 +1465,9 @@ export default function VendorDetailsSidebar({
                   className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
                 >
                   <Ban size={14} />
-                  {updatingStatus === "SUSPENDED" ? "à¦¸à§à¦¥à¦—à¦¿à¦¤ à¦¹à¦šà§à¦›à§‡..." : "Suspend Seller"}
+                  {updatingStatus === "SUSPENDED"
+                    ? "à¦¸à§à¦¥à¦—à¦¿à¦¤ à¦¹à¦šà§à¦›à§‡..."
+                    : "Suspend Seller"}
                 </button>
               )}
 
@@ -1417,7 +1479,9 @@ export default function VendorDetailsSidebar({
                   className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
                 >
                   <CheckCircle size={14} />
-                  {updatingStatus === "APPROVED" ? "à¦…à¦¨à§à¦®à§‹à¦¦à¦¨ à¦¹à¦šà§à¦›à§‡..." : "Re-activate / Approve"}
+                  {updatingStatus === "APPROVED"
+                    ? "à¦…à¦¨à§à¦®à§‹à¦¦à¦¨ à¦¹à¦šà§à¦›à§‡..."
+                    : "Re-activate / Approve"}
                 </button>
               )}
             </div>
@@ -1440,4 +1504,4 @@ export default function VendorDetailsSidebar({
 // API BASE URL
 // =====================================================
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";

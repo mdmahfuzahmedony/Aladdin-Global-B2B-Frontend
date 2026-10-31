@@ -1,7 +1,6 @@
-'use client';
+"use client";
 
-
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Package,
   Clock,
@@ -11,19 +10,13 @@ import {
   ChevronRight,
   X,
   RefreshCw,
-} from 'lucide-react';
-import { createClient } from '../../../../lib/supabase-client';
-import { getValidImageUrl } from '../../../../lib/image-util';
+} from "lucide-react";
+import { createClient } from "../../../../lib/supabase-client";
+import { getValidImageUrl } from "../../../../lib/image-util";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
-type OrderStatus =
-  | 'Pending'
-  | 'Processing'
-  | 'Delivered'
-  | 'Cancelled';
+type OrderStatus = "Pending" | "Processing" | "Delivered" | "Cancelled";
 
 interface OrderItem {
   id: string;
@@ -52,38 +45,38 @@ interface Order {
 }
 
 const normalizeStatus = (status: unknown): OrderStatus => {
-  const value = String(status ?? '').toUpperCase();
+  const value = String(status ?? "").toUpperCase();
 
-  if (value === 'DELIVERED') return 'Delivered';
+  if (value === "DELIVERED") return "Delivered";
 
-  if (value === 'CANCELLED' || value === 'CANCELED') {
-    return 'Cancelled';
+  if (value === "CANCELLED" || value === "CANCELED") {
+    return "Cancelled";
   }
 
   if (
-    value === 'PROCESSING' ||
-    value === 'CONFIRMED' ||
-    value === 'PACKED' ||
-    value === 'SHIPPED' ||
-    value === 'OUT_FOR_DELIVERY'
+    value === "PROCESSING" ||
+    value === "CONFIRMED" ||
+    value === "PACKED" ||
+    value === "SHIPPED" ||
+    value === "OUT_FOR_DELIVERY"
   ) {
-    return 'Processing';
+    return "Processing";
   }
 
-  return 'Pending';
+  return "Pending";
 };
 
 const formatDate = (date: unknown) => {
-  if (!date) return '—';
+  if (!date) return "—";
 
   const parsedDate = new Date(String(date));
 
-  if (Number.isNaN(parsedDate.getTime())) return '—';
+  if (Number.isNaN(parsedDate.getTime())) return "—";
 
-  return parsedDate.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
+  return parsedDate.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 };
 
@@ -96,18 +89,18 @@ const normalizeOrder = (raw: any): Order => {
       item.image ||
       item.product?.images?.[0] ||
       item.product?.image ||
-      '';
+      "";
     const image = getValidImageUrl(rawImage);
 
     return {
-      id: String(item.id ?? ''),
+      id: String(item.id ?? ""),
       productId: item.productId,
       name: String(
         item.productTitle ??
           item.productName ??
           item.product?.name ??
           item.product?.title ??
-          'Product'
+          "Product",
       ),
       quantity: Number(item.quantity ?? 0),
       price: Number(item.unitPrice ?? item.price ?? 0),
@@ -123,8 +116,8 @@ const normalizeOrder = (raw: any): Order => {
     totalAmount: Number(raw.totalAmount ?? 0),
     subtotal: Number(raw.subtotal ?? 0),
     deliveryCharge: Number(raw.deliveryCharge ?? 0),
-    paymentStatus: String(raw.paymentStatus ?? 'PENDING'),
-    deliveryPaymentStatus: String(raw.deliveryPaymentStatus ?? 'PENDING'),
+    paymentStatus: String(raw.paymentStatus ?? "PENDING"),
+    deliveryPaymentStatus: String(raw.deliveryPaymentStatus ?? "PENDING"),
     shippingName: raw.shippingName ? String(raw.shippingName) : undefined,
     shippingPhone: raw.shippingPhone ? String(raw.shippingPhone) : undefined,
     shippingAddress: [
@@ -134,7 +127,7 @@ const normalizeOrder = (raw: any): Order => {
       raw.shippingDivision,
     ]
       .filter(Boolean)
-      .join(', '),
+      .join(", "),
     itemsCount: items.reduce((total, item) => total + item.quantity, 0),
     items,
   };
@@ -142,15 +135,15 @@ const normalizeOrder = (raw: any): Order => {
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('All');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       const supabase = createClient();
@@ -160,27 +153,27 @@ export default function OrdersPage() {
       } = await supabase.auth.getSession();
 
       if (sessionError) {
-        throw new Error('লগইন সেশন যাচাই করা যায়নি।');
+        throw new Error("লগইন সেশন যাচাই করা যায়নি।");
       }
 
       if (!session?.access_token) {
-        throw new Error('অর্ডার দেখতে প্রথমে লগইন করো।');
+        throw new Error("অর্ডার দেখতে প্রথমে লগইন করো।");
       }
 
       const response = await fetch(`${API_BASE_URL}/api/customer/orders`, {
-        method: 'GET',
+        method: "GET",
         headers: {
           Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        cache: 'no-store',
+        cache: "no-store",
       });
 
       const result = await response.json();
 
       if (!response.ok || result.success === false) {
         throw new Error(
-          result.message || 'অর্ডার লোড করা যায়নি। আবার চেষ্টা করো।'
+          result.message || "অর্ডার লোড করা যায়নি। আবার চেষ্টা করো।",
         );
       }
 
@@ -197,9 +190,7 @@ export default function OrdersPage() {
     } catch (err) {
       setOrders([]);
       setError(
-        err instanceof Error
-          ? err.message
-          : 'অর্ডার লোড করতে সমস্যা হয়েছে।'
+        err instanceof Error ? err.message : "অর্ডার লোড করতে সমস্যা হয়েছে।",
       );
     } finally {
       setLoading(false);
@@ -218,28 +209,28 @@ export default function OrdersPage() {
       order.items.some((item) => item.name.toLowerCase().includes(search));
 
     const matchesStatus =
-      filterStatus === 'All' || order.status === filterStatus;
+      filterStatus === "All" || order.status === filterStatus;
 
     return matchesSearch && matchesStatus;
   });
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
-      case 'Delivered':
+      case "Delivered":
         return (
           <span className="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1 rounded-full text-xs font-medium">
             <CheckCircle size={14} /> Delivered
           </span>
         );
 
-      case 'Processing':
+      case "Processing":
         return (
           <span className="flex items-center gap-1 text-orange-600 bg-orange-50 px-3 py-1 rounded-full text-xs font-medium">
             <Clock size={14} /> Processing
           </span>
         );
 
-      case 'Cancelled':
+      case "Cancelled":
         return (
           <span className="flex items-center gap-1 text-red-600 bg-red-50 px-3 py-1 rounded-full text-xs font-medium">
             <XCircle size={14} /> Cancelled
@@ -260,9 +251,7 @@ export default function OrdersPage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-[#0F172A]">
-              My Orders
-            </h1>
+            <h1 className="text-3xl font-bold text-[#0F172A]">My Orders</h1>
             <p className="text-gray-500 text-sm mt-1">
               Track and manage your B2B wholesale orders seamlessly.
             </p>
@@ -274,7 +263,7 @@ export default function OrdersPage() {
             disabled={loading}
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
           >
-            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             Refresh
           </button>
         </div>
@@ -295,7 +284,7 @@ export default function OrdersPage() {
           </div>
 
           <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
-            {['All', 'Pending', 'Processing', 'Delivered', 'Cancelled'].map(
+            {["All", "Pending", "Processing", "Delivered", "Cancelled"].map(
               (status) => (
                 <button
                   key={status}
@@ -303,13 +292,13 @@ export default function OrdersPage() {
                   onClick={() => setFilterStatus(status)}
                   className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-medium transition-all ${
                     filterStatus === status
-                      ? 'bg-[#0F172A] text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? "bg-[#0F172A] text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >
                   {status}
                 </button>
-              )
+              ),
             )}
           </div>
         </div>
@@ -371,7 +360,7 @@ export default function OrdersPage() {
                                 alt={item.name}
                                 className="h-full w-full object-cover"
                                 onError={(event) => {
-                                  event.currentTarget.style.display = 'none';
+                                  event.currentTarget.style.display = "none";
                                 }}
                               />
                             ) : (
@@ -383,28 +372,28 @@ export default function OrdersPage() {
                     )}
                     <div>
                       <p className="text-sm font-medium text-gray-700">
-                        Items:{' '}
-                      <span className="text-gray-500">
-                        {order.items.length > 0
-                          ? order.items
-                              .map((item) => `${item.quantity}x ${item.name}`)
-                              .join(', ')
-                          : 'No item details'}
-                      </span>
-                    </p>
+                        Items:{" "}
+                        <span className="text-gray-500">
+                          {order.items.length > 0
+                            ? order.items
+                                .map((item) => `${item.quantity}x ${item.name}`)
+                                .join(", ")
+                            : "No item details"}
+                        </span>
+                      </p>
 
-                    <p className="text-sm text-gray-500 mt-1">
-                      Total quantity: {order.itemsCount}
-                    </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Total quantity: {order.itemsCount}
+                      </p>
 
-                    <p className="text-sm font-semibold text-[#0F172A] mt-1">
-                      Total: ৳
-                      {order.totalAmount.toLocaleString('en-BD', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </p>
-                  </div>
+                      <p className="text-sm font-semibold text-[#0F172A] mt-1">
+                        Total: ৳
+                        {order.totalAmount.toLocaleString("en-BD", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
+                    </div>
                   </div>
 
                   <button
@@ -422,8 +411,8 @@ export default function OrdersPage() {
               <Package className="mx-auto text-gray-300 mb-2" size={48} />
               <p className="text-gray-500 font-medium">
                 {orders.length === 0
-                  ? 'No orders found yet.'
-                  : 'No orders match your search.'}
+                  ? "No orders found yet."
+                  : "No orders match your search."}
               </p>
             </div>
           )}
@@ -474,11 +463,18 @@ export default function OrdersPage() {
 
             {selectedOrder.shippingAddress && (
               <div className="mb-4 rounded-xl border border-gray-100 bg-gray-50/70 p-3 text-xs">
-                <p className="font-semibold text-gray-700">ডেলিভারি ঠিকানা (Shipping Address)</p>
-                <p className="mt-1 text-gray-600 font-medium">
-                  {selectedOrder.shippingName} {selectedOrder.shippingPhone ? `(${selectedOrder.shippingPhone})` : ''}
+                <p className="font-semibold text-gray-700">
+                  ডেলিভারি ঠিকানা (Shipping Address)
                 </p>
-                <p className="text-gray-500 mt-0.5">{selectedOrder.shippingAddress}</p>
+                <p className="mt-1 text-gray-600 font-medium">
+                  {selectedOrder.shippingName}{" "}
+                  {selectedOrder.shippingPhone
+                    ? `(${selectedOrder.shippingPhone})`
+                    : ""}
+                </p>
+                <p className="text-gray-500 mt-0.5">
+                  {selectedOrder.shippingAddress}
+                </p>
               </div>
             )}
 
@@ -496,15 +492,16 @@ export default function OrdersPage() {
                           alt={item.name}
                           className="h-full w-full object-cover"
                           onError={(event) => {
-                            event.currentTarget.style.display = 'none';
-                            const fallback = event.currentTarget.nextElementSibling as HTMLElement;
-                            if (fallback) fallback.style.display = 'flex';
+                            event.currentTarget.style.display = "none";
+                            const fallback = event.currentTarget
+                              .nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = "flex";
                           }}
                         />
                       ) : null}
                       <div
                         className="items-center justify-center text-gray-300"
-                        style={{ display: item.image ? 'none' : 'flex' }}
+                        style={{ display: item.image ? "none" : "flex" }}
                       >
                         <Package size={20} />
                       </div>
@@ -514,14 +511,18 @@ export default function OrdersPage() {
                         {item.name}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Quantity: {item.quantity} × ৳{item.price.toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        Quantity: {item.quantity} × ৳
+                        {item.price.toLocaleString("en-BD", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </p>
                     </div>
                   </div>
 
                   <p className="text-sm font-semibold text-gray-800 whitespace-nowrap">
                     ৳
-                    {(item.price * item.quantity).toLocaleString('en-BD', {
+                    {(item.price * item.quantity).toLocaleString("en-BD", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -534,20 +535,32 @@ export default function OrdersPage() {
               {Boolean(selectedOrder.subtotal) && (
                 <div className="flex justify-between text-gray-500">
                   <span>Subtotal</span>
-                  <span>৳{Number(selectedOrder.subtotal).toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span>
+                    ৳
+                    {Number(selectedOrder.subtotal).toLocaleString("en-BD", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
                 </div>
               )}
               {Boolean(selectedOrder.deliveryCharge) && (
                 <div className="flex justify-between text-gray-500">
                   <span>Delivery Charge</span>
-                  <span>৳{Number(selectedOrder.deliveryCharge).toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span>
+                    ৳
+                    {Number(selectedOrder.deliveryCharge).toLocaleString(
+                      "en-BD",
+                      { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+                    )}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between items-center pt-2 text-sm font-bold text-[#0F172A] border-t border-gray-100">
                 <span>Order Total</span>
                 <span className="text-base text-emerald-700">
                   ৳
-                  {selectedOrder.totalAmount.toLocaleString('en-BD', {
+                  {selectedOrder.totalAmount.toLocaleString("en-BD", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}

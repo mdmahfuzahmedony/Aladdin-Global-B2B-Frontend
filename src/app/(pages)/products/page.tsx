@@ -11,6 +11,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
+import { useLanguage } from "@/context/LanguageContext";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
@@ -60,6 +61,41 @@ type Product = {
 
   [key: string]: unknown;
 };
+
+type CategoryNode = {
+  id: string;
+  name: string;
+  slug?: string;
+  productCount: number;
+  children?: CategoryNode[];
+};
+
+type CategoryOption = CategoryNode & {
+  depth: number;
+  descendantIds: string[];
+};
+
+function flattenCategories(categories: CategoryNode[]): CategoryOption[] {
+  const options: CategoryOption[] = [];
+
+  function visit(category: CategoryNode, depth: number): string[] {
+    const option: CategoryOption = {
+      ...category,
+      depth,
+      descendantIds: [category.id],
+    };
+    options.push(option);
+
+    for (const child of category.children ?? []) {
+      option.descendantIds.push(...visit(child, depth + 1));
+    }
+
+    return option.descendantIds;
+  }
+
+  categories.forEach((category) => visit(category, 0));
+  return options;
+}
 
 function FilterSection({
   title,
@@ -155,12 +191,14 @@ function ProductSkeleton() {
 function ProductsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
 
   const urlSearch = searchParams.get("search") ?? "";
   const placement = searchParams.get("type") ?? "";
   const urlCategory = searchParams.get("category") ?? "";
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [categoryTree, setCategoryTree] = useState<CategoryNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -226,17 +264,49 @@ function ProductsContent() {
     void fetchProducts();
   }, [fetchProducts]);
 
-  const categories = useMemo(() => {
-    const counts = new Map<string, number>();
+  useEffect(() => {
+    let cancelled = false;
 
-    products.forEach((product) => {
-      const name = product.category?.name?.trim();
+    async function fetchCategories() {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/categories/main-with-count`,
+          { cache: "no-store" },
+        );
+        const result = await response.json();
 
-      if (name) counts.set(name, (counts.get(name) ?? 0) + 1);
-    });
+        if (!response.ok || result?.success === false) {
+          throw new Error(
+            result?.error || "ক্যাটাগরি লোড করা যায়নি।",
+          );
+        }
 
-    return Array.from(counts.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [products]);
+        if (!Array.isArray(result?.data)) {
+          throw new Error("ক্যাটাগরি ডেটা পাওয়া যায়নি।");
+        }
+
+        if (!cancelled) {
+          setCategoryTree(result.data);
+        }
+      } catch (err) {
+        console.error("Categories API error:", err);
+        if (!cancelled) {
+          setCategoryTree([]);
+        }
+      }
+    }
+
+    void fetchCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const categories = useMemo(
+    () => flattenCategories(categoryTree),
+    [categoryTree],
+  );
 
   const availableColors = useMemo(() => {
     const colors = new Set<string>();
@@ -267,11 +337,26 @@ function ProductsContent() {
     let list = [...products];
 
     if (category) {
-      list = list.filter(
-        (product) =>
-          product.category?.id === category ||
-          product.category?.name?.toLowerCase() === category.toLowerCase(),
+      const selectedCategory = categories.find(
+        (item) =>
+          item.id === category ||
+          item.name.toLowerCase() === category.toLowerCase() ||
+          item.slug?.toLowerCase() === category.toLowerCase(),
       );
+
+      if (selectedCategory) {
+        list = list.filter((product) =>
+          selectedCategory.descendantIds.includes(
+            product.category?.id ?? "",
+          ),
+        );
+      } else {
+        list = list.filter(
+          (product) =>
+            product.category?.id === category ||
+            product.category?.name?.toLowerCase() === category.toLowerCase(),
+        );
+      }
     }
 
     if (search.trim()) {
@@ -315,7 +400,16 @@ function ProductsContent() {
     }
 
     return list;
-  }, [products, category, search, minPrice, maxPrice, selectedColors, sortBy]);
+  }, [
+    products,
+    categories,
+    category,
+    search,
+    minPrice,
+    maxPrice,
+    selectedColors,
+    sortBy,
+  ]);
 
   // Filter/search change হলে প্রথম পেজে ফিরে যাবে।
   useEffect(() => {
@@ -356,7 +450,12 @@ function ProductsContent() {
         trusted: "Trusted Products",
       }[placement] ?? placement)
     : category
-      ? (categories.find(([name]) => name === category)?.[0] ?? category)
+      ? (categories.find(
+          (item) =>
+            item.id === category ||
+            item.name.toLowerCase() === category.toLowerCase() ||
+            item.slug?.toLowerCase() === category.toLowerCase(),
+        )?.name ?? category)
       : "All Products";
 
   const clearFilters = () => {
@@ -392,7 +491,7 @@ function ProductsContent() {
       <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4">
         <div className="flex items-center gap-2 font-bold text-[#12233F]">
           <SlidersHorizontal size={17} />
-          Filters
+          {t("filters")}
         </div>
 
         <button
@@ -401,21 +500,21 @@ function ProductsContent() {
           className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline"
         >
           <RotateCcw size={13} />
-          Clear all
+          {t("clearAll")}
         </button>
       </div>
 
-      <FilterSection title="Price Range" defaultOpen>
+      <FilterSection title={t("priceRange")} defaultOpen>
         <div className="space-y-3">
           <div className="flex items-center justify-between text-xs text-gray-500">
-            <span>Minimum price</span>
-            <span>Maximum price</span>
+            <span>{t("minimumPrice")}</span>
+            <span>{t("maximumPrice")}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <label>
               <span className="mb-1 block text-[10px] font-semibold uppercase text-gray-400">
-                Min price (৳)
+                {t("minPrice")} (৳)
               </span>
               <input
                 type="number"
@@ -429,7 +528,7 @@ function ProductsContent() {
 
             <label>
               <span className="mb-1 block text-[10px] font-semibold uppercase text-gray-400">
-                Max price (৳)
+                {t("maxPrice")} (৳)
               </span>
               <input
                 type="number"
@@ -449,30 +548,38 @@ function ProductsContent() {
         </div>
       </FilterSection>
 
-      <FilterSection title="Category" defaultOpen>
+      <FilterSection title={t("category")} defaultOpen>
         {categories.length ? (
           <div className="max-h-64 space-y-3 overflow-y-auto">
-            {categories.map(([name, count]) => (
+            {categories.map((item) => (
               <label
-                key={name}
+                key={item.id}
                 className="flex cursor-pointer items-center justify-between gap-2 text-sm text-gray-700"
               >
-                <span className="flex min-w-0 items-center gap-2">
+                <span
+                  className="flex min-w-0 items-center gap-2"
+                  style={{ paddingLeft: `${item.depth * 12}px` }}
+                >
                   <input
                     type="radio"
                     name="product-category"
-                    checked={category === name}
-                    onChange={() => setCategory(name)}
+                    checked={
+                      category === item.id ||
+                      category.toLowerCase() === item.name.toLowerCase()
+                    }
+                    onChange={() => setCategory(item.id)}
                     className="accent-[#12233F]"
                   />
-                  <span className="truncate">{name}</span>
+                  <span className="truncate">{item.name}</span>
                 </span>
-                <span className="text-xs text-gray-400">{count}</span>
+                <span className="text-xs text-gray-400">
+                  {item.productCount}
+                </span>
               </label>
             ))}
           </div>
         ) : (
-          <p className="text-xs text-gray-400">কোনো category পাওয়া যায়নি।</p>
+          <p className="text-xs text-gray-400">{t("noCategoryFound")}</p>
         )}
 
         {category && (
@@ -481,18 +588,18 @@ function ProductsContent() {
             onClick={() => setCategory("")}
             className="mt-3 text-xs text-blue-600 hover:underline"
           >
-            Remove category
+            {t("removeCategory")}
           </button>
         )}
       </FilterSection>
 
-      <FilterSection title="Brand">
+      <FilterSection title={t("brand")}>
         <p className="text-xs leading-5 text-gray-400">
           Brand filter চালু করতে API data-তে brand field প্রয়োজন।
         </p>
       </FilterSection>
 
-      <FilterSection title="Color">
+      <FilterSection title={t("color")}>
         {availableColors.length ? (
           <div className="space-y-3">
             {availableColors.map((color) => (
@@ -511,7 +618,7 @@ function ProductsContent() {
             ))}
           </div>
         ) : (
-          <p className="text-xs text-gray-400">Color data পাওয়া যায়নি।</p>
+          <p className="text-xs text-gray-400">{t("noColorData")}</p>
         )}
       </FilterSection>
     </div>
@@ -526,7 +633,7 @@ function ProductsContent() {
             onClick={() => router.push("/")}
             className="text-blue-600 hover:underline"
           >
-            Home
+            {t("homeBreadcrumb")}
           </button>
           <ChevronRight size={15} className="text-gray-400" />
           <span className="font-medium text-gray-600">{sectionTitle}</span>
@@ -540,13 +647,18 @@ function ProductsContent() {
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
                 <h1 className="truncate text-xl font-bold text-[#12233F] sm:text-2xl">
-                  {sectionTitle}
+                  {placement === "best-sellers" ? t("bestSellers")
+                    : placement === "new-arrivals" ? t("newArrivals")
+                      : placement === "flash-sale" ? t("flashSale")
+                        : placement === "top-rated" ? t("topRated")
+                          : placement === "featured" ? t("featuredProducts")
+                            : sectionTitle}
                 </h1>
 
                 <p className="mt-1 text-sm text-gray-500">
                   {loading
-                    ? "Loading products..."
-                    : `Showing ${startProduct}-${endProduct} of ${filteredProducts.length} products`}
+                    ? t("loadingProducts")
+                    : `${t("showingProducts")} ${startProduct}-${endProduct} ${t("ofProducts")} ${filteredProducts.length} ${t("products").toLowerCase()}`}
                 </p>
               </div>
 
@@ -557,12 +669,12 @@ function ProductsContent() {
                   className="flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-[#12233F] lg:hidden"
                 >
                   <SlidersHorizontal size={16} />
-                  Filters
+                  {t("filters")}
                 </button>
 
                 <label className="flex h-10 items-center rounded-lg border border-gray-200 bg-white px-2 sm:px-3">
                   <span className="mr-2 hidden text-sm text-gray-600 xl:inline">
-                    Sort by:
+                    {t("sortBy")}
                   </span>
 
                   <select
@@ -570,10 +682,10 @@ function ProductsContent() {
                     onChange={(event) => setSortBy(event.target.value)}
                     className="max-w-[135px] bg-transparent text-sm text-gray-700 outline-none sm:max-w-none"
                   >
-                    <option value="newest">Newest First</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="name">Name: A to Z</option>
+                    <option value="newest">{t("newestFirst")}</option>
+                    <option value="price-low">{t("priceLowHigh")}</option>
+                    <option value="price-high">{t("priceHighLow")}</option>
+                    <option value="name">{t("nameAToZ")}</option>
                   </select>
                 </label>
               </div>
@@ -592,7 +704,7 @@ function ProductsContent() {
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search products..."
+                  placeholder={t("searchProductsPlaceholder")}
                   className="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-3 text-sm outline-none focus:border-[#D6A419] focus:bg-white"
                 />
               </div>
@@ -601,7 +713,7 @@ function ProductsContent() {
                 type="submit"
                 className="rounded-lg bg-[#12233F] px-5 text-sm font-semibold text-white hover:bg-[#1b355b]"
               >
-                Search
+                {t("searchButton")}
               </button>
             </form>
 
@@ -629,7 +741,7 @@ function ProductsContent() {
                     }}
                     className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs text-gray-700 ring-1 ring-gray-200"
                   >
-                    Price: {minPrice || "Any"} – {maxPrice || "Any"}
+                    {t("priceRange")}: {minPrice || t("any")} – {maxPrice || t("any")}
                     <X size={13} />
                   </button>
                 )}
@@ -658,7 +770,7 @@ function ProductsContent() {
             {!loading && error && (
               <div className="rounded-xl border border-red-200 bg-white p-8 text-center">
                 <p className="font-semibold text-red-600">
-                  প্রোডাক্ট লোড করা যায়নি
+                  {t("productLoadFailed")}
                 </p>
                 <p className="mt-2 text-sm text-gray-500">{error}</p>
                 <button
@@ -666,7 +778,7 @@ function ProductsContent() {
                   onClick={() => void fetchProducts()}
                   className="mt-4 rounded-lg bg-[#12233F] px-5 py-2.5 text-sm font-semibold text-white"
                 >
-                  Try Again
+                  {t("tryAgain")}
                 </button>
               </div>
             )}
@@ -726,7 +838,7 @@ function ProductsContent() {
 
                 {totalPages > 1 && (
                   <nav
-                    aria-label="Product pagination"
+                    aria-label={t("productPagination")}
                     className="mt-8 flex flex-wrap items-center justify-center gap-2"
                   >
                     <button
@@ -737,7 +849,7 @@ function ProductsContent() {
                       }
                       className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:border-[#12233F] disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      Previous
+                      {t("previous")}
                     </button>
 
                     {Array.from({ length: totalPages }, (_, index) => index + 1)
@@ -801,7 +913,7 @@ function ProductsContent() {
                       }
                       className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:border-[#12233F] disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      Next
+                      {t("next")}
                     </button>
                   </nav>
                 )}

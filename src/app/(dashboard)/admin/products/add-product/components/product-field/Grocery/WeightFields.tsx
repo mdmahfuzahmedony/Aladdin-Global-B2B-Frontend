@@ -1,129 +1,75 @@
 "use client";
 
-import React from "react";
-
 export interface WeightFieldsData {
-  sellingMethod?: "weight";
-  unit?: "g" | "kg";
-  minimumQuantity?: number;
-  maximumQuantity?: number;
-  quantityStep?: number;
-  isVariableWeight?: boolean;
+  brand?: string;
+  netWeight?: string;
+  packagingType?: string;
+  productType?: string;
+  countryOfOrigin?: string;
 }
 
-interface WeightFieldsProps {
-  value: WeightFieldsData;
+interface Props {
+  value?: WeightFieldsData;
   onChange: (value: WeightFieldsData) => void;
+  categoryName?: string;
 }
 
-const UNIT_OPTIONS = [
-  { value: "g", label: "Gram (g)" },
-  { value: "kg", label: "Kilogram (kg)" },
-];
-
-export default function WeightFields({
-  value,
-  onChange,
-}: WeightFieldsProps) {
-  const update = (key: keyof WeightFieldsData, fieldValue: any) => {
-    onChange({
-      ...value,
-      [key]: fieldValue,
-    });
-  };
+export default function WeightFields({ value = {}, onChange }: Props) {
+  const update = (key: keyof WeightFieldsData, v: string) =>
+    onChange({ ...value, [key]: v });
 
   return (
     <section className="rounded-xl border border-slate-200 bg-white">
       <div className="p-5">
-        <div className="mb-5">
-          <h3 className="text-base font-semibold text-slate-900">
-            Weight & Quantity
-          </h3>
-
-          <p className="mt-1 text-xs text-slate-500">
-            Configure products that are sold by weight.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <h3 className="text-base font-semibold text-slate-900">Weight & Quantity Information</h3>
+        <p className="mt-1 text-xs text-slate-500">Add product details for this item.</p>
+        <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <Input
+            label="Brand"
+            value={value.brand}
+            onChange={(v) => update("brand", v)}
+            placeholder="e.g. Pran, ACI, Square, Bashundhara"
+          />
+          <Input
+            label="Net Weight / Volume"
+            value={value.netWeight}
+            onChange={(v) => update("netWeight", v)}
+            placeholder="e.g. 500g, 1kg, 250ml"
+          />
           <Select
-            label="Selling Unit"
-            value={value.unit || ""}
-            onChange={(e) => update("unit", e.target.value)}
-          >
-            <option value="">Select unit</option>
-
-            {UNIT_OPTIONS.map((unit) => (
-              <option key={unit.value} value={unit.value}>
-                {unit.label}
-              </option>
-            ))}
-          </Select>
-
-          <Input
-            label="Minimum Quantity"
-            type="number"
-            min="0"
-            value={value.minimumQuantity ?? ""}
-            onChange={(e) =>
-              update(
-                "minimumQuantity",
-                e.target.value === "" ? undefined : Number(e.target.value)
-              )
-            }
-            placeholder="e.g. 1"
+            label="Weight Unit"
+            value={value.productType}
+            onChange={(v) => update("productType", v)}
+            options={["Gram (g)","Kilogram (kg)","Ton","Other"]}
           />
-
-          <Input
-            label="Maximum Quantity"
-            type="number"
-            min="0"
-            value={value.maximumQuantity ?? ""}
-            onChange={(e) =>
-              update(
-                "maximumQuantity",
-                e.target.value === "" ? undefined : Number(e.target.value)
-              )
-            }
-            placeholder="e.g. 20"
+          <Select
+            label="Packaging Type"
+            value={value.packagingType}
+            onChange={(v) => update("packagingType", v)}
+            options={[
+              "Packet / Pouch",
+              "Bottle",
+              "Jar / Tin",
+              "Box / Carton",
+              "Sachet",
+              "Cup / Bowl",
+              "Loose / Open",
+            ]}
           />
-
-          <Input
-            label="Quantity Step"
-            type="number"
-            min="0"
-            value={value.quantityStep ?? ""}
-            onChange={(e) =>
-              update(
-                "quantityStep",
-                e.target.value === "" ? undefined : Number(e.target.value)
-              )
-            }
-            placeholder="e.g. 0.5"
+          <Select
+            label="Country of Origin"
+            value={value.countryOfOrigin}
+            onChange={(v) => update("countryOfOrigin", v)}
+            options={[
+              "Bangladesh",
+              "India",
+              "China",
+              "Malaysia",
+              "Thailand",
+              "USA",
+              "Other",
+            ]}
           />
-        </div>
-
-        <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={value.isVariableWeight ?? false}
-              onChange={(e) =>
-                update("isVariableWeight", e.target.checked)
-              }
-              className="mt-0.5 h-4 w-4 rounded border-slate-300"
-            />
-
-            <div>
-              <p className="text-sm font-medium text-slate-900">
-                Variable Weight Product
-              </p>
-
-              <p className="mt-1 text-xs text-slate-500">
-                Allow customers to choose a variable quantity.
-              </p>
-            </div>
-          </label>
         </div>
       </div>
     </section>
@@ -132,19 +78,23 @@ export default function WeightFields({
 
 function Input({
   label,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & {
+  value,
+  onChange,
+  placeholder,
+}: {
   label: string;
+  value?: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-slate-700">
-        {label}
-      </label>
-
+      <label className="mb-1.5 block text-xs font-medium text-slate-700">{label}</label>
       <input
-        {...props}
-        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-slate-500"
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-slate-500"
       />
     </div>
   );
@@ -152,23 +102,29 @@ function Input({
 
 function Select({
   label,
-  children,
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement> & {
+  value,
+  options,
+  onChange,
+}: {
   label: string;
-  children: React.ReactNode;
+  value?: string;
+  options: string[];
+  onChange: (v: string) => void;
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-slate-700">
-        {label}
-      </label>
-
+      <label className="mb-1.5 block text-xs font-medium text-slate-700">{label}</label>
       <select
-        {...props}
-        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-slate-500"
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-slate-500"
       >
-        {children}
+        <option value="">Select {label}</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
       </select>
     </div>
   );

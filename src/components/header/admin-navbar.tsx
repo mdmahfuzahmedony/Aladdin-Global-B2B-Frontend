@@ -5,7 +5,7 @@ import { Search, Bell, ChevronDown, LogOut, UserCircle } from "lucide-react";
 import { createClient } from "../../../lib/supabase-client";
 import NotificationPanel from "./navbar/NotificationPanel";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 export function AdminNavbar() {
   const supabase = createClient();

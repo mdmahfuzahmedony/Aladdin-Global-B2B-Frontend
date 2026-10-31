@@ -54,7 +54,7 @@ interface CustomerLocation {
 
 type StatusType = "success" | "error" | "";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 const normalize = (value?: string | null) =>
   (value ?? "").trim().toLocaleLowerCase("en");
@@ -98,14 +98,14 @@ export default function ProductInfo({ product }: Props) {
         (color): color is NonNullable<ProductAttributes["colors"]>[number] =>
           isRecord(color) &&
           typeof color.color === "string" &&
-          Array.isArray(color.sizes)
+          Array.isArray(color.sizes),
       )
     : [];
 
   const defaultColor = useMemo(() => {
     if (!colors.length) return "";
     const withStock = colors.find((c) =>
-      c.sizes?.some((s) => getStock(s.stock) > 0)
+      c.sizes?.some((s) => getStock(s.stock) > 0),
     );
     return withStock?.color || colors[0]?.color || "";
   }, [colors]);
@@ -163,7 +163,13 @@ export default function ProductInfo({ product }: Props) {
       return totalVariantStock;
     }
     return getStock(product.stock);
-  }, [hasColorVariants, selectedSizeData, selectedStock, totalVariantStock, product.stock]);
+  }, [
+    hasColorVariants,
+    selectedSizeData,
+    selectedStock,
+    totalVariantStock,
+    product.stock,
+  ]);
 
   const hasVariantSelection = hasColorVariants;
   const variantStockInvalid =
@@ -208,7 +214,7 @@ export default function ProductInfo({ product }: Props) {
         const result = await response.json();
         if (!cancelled) {
           setCustomerLocation(
-            result?.success && result?.customer ? result.customer : null
+            result?.success && result?.customer ? result.customer : null,
           );
         }
       } catch (error) {
@@ -268,12 +274,14 @@ export default function ProductInfo({ product }: Props) {
     product.discount && product.discount > 0
       ? product.discount
       : hasOldPrice
-      ? Math.round((savingAmount / oldPrice) * 100)
-      : 0;
+        ? Math.round((savingAmount / oldPrice) * 100)
+        : 0;
 
   const brandName =
     product.brand ||
-    (typeof attributes.brand === "string" ? attributes.brand : "Aladdin Global");
+    (typeof attributes.brand === "string"
+      ? attributes.brand
+      : "Aladdin Global");
 
   const soldCount =
     product.soldCount !== undefined && product.soldCount !== null
@@ -372,7 +380,7 @@ export default function ProductInfo({ product }: Props) {
         setStatusMessage("Selected size is currently out of stock.");
       } else {
         setStatusMessage(
-          `Only ${selectedStock} item(s) available in selected size.`
+          `Only ${selectedStock} item(s) available in selected size.`,
         );
       }
       return;
@@ -383,7 +391,7 @@ export default function ProductInfo({ product }: Props) {
     try {
       const productId = String(product.id ?? "").trim();
       const vendorId = String(
-        product.sellerId || product.vendor?.id || ""
+        product.sellerId || product.vendor?.id || "",
       ).trim();
 
       if (!productId || productId === "undefined" || productId === "null") {
@@ -421,9 +429,7 @@ export default function ProductInfo({ product }: Props) {
       if (!response.ok || result?.success === false) {
         setStatusType("error");
         setStatusMessage(
-          result?.message ||
-            result?.error ||
-            "Failed to add product to cart."
+          result?.message || result?.error || "Failed to add product to cart.",
         );
         return;
       }
@@ -442,8 +448,8 @@ export default function ProductInfo({ product }: Props) {
 
       const productImage = getValidImageUrl(
         product.images?.find(
-          (img: any) => img?.url || typeof img === "string"
-        ) || product.images?.[0]
+          (img: any) => img?.url || typeof img === "string",
+        ) || product.images?.[0],
       );
 
       const variantKey = `${productId}:${selectedColor}:${selectedSize}`;
@@ -472,7 +478,7 @@ export default function ProductInfo({ product }: Props) {
       toast.success(
         goToCheckout
           ? "Redirecting to checkout..."
-          : "Product added to cart successfully!"
+          : "Product added to cart successfully!",
       );
 
       if (goToCheckout) {
@@ -524,9 +530,7 @@ export default function ProductInfo({ product }: Props) {
                 />
               ))}
             </div>
-            <span className="font-bold text-amber-950">
-              {displayRating}
-            </span>
+            <span className="font-bold text-amber-950">{displayRating}</span>
           </div>
 
           <span className="text-slate-300">|</span>
@@ -595,7 +599,9 @@ export default function ProductInfo({ product }: Props) {
       <div className="space-y-2 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3.5 text-xs">
         {/* Category */}
         <div className="flex items-start gap-2">
-          <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">Category:</span>
+          <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
+            Category:
+          </span>
           <span className="font-semibold text-slate-800">
             {product.category || "General"}
             {product.subcategory ? ` / ${product.subcategory}` : ""}
@@ -604,7 +610,9 @@ export default function ProductInfo({ product }: Props) {
 
         {/* SKU */}
         <div className="flex items-start gap-2">
-          <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">SKU:</span>
+          <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
+            SKU:
+          </span>
           <span className="font-mono font-semibold text-slate-700">
             {product.sku || "N/A"}
           </span>
@@ -612,13 +620,17 @@ export default function ProductInfo({ product }: Props) {
 
         {/* Brand */}
         <div className="flex items-start gap-2">
-          <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">Brand:</span>
+          <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
+            Brand:
+          </span>
           <span className="font-bold text-blue-700">{brandName}</span>
         </div>
 
         {/* Short description */}
         <div className="flex items-start gap-2">
-          <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">Short des:</span>
+          <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
+            Short des:
+          </span>
           <p className="font-normal text-slate-700 leading-relaxed">
             {product.shortDescription ||
               product.description?.replace(/<[^>]+>/g, "").slice(0, 160) ||
@@ -628,9 +640,13 @@ export default function ProductInfo({ product }: Props) {
 
         {/* Sold by */}
         <div className="flex flex-wrap items-center gap-2 pt-0.5 border-t border-slate-200/60">
-          <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">Sold by:</span>
+          <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
+            Sold by:
+          </span>
           <div className="flex flex-wrap items-center gap-2 font-semibold text-[#12233f]">
-            <span>{product.sellerName || product.vendor?.name || "Official Store"}</span>
+            <span>
+              {product.sellerName || product.vendor?.name || "Official Store"}
+            </span>
             <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200/60">
               Verified Seller
             </span>
@@ -691,7 +707,9 @@ export default function ProductInfo({ product }: Props) {
             <p className="mb-1.5 text-xs font-semibold text-slate-600">
               Color:{" "}
               {selectedColor ? (
-                <span className="font-bold text-slate-900">{selectedColor}</span>
+                <span className="font-bold text-slate-900">
+                  {selectedColor}
+                </span>
               ) : (
                 <span className="text-amber-600 font-normal">
                   (Select a color)
@@ -733,7 +751,9 @@ export default function ProductInfo({ product }: Props) {
               <p className="mb-1.5 text-xs font-semibold text-slate-600">
                 Size:{" "}
                 {selectedSize ? (
-                  <span className="font-bold text-slate-900">{selectedSize}</span>
+                  <span className="font-bold text-slate-900">
+                    {selectedSize}
+                  </span>
                 ) : (
                   <span className="text-amber-600 font-normal">
                     (Select a size)
@@ -760,8 +780,8 @@ export default function ProductInfo({ product }: Props) {
                         outOfStock
                           ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 line-through"
                           : selected
-                          ? "border-[#12233f] bg-[#12233f] font-bold text-white shadow-xs"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
+                            ? "border-[#12233f] bg-[#12233f] font-bold text-white shadow-xs"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
                       }`}
                     >
                       <span>{size.size}</span>
@@ -826,9 +846,7 @@ export default function ProductInfo({ product }: Props) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span>
-              In Stock ({availableStockCount} available)
-            </span>
+            <span>In Stock ({availableStockCount} available)</span>
           </div>
         ) : (
           <div className="flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 border border-rose-200/70">
@@ -881,7 +899,9 @@ export default function ProductInfo({ product }: Props) {
             <span className="truncate">
               Delivery Location:{" "}
               <b className="text-slate-800">
-                {customerUpazila || customerLocation?.district || "All Bangladesh"}
+                {customerUpazila ||
+                  customerLocation?.district ||
+                  "All Bangladesh"}
               </b>
             </span>
           </div>

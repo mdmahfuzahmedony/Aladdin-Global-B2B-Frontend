@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { createClient } from "../../../../../lib/supabase-client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type Review = {
   id: string;
@@ -248,13 +248,20 @@ export default function ProductReview({ productId }: Props) {
               <span className="text-4xl sm:text-5xl font-black text-[#12233f] tracking-tight">
                 {averageRating.toFixed(1)}
               </span>
-              <span className="text-sm font-semibold text-slate-400">/ 5.0</span>
+              <span className="text-sm font-semibold text-slate-400">
+                / 5.0
+              </span>
             </div>
 
-            <div className="flex justify-center md:justify-start text-amber-500 text-base tracking-wider" aria-label="গড় রেটিং">
+            <div
+              className="flex justify-center md:justify-start text-amber-500 text-base tracking-wider"
+              aria-label="গড় রেটিং"
+            >
               {Array.from({ length: 5 }).map((_, i) => (
                 <span key={i}>
-                  {totalReviews > 0 && i < Math.round(averageRating) ? "★" : "☆"}
+                  {totalReviews > 0 && i < Math.round(averageRating)
+                    ? "★"
+                    : "☆"}
                 </span>
               ))}
             </div>

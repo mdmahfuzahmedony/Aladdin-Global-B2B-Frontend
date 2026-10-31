@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Image as ImageIcon } from "lucide-react";
 
 export type CategoryItem = {
   id: string;
@@ -22,21 +21,19 @@ export default function CategoryCard({
       href={`/categories/${category.slug}`}
       className="group block text-center"
     >
-      {/* Circular Category Image (Mobile: 16/20px -> h-16 w-16, Desktop: h-24 w-24) */}
-      <div className="mx-auto h-16 w-16 overflow-hidden rounded-full border border-slate-200 bg-slate-100 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:border-[#d6a419] group-hover:shadow-md sm:h-20 sm:w-20 lg:h-24 lg:w-24">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:border-[#d6a419] group-hover:shadow-md sm:h-20 sm:w-20 lg:h-24 lg:w-24">
         {category.image ? (
           <img
             src={category.image}
             alt={category.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+            loading="lazy"
+            className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <ImageIcon
-              size={22}
-              className="text-slate-300 sm:size-7"
-            />
-          </div>
+          <span
+            aria-hidden="true"
+            className="h-full w-full bg-gradient-to-br from-slate-100 to-slate-200"
+          />
         )}
       </div>
 

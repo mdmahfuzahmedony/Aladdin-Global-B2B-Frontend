@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
 
 const companyLinks = [
   { label: "About Us", href: "/about" },
@@ -6,30 +9,35 @@ const companyLinks = [
   { label: "Careers", href: "/careers" },
   { label: "Privacy Policy", href: "/privacy-policy" },
   { label: "Aladdin Global B2B Certified", href: "/certified" },
-  { label: "Shipping or Delivery", href: "/shipping" },
-  { label: "Affiliate", href: "/affiliate" },
   { label: "Site Map", href: "/sitemap" },
-  { label: "Dropshop", href: "/dropshop" },
-  { label: "Partnership", href: "/partnership" },
-  { label: "Investors", href: "/investors" },
-  { label: "Donates", href: "/donates" },
+ 
 ];
 
 export function FooterLinks() {
+  const { t } = useLanguage();
+  const labels = [
+    t("aboutUs"),
+    t("contactUs"),
+    t("careers"),
+    t("privacyPolicy"),
+    t("certified"),
+    t("siteMap"),
+  ];
+
   return (
     <div>
       <h3 className="mb-3 text-sm font-bold tracking-tight text-[#12233F] sm:text-base">
-        About Company
+        {t("aboutCompany")}
       </h3>
 
       <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
-        {companyLinks.map((link) => (
+        {companyLinks.map((link, index) => (
           <li key={link.href}>
             <Link
               href={link.href}
               className="text-xs text-slate-600 transition-colors duration-200 hover:text-[#12233F] hover:underline sm:text-sm"
             >
-              {link.label}
+              {labels[index]}
             </Link>
           </li>
         ))}

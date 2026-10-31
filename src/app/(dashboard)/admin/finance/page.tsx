@@ -31,7 +31,7 @@ import ExportReports from "@/components/admin/finance/ExportReports";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
 import { createClient } from "../../../../../lib/supabase-client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 const supabase = createClient();
 
 type ReportPeriod = "7D" | "30D" | "90D" | "1Y" | "ALL";
@@ -508,7 +508,8 @@ export default function FinancePage() {
   const generateFinanceReportHTML = () => {
     const periodInfo = getPeriodDetails(period);
     const siteName = settings.siteName || "Aladin Global B2B";
-    const supportEmail = settings.supportEmail || "support@aladdinglobalb2b.com";
+    const supportEmail =
+      settings.supportEmail || "support@aladdinglobalb2b.com";
     const contactNumber = settings.contactNumber || "01322-130929";
     const address =
       settings.address ||

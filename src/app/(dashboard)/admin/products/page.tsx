@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -29,11 +28,14 @@ import { createClient } from "../../../../../lib/supabase-client";
 import CategoryModal from "@/app/(dashboard)/admin/products/add-product/components/CategoryModal";
 
 import ProductDetailsSidebar from "@/app/(dashboard)/vendor/products/components/ProductDetailsSidebar";
-import type { ProductDetails, ProductCoupon } from "@/app/(dashboard)/vendor/products/components/ProductDetailsSidebar";
+import type {
+  ProductDetails,
+  ProductCoupon,
+} from "@/app/(dashboard)/vendor/products/components/ProductDetailsSidebar";
 
 const supabase = createClient();
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 /* =========================================================
    TYPES
@@ -134,7 +136,6 @@ type CategoryMenuItemProps = {
   categoryFilter: string;
   setCategoryFilter: (value: string) => void;
   setIsCategoryMenuOpen: (value: boolean) => void;
-  menuSide: "right" | "left";
   openCategoryPath: string[];
   setOpenCategoryPath: (path: string[]) => void;
   parentPath: string[];
@@ -147,7 +148,6 @@ function CategoryMenuItem({
   categoryFilter,
   setCategoryFilter,
   setIsCategoryMenuOpen,
-  menuSide,
   openCategoryPath,
   setOpenCategoryPath,
   parentPath,
@@ -189,13 +189,7 @@ function CategoryMenuItem({
             <ChevronRight
               size={14}
               className={`shrink-0 text-slate-400 transition-transform duration-150 ${
-                menuSide === "right"
-                  ? isOpen
-                    ? "rotate-90"
-                    : "rotate-0"
-                  : isOpen
-                    ? "-rotate-90"
-                    : "rotate-180"
+                isOpen ? "rotate-90" : "rotate-0"
               }`}
             />
           )}
@@ -215,11 +209,7 @@ function CategoryMenuItem({
       </div>
 
       {hasChildren && isOpen && (
-        <div
-          className={`absolute top-0 z-[70] min-w-[210px] rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl ${
-            menuSide === "right" ? "left-full ml-1" : "right-full mr-1"
-          }`}
-        >
+        <div className="ml-3 border-l border-slate-100 pl-1">
           {children.map((child) => (
             <CategoryMenuItem
               key={child.id}
@@ -228,7 +218,6 @@ function CategoryMenuItem({
               categoryFilter={categoryFilter}
               setCategoryFilter={setCategoryFilter}
               setIsCategoryMenuOpen={setIsCategoryMenuOpen}
-              menuSide={menuSide}
               openCategoryPath={openCategoryPath}
               setOpenCategoryPath={setOpenCategoryPath}
               parentPath={currentPath}
@@ -318,10 +307,6 @@ export default function ProductsPage() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
-
-  const [categoryMenuSide, setCategoryMenuSide] = useState<"right" | "left">(
-    "right",
-  );
 
   const [openCategoryPath, setOpenCategoryPath] = useState<string[]>([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -520,20 +505,10 @@ export default function ProductsPage() {
     (category) => category.parentId === null,
   );
 
-  function handleCategoryMenuToggle(event: MouseEvent<HTMLButtonElement>) {
+  function handleCategoryMenuToggle() {
     const willOpen = !isCategoryMenuOpen;
 
-    if (willOpen) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      const submenuWidth = 210;
-      const rightSpace = window.innerWidth - rect.right;
-
-      setCategoryMenuSide(rightSpace >= submenuWidth ? "right" : "left");
-      setOpenCategoryPath([]);
-    } else {
-      setOpenCategoryPath([]);
-    }
-
+    setOpenCategoryPath([]);
     setIsCategoryMenuOpen(willOpen);
   }
 
@@ -966,7 +941,7 @@ export default function ProductsPage() {
 
       {/* PRODUCT TABLE */}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="overflow-x-clip rounded-2xl border border-slate-200 bg-white">
         <div className="border-b border-slate-100 p-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
@@ -1017,7 +992,7 @@ export default function ProductsPage() {
                 </button>
 
                 {isCategoryMenuOpen && (
-                  <div className="absolute right-0 top-full z-[60] mt-2 w-60 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                  <div className="absolute right-0 top-full z-[60] mt-2 max-h-[calc(100dvh-2rem)] w-60 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
                     <button
                       type="button"
                       onClick={() => {
@@ -1047,7 +1022,6 @@ export default function ProductsPage() {
                           categoryFilter={categoryFilter}
                           setCategoryFilter={setCategoryFilter}
                           setIsCategoryMenuOpen={setIsCategoryMenuOpen}
-                          menuSide={categoryMenuSide}
                           openCategoryPath={openCategoryPath}
                           setOpenCategoryPath={setOpenCategoryPath}
                           parentPath={[]}
@@ -1499,9 +1473,7 @@ export default function ProductsPage() {
             return;
           }
 
-          router.push(
-            `/admin/products/edit/${encodeURIComponent(target)}`,
-          );
+          router.push(`/admin/products/edit/${encodeURIComponent(target)}`);
         }}
       />
     </div>

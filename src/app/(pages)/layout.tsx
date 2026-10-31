@@ -13,7 +13,7 @@ import LocationModal from "./set-location/LocationModal";
 
 const supabase = createClient();
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type UserRole =
   | "SUPER_ADMIN"

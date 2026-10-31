@@ -22,8 +22,7 @@ import { toast } from "react-toastify";
 import { useCompare, CompareProduct } from "@/context/CompareContext";
 import { createClient } from "../../../../lib/supabase-client";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 interface EnrichedDetails {
   category?: string;
@@ -37,7 +36,9 @@ interface EnrichedDetails {
 
 export default function ComparePage() {
   const { items, removeFromCompare, clearCompare, isHydrated } = useCompare();
-  const [enrichedData, setEnrichedData] = useState<Record<string, EnrichedDetails>>({});
+  const [enrichedData, setEnrichedData] = useState<
+    Record<string, EnrichedDetails>
+  >({});
   const [addingCartId, setAddingCartId] = useState<string | null>(null);
 
   // Fetch full details for compared products in the background
@@ -70,7 +71,8 @@ export default function ComparePage() {
               p.vendor?.user?.fullName ||
               item.storeName,
             stock: typeof p.stock === "number" ? p.stock : item.stock,
-            description: p.shortDescription || p.description || item.description,
+            description:
+              p.shortDescription || p.description || item.description,
             sku: p.sku,
             warranty: p.warranty,
           },
@@ -181,7 +183,9 @@ export default function ComparePage() {
             তুলনার তালিকায় কোনো পণ্য নেই
           </h1>
           <p className="mt-3 text-sm text-slate-600 sm:text-base leading-relaxed">
-            পণ্য ব্রাউজ করার সময় ছবির উপরে থাকা Compare (তুলনা) আইকনে ক্লিক করে একসাথে সর্বোচ্চ ৪টি পণ্যের দাম, স্পেসিফিকেশন এবং রেটিং পাশাপাশি তুলনা করতে পারেন।
+            পণ্য ব্রাউজ করার সময় ছবির উপরে থাকা Compare (তুলনা) আইকনে ক্লিক করে
+            একসাথে সর্বোচ্চ ৪টি পণ্যের দাম, স্পেসিফিকেশন এবং রেটিং পাশাপাশি
+            তুলনা করতে পারেন।
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -252,7 +256,11 @@ export default function ComparePage() {
             <button
               type="button"
               onClick={() => {
-                if (window.confirm("আপনি কি তুলনার তালিকা থেকে সব পণ্য মুছতে চান?")) {
+                if (
+                  window.confirm(
+                    "আপনি কি তুলনার তালিকা থেকে সব পণ্য মুছতে চান?",
+                  )
+                ) {
                   clearCompare();
                   toast.info("তুলনার তালিকা খালি করা হয়েছে");
                 }
@@ -321,11 +329,15 @@ export default function ComparePage() {
                           <span className="text-base font-extrabold text-amber-600 sm:text-lg">
                             ৳{Number(item.price || 0).toLocaleString("en-BD")}
                           </span>
-                          {item.regularPrice && item.regularPrice > item.price && (
-                            <span className="text-xs text-slate-400 line-through">
-                              ৳{Number(item.regularPrice).toLocaleString("en-BD")}
-                            </span>
-                          )}
+                          {item.regularPrice &&
+                            item.regularPrice > item.price && (
+                              <span className="text-xs text-slate-400 line-through">
+                                ৳
+                                {Number(item.regularPrice).toLocaleString(
+                                  "en-BD",
+                                )}
+                              </span>
+                            )}
                         </div>
 
                         {/* Cart CTA */}
@@ -361,7 +373,9 @@ export default function ComparePage() {
                         <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-2xs">
                           <Plus size={20} />
                         </div>
-                        <span className="text-xs font-semibold">পণ্য যোগ করুন</span>
+                        <span className="text-xs font-semibold">
+                          পণ্য যোগ করুন
+                        </span>
                         <span className="mt-1 text-[11px] text-slate-400">
                           ব্রাউজ করে তুলনা করুন
                         </span>
@@ -385,8 +399,16 @@ export default function ComparePage() {
                             <Star
                               key={i}
                               size={14}
-                              fill={i < Math.round(item.rating || 0) ? "currentColor" : "none"}
-                              className={i < Math.round(item.rating || 0) ? "text-amber-400" : "text-slate-200"}
+                              fill={
+                                i < Math.round(item.rating || 0)
+                                  ? "currentColor"
+                                  : "none"
+                              }
+                              className={
+                                i < Math.round(item.rating || 0)
+                                  ? "text-amber-400"
+                                  : "text-slate-200"
+                              }
                             />
                           ))}
                         </div>
@@ -400,7 +422,10 @@ export default function ComparePage() {
                     </td>
                   ))}
                   {Array.from({ length: 4 - items.length }).map((_, idx) => (
-                    <td key={`empty-rating-${idx}`} className="p-4 text-center text-slate-300">
+                    <td
+                      key={`empty-rating-${idx}`}
+                      className="p-4 text-center text-slate-300"
+                    >
                       —
                     </td>
                   ))}
@@ -422,7 +447,10 @@ export default function ComparePage() {
                           <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
                             <CheckCircle2 size={13} />
                             <span>
-                              ইন স্টক {stock !== undefined && stock > 0 ? `(${stock}টি)` : ""}
+                              ইন স্টক{" "}
+                              {stock !== undefined && stock > 0
+                                ? `(${stock}টি)`
+                                : ""}
                             </span>
                           </div>
                         ) : (
@@ -435,7 +463,10 @@ export default function ComparePage() {
                     );
                   })}
                   {Array.from({ length: 4 - items.length }).map((_, idx) => (
-                    <td key={`empty-stock-${idx}`} className="p-4 text-center text-slate-300">
+                    <td
+                      key={`empty-stock-${idx}`}
+                      className="p-4 text-center text-slate-300"
+                    >
                       —
                     </td>
                   ))}
@@ -447,12 +478,18 @@ export default function ComparePage() {
                     ন্যূনতম অর্ডার (MOQ)
                   </td>
                   {items.map((item: CompareProduct) => (
-                    <td key={item.id} className="p-4 align-top font-medium text-slate-800">
+                    <td
+                      key={item.id}
+                      className="p-4 align-top font-medium text-slate-800"
+                    >
                       {item.moq ? `${item.moq} Pcs` : "১ টি"}
                     </td>
                   ))}
                   {Array.from({ length: 4 - items.length }).map((_, idx) => (
-                    <td key={`empty-moq-${idx}`} className="p-4 text-center text-slate-300">
+                    <td
+                      key={`empty-moq-${idx}`}
+                      className="p-4 text-center text-slate-300"
+                    >
                       —
                     </td>
                   ))}
@@ -465,7 +502,8 @@ export default function ComparePage() {
                   </td>
                   {items.map((item: CompareProduct) => {
                     const enriched = enrichedData[item.id];
-                    const category = enriched?.category || item.category || "General";
+                    const category =
+                      enriched?.category || item.category || "General";
                     return (
                       <td key={item.id} className="p-4 align-top">
                         <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
@@ -476,7 +514,10 @@ export default function ComparePage() {
                     );
                   })}
                   {Array.from({ length: 4 - items.length }).map((_, idx) => (
-                    <td key={`empty-cat-${idx}`} className="p-4 text-center text-slate-300">
+                    <td
+                      key={`empty-cat-${idx}`}
+                      className="p-4 text-center text-slate-300"
+                    >
                       —
                     </td>
                   ))}
@@ -489,15 +530,22 @@ export default function ComparePage() {
                   </td>
                   {items.map((item: CompareProduct) => {
                     const enriched = enrichedData[item.id];
-                    const brand = enriched?.brand || item.brand || "Non-branded";
+                    const brand =
+                      enriched?.brand || item.brand || "Non-branded";
                     return (
-                      <td key={item.id} className="p-4 align-top font-semibold text-slate-800">
+                      <td
+                        key={item.id}
+                        className="p-4 align-top font-semibold text-slate-800"
+                      >
                         {brand}
                       </td>
                     );
                   })}
                   {Array.from({ length: 4 - items.length }).map((_, idx) => (
-                    <td key={`empty-brand-${idx}`} className="p-4 text-center text-slate-300">
+                    <td
+                      key={`empty-brand-${idx}`}
+                      className="p-4 text-center text-slate-300"
+                    >
                       —
                     </td>
                   ))}
@@ -510,7 +558,10 @@ export default function ComparePage() {
                   </td>
                   {items.map((item: CompareProduct) => {
                     const enriched = enrichedData[item.id];
-                    const store = enriched?.storeName || item.storeName || "Aladin Verified Vendor";
+                    const store =
+                      enriched?.storeName ||
+                      item.storeName ||
+                      "Aladin Verified Vendor";
                     return (
                       <td key={item.id} className="p-4 align-top">
                         <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
@@ -521,7 +572,10 @@ export default function ComparePage() {
                     );
                   })}
                   {Array.from({ length: 4 - items.length }).map((_, idx) => (
-                    <td key={`empty-store-${idx}`} className="p-4 text-center text-slate-300">
+                    <td
+                      key={`empty-store-${idx}`}
+                      className="p-4 text-center text-slate-300"
+                    >
                       —
                     </td>
                   ))}
@@ -534,7 +588,8 @@ export default function ComparePage() {
                   </td>
                   {items.map((item: CompareProduct) => {
                     const enriched = enrichedData[item.id];
-                    const desc = enriched?.description || item.description || "";
+                    const desc =
+                      enriched?.description || item.description || "";
                     // Strip HTML tags if any
                     const plainDesc = desc.replace(/<[^>]*>?/gm, "").trim();
 
@@ -554,7 +609,10 @@ export default function ComparePage() {
                     );
                   })}
                   {Array.from({ length: 4 - items.length }).map((_, idx) => (
-                    <td key={`empty-desc-${idx}`} className="p-4 text-center text-slate-300">
+                    <td
+                      key={`empty-desc-${idx}`}
+                      className="p-4 text-center text-slate-300"
+                    >
                       —
                     </td>
                   ))}
@@ -593,7 +651,10 @@ export default function ComparePage() {
                     </td>
                   ))}
                   {Array.from({ length: 4 - items.length }).map((_, idx) => (
-                    <td key={`empty-action-${idx}`} className="p-4 text-center text-slate-300">
+                    <td
+                      key={`empty-action-${idx}`}
+                      className="p-4 text-center text-slate-300"
+                    >
                       —
                     </td>
                   ))}

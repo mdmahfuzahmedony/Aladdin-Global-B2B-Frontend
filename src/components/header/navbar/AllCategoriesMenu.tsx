@@ -1,12 +1,6 @@
 "use client";
 
-
-import React, {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -15,13 +9,14 @@ import {
   Folder,
   Loader2,
 } from "lucide-react";
+import CategoryIcon from "@/components/category/CategoryIcon";
+import { useLanguage } from "@/context/LanguageContext";
 
 // ======================================================
 // API
 // ======================================================
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 const CATEGORY_API = `${API_URL}/api/categories/main-with-count`;
 
@@ -38,6 +33,7 @@ type ApiCategory = {
   image?: string | null;
   icon?: string | null;
   parentId?: string | null;
+  sortOrder?: number | null;
   productCount?: number;
   children?: ApiCategory[];
 };
@@ -50,6 +46,7 @@ type CategoryNode = {
   image?: string | null;
   icon?: string | null;
   parentId?: string | null;
+  sortOrder: number;
   productCount?: number;
   children: CategoryNode[];
 };
@@ -58,6 +55,31 @@ type MegaMenuProps = {
   onClose: () => void;
   mode?: "desktop" | "mobile";
 };
+
+// ======================================================
+// SORT CATEGORIES
+// sortOrder একই হলে API-এর আগের ক্রম বজায় থাকবে
+// ======================================================
+
+function sortByOrder<T extends { sortOrder?: number | null }>(items: T[]): T[] {
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      const orderA = a.item.sortOrder;
+      const orderB = b.item.sortOrder;
+
+      // sortOrder না থাকলে API-এর মূল ক্রম অগ্রাধিকার পাবে
+      if (orderA == null && orderB == null) {
+        return a.index - b.index;
+      }
+
+      if (orderA == null) return 1;
+      if (orderB == null) return -1;
+
+      return orderA - orderB || a.index - b.index;
+    })
+    .map(({ item }) => item);
+}
 
 // ======================================================
 // EXTRACT API CATEGORIES
@@ -101,9 +123,11 @@ function extractCategories(payload: unknown): ApiCategory[] {
 // MAP NESTED CATEGORY
 // ======================================================
 
-function mapNestedCategory(
-  category: ApiCategory,
-): CategoryNode {
+function mapNestedCategory(category: ApiCategory): CategoryNode {
+  const children = Array.isArray(category.children)
+    ? sortByOrder(category.children).map(mapNestedCategory)
+    : [];
+
   return {
     id: category.id,
     name: category.name,
@@ -112,36 +136,35 @@ function mapNestedCategory(
     image: category.image ?? null,
     icon: category.icon ?? null,
     parentId: category.parentId ?? null,
+    sortOrder: category.sortOrder ?? 0,
     productCount: category.productCount,
-    children: Array.isArray(category.children)
-      ? category.children.map(mapNestedCategory)
-      : [],
+    children,
   };
 }
 
 // ======================================================
 // BUILD CATEGORY TREE
+// Supports nested and flat API responses
 // ======================================================
 
-function buildCategoryTree(
-  categories: ApiCategory[],
-): CategoryNode[] {
-  if (!categories.length) {
+function buildCategoryTree(categories: ApiCategory[]): CategoryNode[] {
+  if (categories.length === 0) {
     return [];
   }
 
   const hasNestedChildren = categories.some(
     (category) =>
-      Array.isArray(category.children) &&
-      category.children.length > 0,
+      Array.isArray(category.children) && category.children.length > 0,
   );
 
+  // API already provides a nested category tree
   if (hasNestedChildren) {
-    return categories
-      .filter((category) => !category.parentId)
-      .map(mapNestedCategory);
+    return sortByOrder(categories.filter((category) => !category.parentId)).map(
+      mapNestedCategory,
+    );
   }
 
+  // API provides a flat category list
   const categoryMap = new Map<string, CategoryNode>();
 
   categories.forEach((category) => {
@@ -153,6 +176,7 @@ function buildCategoryTree(
       image: category.image ?? null,
       icon: category.icon ?? null,
       parentId: category.parentId ?? null,
+      sortOrder: category.sortOrder ?? 0,
       productCount: category.productCount,
       children: [],
     });
@@ -163,23 +187,24 @@ function buildCategoryTree(
   categories.forEach((category) => {
     const current = categoryMap.get(category.id);
 
-    if (!current) {
-      return;
-    }
+    if (!current) return;
 
-    if (
-      category.parentId &&
-      categoryMap.has(category.parentId)
-    ) {
-      categoryMap
-        .get(category.parentId)!
-        .children.push(current);
+    if (category.parentId && categoryMap.has(category.parentId)) {
+      categoryMap.get(category.parentId)!.children.push(current);
     } else {
       roots.push(current);
     }
   });
 
-  return roots;
+  // Sort every level using the saved order
+  const sortTree = (items: CategoryNode[]): CategoryNode[] => {
+    return sortByOrder(items).map((item) => ({
+      ...item,
+      children: sortTree(item.children),
+    }));
+  };
+
+  return sortTree(roots);
 }
 
 // ======================================================
@@ -187,7 +212,9 @@ function buildCategoryTree(
 // ======================================================
 
 function getCategoryHref(category: CategoryNode) {
-  return `/products?categoryId=${encodeURIComponent(category.id)}`;
+  return category.slug
+    ? `/categories/${encodeURIComponent(category.slug)}`
+    : `/products?category=${encodeURIComponent(category.id)}`;
 }
 
 // ======================================================
@@ -199,6 +226,7 @@ export function AllCategoriesMenu({
   mode = "desktop",
 }: MegaMenuProps) {
   const isMobile = mode === "mobile";
+  const { t } = useLanguage();
 
   const [categories, setCategories] = useState<CategoryNode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -208,12 +236,9 @@ export function AllCategoriesMenu({
   const [activePath, setActivePath] = useState<CategoryNode[]>([]);
 
   // Mobile expanded categories
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(
-    () => new Set(),
-  );
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
 
-  const closeTimerRef =
-    useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cancelCloseTimer = useCallback(() => {
     if (closeTimerRef.current) {
@@ -260,23 +285,16 @@ export function AllCategoriesMenu({
         });
 
         if (!response.ok) {
-          throw new Error(
-            `Failed to load categories (${response.status})`,
-          );
+          throw new Error(`Failed to load categories (${response.status})`);
         }
 
-        const payload = await response.json();
+        const payload: unknown = await response.json();
         const apiCategories = extractCategories(payload);
         const tree = buildCategoryTree(apiCategories);
 
-        // Ensure Grocery is always at the top of All Categories menu
-        tree.sort((a, b) => {
-          const aIsGrocery = /grocer|মুদি/i.test(a.name);
-          const bIsGrocery = /grocer|মুদি/i.test(b.name);
-          if (aIsGrocery && !bIsGrocery) return -1;
-          if (!aIsGrocery && bIsGrocery) return 1;
-          return a.name.localeCompare(b.name);
-        });
+        // গুরুত্বপূর্ণ:
+        // এখানে নাম অনুযায়ী tree.sort() করা হবে না।
+        // API/database-এর sortOrder-ই category order নির্ধারণ করবে।
 
         if (!mounted) return;
 
@@ -338,9 +356,7 @@ export function AllCategoriesMenu({
         return;
       }
 
-      setActivePath((current) =>
-        current.slice(0, depth),
-      );
+      setActivePath((current) => current.slice(0, depth));
     },
     [cancelCloseTimer],
   );
@@ -357,7 +373,6 @@ export function AllCategoriesMenu({
         if (next.has(category.id)) {
           next.delete(category.id);
 
-          // Collapse all descendants too.
           const removeDescendants = (items: CategoryNode[]) => {
             items.forEach((item) => {
               next.delete(item.id);
@@ -384,18 +399,11 @@ export function AllCategoriesMenu({
 
   // ====================================================
   // DESKTOP CATEGORY ITEM
-  // Only root category gets active background.
-  // No images, icons, or child hover background.
   // ====================================================
 
-  const renderDesktopCategoryItem = (
-    category: CategoryNode,
-    depth: number,
-  ) => {
+  const renderDesktopCategoryItem = (category: CategoryNode, depth: number) => {
     const hasChildren = category.children.length > 0;
-
-    const active =
-      depth === 0 && activePath[0]?.id === category.id;
+    const active = depth === 0 && activePath[0]?.id === category.id;
 
     return (
       <a
@@ -403,20 +411,25 @@ export function AllCategoriesMenu({
         href={getCategoryHref(category)}
         className={[
           "flex w-full min-w-0 items-center justify-between gap-2",
-          "rounded-lg px-3 py-3 text-left transition-colors duration-150",
+          "rounded-lg px-2 text-left transition-all duration-150 ease-out",
+          depth === 0 ? "py-2" : "py-1",
           active
-            ? "bg-[#12233F] text-white"
-            : "text-slate-700 hover:text-[#12233F]",
+            ? "bg-[#fff8e6] text-[#12233F] shadow-sm"
+            : "text-slate-700 hover:bg-[#fffbf2] hover:text-[#12233F]",
         ].join(" ")}
-        onMouseEnter={() =>
-          handleCategoryHover(category, depth)
-        }
-        onFocus={() =>
-          handleCategoryHover(category, depth)
-        }
+        onMouseEnter={() => handleCategoryHover(category, depth)}
+        onFocus={() => handleCategoryHover(category, depth)}
       >
-        <span className="min-w-0 flex-1 truncate text-sm font-medium">
-          {category.name}
+        <span className="flex min-w-0 flex-1 items-center gap-2">
+          {depth === 0 && (
+            <CategoryIcon
+              icon={category.icon}
+              name={category.name}
+              size={17}
+              className="shrink-0 text-[#d6a419]"
+            />
+          )}
+          <span className="truncate text-sm font-medium">{category.name}</span>
         </span>
 
         {hasChildren && (
@@ -424,7 +437,7 @@ export function AllCategoriesMenu({
             size={16}
             className={[
               "shrink-0",
-              active ? "text-white" : "text-slate-400",
+              active ? "text-[#d6a419]" : "text-slate-400",
             ].join(" ")}
           />
         )}
@@ -434,11 +447,11 @@ export function AllCategoriesMenu({
 
   // ====================================================
   // MOBILE CATEGORY ITEM
-  // All levels use the same left alignment.
   // ====================================================
 
   const renderMobileCategory = (
     category: CategoryNode,
+    depth = 0,
   ): React.ReactNode => {
     const hasChildren = category.children.length > 0;
     const expanded = expandedIds.has(category.id);
@@ -449,10 +462,23 @@ export function AllCategoriesMenu({
           type="button"
           onClick={() => handleCategoryTap(category)}
           aria-expanded={hasChildren ? expanded : undefined}
-          className="flex w-full items-center justify-between gap-3 border-b border-slate-100 px-3 py-3.5 text-left transition-colors hover:text-[#12233F]"
+          className={[
+            "flex w-full items-center justify-between gap-3 border-b border-slate-100 px-3 text-left transition-colors hover:text-[#12233F]",
+            depth === 0 ? "py-2.5" : "py-1",
+          ].join(" ")}
         >
-          <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">
-            {category.name}
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            {depth === 0 && (
+              <CategoryIcon
+                icon={category.icon}
+                name={category.name}
+                size={17}
+                className="shrink-0 text-[#d6a419]"
+              />
+            )}
+            <span className="truncate text-sm font-medium text-slate-700">
+              {category.name}
+            </span>
           </span>
 
           {hasChildren && (
@@ -470,7 +496,7 @@ export function AllCategoriesMenu({
         {hasChildren && expanded && (
           <div className="w-full">
             {category.children.map((child) =>
-              renderMobileCategory(child),
+              renderMobileCategory(child, depth + 1),
             )}
           </div>
         )}
@@ -485,11 +511,8 @@ export function AllCategoriesMenu({
   if (loading) {
     return (
       <div className="flex min-h-[180px] items-center justify-center gap-3 p-6 text-sm text-slate-500">
-        <Loader2
-          size={20}
-          className="animate-spin text-[#D6A419]"
-        />
-        Loading categories...
+        <Loader2 size={20} className="animate-spin text-[#D6A419]" />
+        {t("loadingCategories")}
       </div>
     );
   }
@@ -510,7 +533,7 @@ export function AllCategoriesMenu({
           onClick={() => window.location.reload()}
           className="rounded-lg bg-[#12233F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1c355c]"
         >
-          Reload page
+          {t("reloadPage")}
         </button>
       </div>
     );
@@ -526,11 +549,11 @@ export function AllCategoriesMenu({
         <Folder size={28} className="text-slate-400" />
 
         <p className="text-sm font-medium text-slate-700">
-          No categories available
+          {t("categoriesUnavailable")}
         </p>
 
         <p className="text-xs text-slate-500">
-          Please check the categories API.
+          {t("categoryApiHelp")}
         </p>
       </div>
     );
@@ -538,19 +561,13 @@ export function AllCategoriesMenu({
 
   // ====================================================
   // MOBILE MENU
-  // No Back to Categories button.
-  // Main categories remain visible.
   // ====================================================
 
   if (isMobile) {
     return (
       <div className="flex min-h-full flex-col overflow-x-hidden bg-white">
-        
-
         <div className="min-w-0 flex-1 px-3 pb-5">
-          {categories.map((category) =>
-            renderMobileCategory(category),
-          )}
+          {categories.map((category) => renderMobileCategory(category))}
         </div>
       </div>
     );
@@ -558,48 +575,39 @@ export function AllCategoriesMenu({
 
   // ====================================================
   // DESKTOP MEGA MENU
-  // No parent headings.
-  // No horizontal scrollbar.
-  // Columns share available width.
   // ====================================================
 
   return (
     <div
-      className="relative w-full min-w-0 overflow-hidden bg-white"
+      className="relative w-fit min-w-0 max-w-[90vw] overflow-hidden bg-white"
       onMouseEnter={cancelCloseTimer}
       onMouseLeave={scheduleClose}
     >
-      <div className="flex max-h-[520px] min-h-[320px] min-w-0 overflow-hidden">
-        <div className="flex min-w-0 flex-1 overflow-x-hidden">
-          {Array.from(
-            { length: activePath.length + 1 },
-            (_, depth) => {
-              const columnCategories =
-                getColumnCategories(depth);
+      <div className="flex max-h-[520px] min-h-[320px] w-fit min-w-0 max-w-[90vw] overflow-hidden">
+        <div className="flex w-fit min-w-0 overflow-x-hidden">
+          {Array.from({ length: activePath.length + 1 }, (_, depth) => {
+            const columnCategories = getColumnCategories(depth);
 
-              if (columnCategories.length === 0) {
-                return null;
-              }
+            if (columnCategories.length === 0) {
+              return null;
+            }
 
-              return (
-                <div
-                  key={`category-column-${depth}`}
-                  className={[
-                    "min-w-0 flex-1 overflow-y-auto p-2",
-                    depth > 0
-                      ? "border-l border-slate-100"
-                      : "bg-white",
-                  ].join(" ")}
-                >
-                  <div className="space-y-1">
-                    {columnCategories.map((category) =>
-                      renderDesktopCategoryItem(category, depth),
-                    )}
-                  </div>
+            return (
+              <div
+                key={`category-column-${depth}`}
+                className={[
+                  "w-[240px] min-w-0 shrink-0 overflow-y-auto p-2",
+                  depth > 0 ? "border-l border-slate-100" : "bg-white",
+                ].join(" ")}
+              >
+                <div className="space-y-1">
+                  {columnCategories.map((category) =>
+                    renderDesktopCategoryItem(category, depth),
+                  )}
                 </div>
-              );
-            },
-          )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -609,12 +617,12 @@ export function AllCategoriesMenu({
           onClick={onClose}
           className="flex min-w-0 items-center gap-2 text-sm font-semibold text-[#12233F] transition hover:text-[#D6A419]"
         >
-          <span className="truncate">Browse all categories</span>
+          <span className="truncate">{t("browseAllCategories")}</span>
           <ArrowRight size={15} className="shrink-0" />
         </Link>
 
         <span className="shrink-0 text-xs text-slate-400">
-          {categories.length} main categories
+          {categories.length} {t("mainCategories")}
         </span>
       </div>
     </div>

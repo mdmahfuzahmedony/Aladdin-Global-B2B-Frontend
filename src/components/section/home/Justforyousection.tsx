@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
 import JustForYouSkeleton from "./JustForYouSkeleton";
+import { useLanguage } from "@/context/LanguageContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
@@ -19,6 +20,7 @@ type Product = {
 };
 
 export default function JustForYouSection() {
+  const { t } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -43,7 +45,7 @@ export default function JustForYouSection() {
         const result = await response.json();
 
         if (!response.ok || !result.success) {
-          throw new Error(result?.error || "Failed to fetch products");
+          throw new Error(result?.error || t("productLoadError"));
         }
 
         const apiProducts = Array.isArray(result.data) ? result.data : [];
@@ -85,7 +87,7 @@ export default function JustForYouSection() {
 
         if (!cancelled) {
           setError(
-            error instanceof Error ? error.message : "Failed to load products"
+            error instanceof Error ? error.message : t("productLoadError")
           );
           setProducts([]);
         }
@@ -101,7 +103,7 @@ export default function JustForYouSection() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const visibleProducts = products.slice(0, visibleCount);
   const hasMore = visibleCount < products.length;
@@ -115,9 +117,9 @@ export default function JustForYouSection() {
       <div className="mx-auto max-w-[1500px] px-3 sm:px-6 lg:px-0">
         {/* ================= HEADER ================= */}
         <div className="mb-5">
-          <h2 className="text-xl font-bold text-slate-900">Just For You</h2>
+          <h2 className="text-xl font-bold text-slate-900">{t("justForYou")}</h2>
           <p className="mt-1 text-xs text-slate-500 sm:text-sm">
-            Products selected based on your interests
+            {t("basedOnInterests")}
           </p>
         </div>
 
@@ -141,7 +143,7 @@ export default function JustForYouSection() {
         {!loading && !error && products.length === 0 && (
           <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
             <p className="text-sm font-semibold text-slate-500">
-              No products available.
+              {t("noProducts")}
             </p>
           </div>
         )}
@@ -165,7 +167,7 @@ export default function JustForYouSection() {
                   onClick={handleLoadMore}
                   className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-8 py-2.5 text-xs font-bold text-[#12233F] shadow-sm transition-all hover:border-[#12233F] hover:bg-slate-50 active:scale-95 sm:py-3 sm:text-sm"
                 >
-                  Load More Products
+                  {t("loadMoreProducts")}
                 </button>
               </div>
             )}

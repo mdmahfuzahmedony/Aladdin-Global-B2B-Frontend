@@ -6,11 +6,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import BrandCard, {
   type BrandItem,
 } from "@/components/cards/product/BrandCard";
+import { useLanguage } from "@/context/LanguageContext";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 export default function PopularBrands() {
+  const { t } = useLanguage();
   const [brands, setBrands] = useState<BrandItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,11 +68,11 @@ export default function PopularBrands() {
         <div className="mb-3 flex items-center justify-between gap-3 sm:mb-5">
           <div className="flex min-w-0 flex-col">
     <h2 className="truncate text-base font-bold text-slate-900 sm:text-xl">
-      Popular Brands
+      {t("popularBrands")}
     </h2>
 
     <p className="mt-1 text-xs text-slate-500 sm:text-sm">
-      Explore your favorite brands
+      {t("exploreBrands")}
     </p>
   </div>
 
@@ -79,7 +81,7 @@ export default function PopularBrands() {
             <button
               type="button"
               onClick={() => scroll("left")}
-              aria-label="Scroll brands left"
+              aria-label={t("scrollBrandsLeft")}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white transition hover:bg-slate-100 active:scale-95 sm:h-9 sm:w-9"
             >
               <ChevronLeft className="h-4 w-4 text-slate-700" />
@@ -88,7 +90,7 @@ export default function PopularBrands() {
             <button
               type="button"
               onClick={() => scroll("right")}
-              aria-label="Scroll brands right"
+              aria-label={t("scrollBrandsRight")}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white transition hover:bg-slate-100 active:scale-95 sm:h-9 sm:w-9"
             >
               <ChevronRight className="h-4 w-4 text-slate-700" />
@@ -123,7 +125,7 @@ export default function PopularBrands() {
             </div>
           ) : brands.length === 0 ? (
             <div className="py-8 text-xs text-slate-500 sm:text-sm">
-              No brands found.
+              {t("noBrands")}
             </div>
           ) : (
             brands.map((brand) => (

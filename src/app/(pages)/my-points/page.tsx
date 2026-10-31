@@ -17,8 +17,7 @@ import {
 } from "lucide-react";
 import { createClient } from "../../../../lib/supabase-client";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 interface PointTransaction {
   id: string;
@@ -95,7 +94,7 @@ export default function MyPointsPage() {
       setError(
         err instanceof Error
           ? err.message
-          : "পয়েন্ট লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।"
+          : "পয়েন্ট লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।",
       );
     } finally {
       setLoading(false);
@@ -140,8 +139,12 @@ export default function MyPointsPage() {
               </h1>
 
               <p className="mt-2 text-sm text-slate-300">
-                প্রতি <span className="font-bold text-amber-300">১০০ টাকার</span> পণ্য কেনাকাটায় পাবেন{" "}
-                <span className="font-bold text-amber-300">১ পয়েন্ট</span>। আপনি যে সেলারের কাছ থেকে কিনবেন, পয়েন্ট সেই সেলারের অধীনেই জমা হবে এবং ওই সেলারের পণ্যেই ভাঙাতে পারবেন!
+                প্রতি{" "}
+                <span className="font-bold text-amber-300">১০০ টাকার</span> পণ্য
+                কেনাকাটায় পাবেন{" "}
+                <span className="font-bold text-amber-300">১ পয়েন্ট</span>। আপনি
+                যে সেলারের কাছ থেকে কিনবেন, পয়েন্ট সেই সেলারের অধীনেই জমা হবে
+                এবং ওই সেলারের পণ্যেই ভাঙাতে পারবেন!
               </p>
             </div>
 
@@ -179,10 +182,7 @@ export default function MyPointsPage() {
               disabled={loading}
               className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
             >
-              <RefreshCw
-                size={13}
-                className={loading ? "animate-spin" : ""}
-              />
+              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
               রিফ্রেশ
             </button>
           </div>
@@ -196,7 +196,8 @@ export default function MyPointsPage() {
                 স্টোরভিত্তিক পয়েন্ট ব্যালেন্স
               </h2>
               <p className="text-xs text-slate-500">
-                যে সেলারের কাছ থেকে পণ্য কিনেছেন, পয়েন্ট শুধুমাত্র ওই সেলারের পণ্যে ভাঙানো যাবে।
+                যে সেলারের কাছ থেকে পণ্য কিনেছেন, পয়েন্ট শুধুমাত্র ওই সেলারের
+                পণ্যে ভাঙানো যাবে।
               </p>
             </div>
             <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
@@ -215,7 +216,8 @@ export default function MyPointsPage() {
                 এখনো কোনো স্টোরভিত্তিক পয়েন্ট নেই
               </p>
               <p className="mt-1 text-xs text-slate-400">
-                যেকোনো সেলারের দোকান থেকে অর্ডার করলে এখানে স্বয়ংক্রিয়ভাবে ওই সেলারের পয়েন্ট যুক্ত হবে।
+                যেকোনো সেলারের দোকান থেকে অর্ডার করলে এখানে স্বয়ংক্রিয়ভাবে ওই
+                সেলারের পয়েন্ট যুক্ত হবে।
               </p>
             </div>
           ) : (
@@ -257,7 +259,8 @@ export default function MyPointsPage() {
                       </div>
                       <p className="mt-1.5 flex items-center gap-1 text-[10.5px] text-slate-500">
                         <Tag size={11} className="text-amber-500" />
-                        এই পয়েন্ট শুধু {store.storeName}-এর পণ্য অর্ডারে ব্যবহার করা যাবে
+                        এই পয়েন্ট শুধু {store.storeName}-এর পণ্য অর্ডারে ব্যবহার
+                        করা যাবে
                       </p>
                     </div>
                   </div>
@@ -287,7 +290,8 @@ export default function MyPointsPage() {
               সেলারভিত্তিক পয়েন্ট জমা
             </h3>
             <p className="mt-1 text-xs leading-relaxed text-slate-500">
-              আপনি যে সেলারের কাছ থেকে যত টাকার পণ্য কিনবেন, প্রতি ১০০ টাকার জন্য ওই নির্দিষ্ট সেলারের ঝুলিতেই ১ পয়েন্ট জমা হবে।
+              আপনি যে সেলারের কাছ থেকে যত টাকার পণ্য কিনবেন, প্রতি ১০০ টাকার
+              জন্য ওই নির্দিষ্ট সেলারের ঝুলিতেই ১ পয়েন্ট জমা হবে।
             </p>
           </div>
 
@@ -299,7 +303,8 @@ export default function MyPointsPage() {
               ১ পয়েন্ট = ১ টাকা ডিসকাউন্ট
             </h3>
             <p className="mt-1 text-xs leading-relaxed text-slate-500">
-              আপনার অর্জিত প্রতিটি পয়েন্টের মান ১ টাকা। যেমন: কোনো সেলারের ৫০ পয়েন্ট থাকলে ওই সেলারের কেনাকাটায় ৫০ টাকা ছাড় পাবেন।
+              আপনার অর্জিত প্রতিটি পয়েন্টের মান ১ টাকা। যেমন: কোনো সেলারের ৫০
+              পয়েন্ট থাকলে ওই সেলারের কেনাকাটায় ৫০ টাকা ছাড় পাবেন।
             </p>
           </div>
 
@@ -311,7 +316,8 @@ export default function MyPointsPage() {
               ওই সেলারের পণ্যে ভাঙানোর নিয়ম
             </h3>
             <p className="mt-1 text-xs leading-relaxed text-slate-500">
-              যেহেতু পয়েন্টটি ওই সেলার দিয়েছেন, তাই পয়েন্ট ভাঙিয়ে পণ্য কিনতে হলে আবার ওই সেলারের দোকান থেকেই পণ্য নিতে হবে।
+              যেহেতু পয়েন্টটি ওই সেলার দিয়েছেন, তাই পয়েন্ট ভাঙিয়ে পণ্য কিনতে হলে
+              আবার ওই সেলারের দোকান থেকেই পণ্য নিতে হবে।
             </p>
           </div>
         </div>
@@ -336,14 +342,15 @@ export default function MyPointsPage() {
           </div>
 
           {error && (
-            <div className="p-6 text-center text-xs text-rose-600">
-              {error}
-            </div>
+            <div className="p-6 text-center text-xs text-rose-600">{error}</div>
           )}
 
           {loading ? (
             <div className="p-12 text-center text-xs text-slate-400">
-              <RefreshCw size={18} className="mx-auto mb-2 animate-spin text-amber-500" />
+              <RefreshCw
+                size={18}
+                className="mx-auto mb-2 animate-spin text-amber-500"
+              />
               পয়েন্ট তথ্য লোড হচ্ছে...
             </div>
           ) : !data?.transactions || data.transactions.length === 0 ? (
@@ -355,7 +362,8 @@ export default function MyPointsPage() {
                 এখনো কোনো পয়েন্ট ট্রানজ্যাকশন নেই
               </h4>
               <p className="mx-auto mt-1 max-w-sm text-xs text-slate-400">
-                যেকোনো সেলারের দোকান থেকে অর্ডার করলে প্রতি ১০০ টাকার জন্য ১ পয়েন্ট ওই সেলারের আন্ডারে যুক্ত হবে।
+                যেকোনো সেলারের দোকান থেকে অর্ডার করলে প্রতি ১০০ টাকার জন্য ১
+                পয়েন্ট ওই সেলারের আন্ডারে যুক্ত হবে।
               </p>
               <Link
                 href="/products"

@@ -1,6 +1,5 @@
 "use client";
 
-
 import {
   useCallback,
   useEffect,
@@ -43,8 +42,7 @@ import ConfirmModal from "@/components/common/ConfirmModal";
 import { toast } from "react-toastify";
 import { createClient } from "../../../../../lib/supabase-client";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 const ADD_PRODUCT_PATH = "/vendor/products/add-product";
 
@@ -132,8 +130,6 @@ function formatMoney(amount?: number | null): string {
   return `৳${Number(amount).toLocaleString("en-BD")}`;
 }
 
-
-
 function getProductPrice(product: ApiProduct): number | null {
   const pricing = product.pricing;
 
@@ -220,10 +216,7 @@ function getProductList(data: unknown): ApiProduct[] {
 }
 
 function getCouponFromResponse(data: any): ProductCoupon | null {
-  const coupon =
-    data?.data?.coupon ??
-    data?.data ??
-    data?.coupon;
+  const coupon = data?.data?.coupon ?? data?.data ?? data?.coupon;
 
   if (
     coupon &&
@@ -263,9 +256,7 @@ function ProductStatusBadge({ status }: { status: ProductStatus }) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-semibold ${
-        active
-          ? "bg-emerald-50 text-emerald-700"
-          : "bg-red-50 text-red-600"
+        active ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
       }`}
     >
       {active ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
@@ -274,13 +265,7 @@ function ProductStatusBadge({ status }: { status: ProductStatus }) {
   );
 }
 
-function ProductImage({
-  name,
-  image,
-}: {
-  name: string;
-  image?: string;
-}) {
+function ProductImage({ name, image }: { name: string; image?: string }) {
   const [failed, setFailed] = useState(false);
 
   if (!image || failed) {
@@ -372,9 +357,7 @@ function ProductDetailsSidebar({
   useEffect(() => {
     setCoupon(product?.coupon ?? null);
     setCouponName(product?.coupon?.couponName ?? "");
-    setDiscount(
-      product?.coupon ? String(product.coupon.discount) : "",
-    );
+    setDiscount(product?.coupon ? String(product.coupon.discount) : "");
     setCouponError("");
     setCouponMessage("");
     setShowCouponForm(false);
@@ -496,16 +479,12 @@ function ProductDetailsSidebar({
       setCouponName(savedCoupon.couponName);
       setDiscount(String(savedCoupon.discount));
       setShowCouponForm(false);
-      setCouponMessage(
-        coupon ? "কুপন আপডেট হয়েছে।" : "কুপন যোগ হয়েছে।",
-      );
+      setCouponMessage(coupon ? "কুপন আপডেট হয়েছে।" : "কুপন যোগ হয়েছে।");
 
       onCouponChange(product.id, savedCoupon);
     } catch (error) {
       setCouponError(
-        error instanceof Error
-          ? error.message
-          : "কুপন সংরক্ষণ করা যায়নি।",
+        error instanceof Error ? error.message : "কুপন সংরক্ষণ করা যায়নি।",
       );
     } finally {
       setCouponLoading(false);
@@ -572,9 +551,7 @@ function ProductDetailsSidebar({
       onCouponChange(product.id, null);
     } catch (error) {
       setCouponError(
-        error instanceof Error
-          ? error.message
-          : "কুপন ডিলিট করা যায়নি।",
+        error instanceof Error ? error.message : "কুপন ডিলিট করা যায়নি।",
       );
     } finally {
       setCouponLoading(false);
@@ -750,9 +727,7 @@ function ProductDetailsSidebar({
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-[11px] text-slate-500">
-                        Coupon Code
-                      </p>
+                      <p className="text-[11px] text-slate-500">Coupon Code</p>
                       <p className="mt-1 break-all text-lg font-bold text-[#12233F]">
                         {coupon.couponName}
                       </p>
@@ -768,9 +743,7 @@ function ProductDetailsSidebar({
                     </span>
                   </div>
 
-                  <p className="mt-3 text-xs text-slate-500">
-                    Discount Amount
-                  </p>
+                  <p className="mt-3 text-xs text-slate-500">Discount Amount</p>
                   <p className="mt-1 text-2xl font-bold text-emerald-700">
                     ৳{Number(coupon.discount).toLocaleString("en-BD")}
                   </p>
@@ -824,10 +797,7 @@ function ProductDetailsSidebar({
 
               {!coupon && !showCouponForm && (
                 <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center">
-                  <TicketPercent
-                    size={28}
-                    className="mx-auto text-slate-400"
-                  />
+                  <TicketPercent size={28} className="mx-auto text-slate-400" />
                   <p className="mt-3 text-sm font-semibold text-slate-700">
                     এখনো কোনো কুপন নেই
                   </p>
@@ -880,9 +850,7 @@ function ProductDetailsSidebar({
                       value={couponName}
                       onChange={(event) =>
                         setCouponName(
-                          event.target.value
-                            .toUpperCase()
-                            .replace(/\s+/g, ""),
+                          event.target.value.toUpperCase().replace(/\s+/g, ""),
                         )
                       }
                       placeholder="যেমন SAVE50"
@@ -979,21 +947,21 @@ function ProductDetailsSidebar({
           </button>
         </div>
 
-      <ConfirmModal
-        isOpen={isDeleteCouponModalOpen}
-        onClose={() => setIsDeleteCouponModalOpen(false)}
-        onConfirm={async () => {
-          await removeCoupon();
-          setIsDeleteCouponModalOpen(false);
-          toast.success("কুপন সফলভাবে ডিলিট হয়েছে!");
-        }}
-        isLoading={couponLoading}
-        title="কুপন ডিলিট করবেন?"
-        description={`আপনি কি নিশ্চিতভাবে "${coupon?.couponName}" কুপনটি ডিলিট করতে চান?`}
-        confirmText="হ্যাঁ, ডিলিট করুন"
-        cancelText="বাতিল"
-        variant="danger"
-      />
+        <ConfirmModal
+          isOpen={isDeleteCouponModalOpen}
+          onClose={() => setIsDeleteCouponModalOpen(false)}
+          onConfirm={async () => {
+            await removeCoupon();
+            setIsDeleteCouponModalOpen(false);
+            toast.success("কুপন সফলভাবে ডিলিট হয়েছে!");
+          }}
+          isLoading={couponLoading}
+          title="কুপন ডিলিট করবেন?"
+          description={`আপনি কি নিশ্চিতভাবে "${coupon?.couponName}" কুপনটি ডিলিট করতে চান?`}
+          confirmText="হ্যাঁ, ডিলিট করুন"
+          cancelText="বাতিল"
+          variant="danger"
+        />
       </aside>
     </div>
   );
@@ -1017,9 +985,9 @@ export default function VendorProductsPage() {
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
-  const [statusFilter, setStatusFilter] = useState<
-    "ALL" | ProductStatus
-  >("ALL");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | ProductStatus>(
+    "ALL",
+  );
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
@@ -1079,24 +1047,17 @@ export default function VendorProductsPage() {
         }),
       ]);
 
-      const [
-        productsResult,
-        categoriesResult,
-        storeResult,
-        dashboardResult,
-      ] = await Promise.all([
-        productsResponse.json().catch(() => null),
-        categoriesResponse.json().catch(() => null),
-        storeResponse.json().catch(() => null),
-        dashboardResponse.json().catch(() => null),
-      ]);
+      const [productsResult, categoriesResult, storeResult, dashboardResult] =
+        await Promise.all([
+          productsResponse.json().catch(() => null),
+          categoriesResponse.json().catch(() => null),
+          storeResponse.json().catch(() => null),
+          dashboardResponse.json().catch(() => null),
+        ]);
 
       if (!productsResponse.ok) {
         throw new Error(
-          getErrorMessage(
-            productsResult,
-            "Vendor products load করা যায়নি।",
-          ),
+          getErrorMessage(productsResult, "Vendor products load করা যায়নি।"),
         );
       }
 
@@ -1104,16 +1065,10 @@ export default function VendorProductsPage() {
 
       const mappedProducts: Product[] = apiProducts
         .filter(
-          (item) =>
-            item &&
-            typeof item.id === "string" &&
-            item.id.length > 0,
+          (item) => item && typeof item.id === "string" && item.id.length > 0,
         )
         .map((item) => {
-          const stock = Math.max(
-            0,
-            Number(item.stockQuantity ?? 0) || 0,
-          );
+          const stock = Math.max(0, Number(item.stockQuantity ?? 0) || 0);
 
           const images = Array.isArray(item.images)
             ? item.images.filter(
@@ -1148,9 +1103,7 @@ export default function VendorProductsPage() {
       setSelectedIds([]);
 
       setCategories(
-        categoriesResponse.ok
-          ? getCategoryList(categoriesResult)
-          : [],
+        categoriesResponse.ok ? getCategoryList(categoriesResult) : [],
       );
 
       const dashboardData = dashboardResult?.data;
@@ -1206,9 +1159,7 @@ export default function VendorProductsPage() {
     } catch (err) {
       console.error("Vendor products fetch error:", err);
       setError(
-        err instanceof Error
-          ? err.message
-          : "Products load করতে সমস্যা হয়েছে।",
+        err instanceof Error ? err.message : "Products load করতে সমস্যা হয়েছে।",
       );
     } finally {
       setLoading(false);
@@ -1242,12 +1193,10 @@ export default function VendorProductsPage() {
         product.sku.toLowerCase().includes(searchText);
 
       const categoryMatch =
-        categoryFilter === "ALL" ||
-        product.category === categoryFilter;
+        categoryFilter === "ALL" || product.category === categoryFilter;
 
       const statusMatch =
-        statusFilter === "ALL" ||
-        product.status === statusFilter;
+        statusFilter === "ALL" || product.status === statusFilter;
 
       return searchMatch && categoryMatch && statusMatch;
     });
@@ -1255,33 +1204,25 @@ export default function VendorProductsPage() {
 
   const allVisibleSelected =
     filteredProducts.length > 0 &&
-    filteredProducts.every((product) =>
-      selectedIds.includes(product.id),
-    );
+    filteredProducts.every((product) => selectedIds.includes(product.id));
 
   function toggleSelectAll() {
     if (allVisibleSelected) {
       setSelectedIds((prev) =>
         prev.filter(
-          (id) =>
-            !filteredProducts.some((product) => product.id === id),
+          (id) => !filteredProducts.some((product) => product.id === id),
         ),
       );
     } else {
       setSelectedIds((prev) => [
-        ...new Set([
-          ...prev,
-          ...filteredProducts.map((product) => product.id),
-        ]),
+        ...new Set([...prev, ...filteredProducts.map((product) => product.id)]),
       ]);
     }
   }
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((item) => item !== id)
-        : [...prev, id],
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   }
 
@@ -1302,9 +1243,7 @@ export default function VendorProductsPage() {
       );
 
       setViewProduct((previous) =>
-        previous?.id === productId
-          ? { ...previous, coupon }
-          : previous,
+        previous?.id === productId ? { ...previous, coupon } : previous,
       );
     },
     [],
@@ -1312,9 +1251,7 @@ export default function VendorProductsPage() {
 
   function handleEditProduct(product: Product) {
     setViewProduct(null);
-    router.push(
-      `/vendor/products/${encodeURIComponent(product.id)}/edit`,
-    );
+    router.push(`/vendor/products/${encodeURIComponent(product.id)}/edit`);
   }
 
   function deleteProduct(product: Product) {
@@ -1477,11 +1414,7 @@ export default function VendorProductsPage() {
   }
 
   const modalProductCount =
-    deleteMode === "single"
-      ? deleteTarget
-        ? 1
-        : 0
-      : selectedIds.length;
+    deleteMode === "single" ? (deleteTarget ? 1 : 0) : selectedIds.length;
 
   return (
     <div className="space-y-5">
@@ -1565,7 +1498,7 @@ export default function VendorProductsPage() {
                 <h2 className="truncate text-[15px] font-bold text-[#12233F]">
                   {loading
                     ? "Loading store..."
-                    : vendorInfo?.storeName ?? "My Store"}
+                    : (vendorInfo?.storeName ?? "My Store")}
                 </h2>
                 {vendorInfo?.status && vendorInfo.status !== "—" && (
                   <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
@@ -1803,22 +1736,34 @@ export default function VendorProductsPage() {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-[12px] text-slate-400">
+                  <td
+                    colSpan={7}
+                    className="px-5 py-12 text-center text-[12px] text-slate-400"
+                  >
                     <span className="inline-flex items-center gap-2">
-                      <Loader2 size={15} className="animate-spin text-[#D6A419]" />
+                      <Loader2
+                        size={15}
+                        className="animate-spin text-[#D6A419]"
+                      />
                       Loading your products...
                     </span>
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-[12px] text-red-500">
+                  <td
+                    colSpan={7}
+                    className="px-5 py-12 text-center text-[12px] text-red-500"
+                  >
                     Products load করা যায়নি।
                   </td>
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-[12px] text-slate-400">
+                  <td
+                    colSpan={7}
+                    className="px-5 py-12 text-center text-[12px] text-slate-400"
+                  >
                     No products found.
                   </td>
                 </tr>
@@ -1853,7 +1798,10 @@ export default function VendorProductsPage() {
 
                     <td className="px-3 py-3.5">
                       <div className="flex items-center gap-2.5">
-                        <ProductImage name={product.name} image={product.image} />
+                        <ProductImage
+                          name={product.name}
+                          image={product.image}
+                        />
                         <div className="min-w-0">
                           <p className="max-w-[230px] truncate text-[11.5px] font-semibold text-[#12233F]">
                             {product.name}
@@ -2003,10 +1951,16 @@ export default function VendorProductsPage() {
                 <Trash2 size={21} />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 id="delete-modal-title" className="text-[15px] font-bold text-[#12233F]">
+                <h2
+                  id="delete-modal-title"
+                  className="text-[15px] font-bold text-[#12233F]"
+                >
                   তুমি কি নিশ্চিত?
                 </h2>
-                <p id="delete-modal-description" className="mt-2 text-[12px] leading-5 text-slate-500">
+                <p
+                  id="delete-modal-description"
+                  className="mt-2 text-[12px] leading-5 text-slate-500"
+                >
                   {deleteMode === "single" ? (
                     <>
                       তুমি কি সত্যিই{" "}

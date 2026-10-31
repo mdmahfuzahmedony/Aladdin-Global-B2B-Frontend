@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ComponentType, FormEvent, ReactNode } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 import {
   ArrowRight,
@@ -29,6 +30,7 @@ const inputClass =
   "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#D6A419] focus:ring-2 focus:ring-[#D6A419]/20";
 
 export default function ContactPage() {
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -52,48 +54,47 @@ export default function ContactPage() {
       <section className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:py-20">
         <div className="mb-10 max-w-2xl">
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#b48a08]">
-            Get in touch
+            {t("contactGetInTouch")}
           </p>
 
           <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-            We&apos;d love to hear from you
+            {t("contactHeroTitle")}
           </h2>
 
           <p className="mt-4 leading-7 text-gray-600">
-            Choose the contact method that works best for you. Our team will
-            help you with your questions and concerns.
+            {t("contactHeroDescription")}
           </p>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <ContactInfoCard
             icon={Phone}
-            title="Call Us"
-            description="10:00 AM – 10:00 PM (Friday Open)"
+            title={t("callUs")}
+            description={t("contactHours")}
             value="01312-789354"
             href="tel:01312789354"
           />
 
           <ContactInfoCard
             icon={Mail}
-            title="Email Us"
-            description="Send us your questions."
+            title={t("emailUs")}
+            description={t("sendQuestions")}
             value="support@aladdinglobalb2b.com"
             href="mailto:support@aladdinglobalb2b.com"
           />
 
           <ContactInfoCard
             icon={MapPin}
-            title="Office Location"
-            description="Gonata Road, Jashore, Bangladesh."
+            title={t("officeLocation")}
+            description={t("jashoreBangladesh")}
             value="Jashore - 7400"
           />
 
           <ContactInfoCard
             icon={FileText}
-            title="Trade Licence"
-            description="Official Business Registration"
-            value="Verified & Secured"
+            title={t("tradeLicense")}
+            description={t("officialRegistration")}
+            value={t("verifiedSecured")}
           />
         </div>
       </section>
@@ -112,11 +113,11 @@ export default function ContactPage() {
               </span>
 
               <h2 className="mt-5 text-2xl font-bold sm:text-3xl">
-                Send us a message
+                {t("sendMessage")}
               </h2>
 
               <p className="mt-3 leading-7 text-gray-600">
-                Fill out the form below and tell us how we can help.
+                {t("contactFormHelp")}
               </p>
             </div>
 
@@ -127,25 +128,25 @@ export default function ContactPage() {
               >
                 <CheckCircle2 size={20} className="mt-0.5 shrink-0" />
                 <p>
-                  Your message has been sent successfully. We will get back to you soon.
+                  {t("messageSent")}
                 </p>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid gap-5 sm:grid-cols-2">
-                <FormField label="Full Name" htmlFor="fullName" required>
+                <FormField label={t("fullName")} htmlFor="fullName" required>
                   <input
                     id="fullName"
                     name="fullName"
                     type="text"
-                    placeholder="Enter your full name"
+                    placeholder={t("enterFullName")}
                     className={inputClass}
                     required
                   />
                 </FormField>
 
-                <FormField label="Email Address" htmlFor="email" required>
+                <FormField label={t("emailAddress")} htmlFor="email" required>
                   <input
                     id="email"
                     name="email"
@@ -158,7 +159,7 @@ export default function ContactPage() {
               </div>
 
               <div className="grid gap-5 sm:grid-cols-2">
-                <FormField label="Phone Number" htmlFor="phone">
+                <FormField label={t("phoneNumber")} htmlFor="phone">
                   <input
                     id="phone"
                     name="phone"
@@ -168,7 +169,7 @@ export default function ContactPage() {
                   />
                 </FormField>
 
-                <FormField label="I am a..." htmlFor="contactType" required>
+                <FormField label={t("contactRole")} htmlFor="contactType" required>
                   <select
                     id="contactType"
                     name="contactType"
@@ -177,33 +178,33 @@ export default function ContactPage() {
                     required
                   >
                     <option value="" disabled>
-                      Select an option
+                      {t("selectOption")}
                     </option>
-                    <option value="customer">Customer</option>
-                    <option value="vendor">Vendor / Seller</option>
-                    <option value="business">Business Partner</option>
-                    <option value="other">Other</option>
+                    <option value="customer">{t("customer")}</option>
+                    <option value="vendor">{t("vendorSeller")}</option>
+                    <option value="business">{t("businessPartner")}</option>
+                    <option value="other">{t("other")}</option>
                   </select>
                 </FormField>
               </div>
 
-              <FormField label="Subject" htmlFor="subject" required>
+              <FormField label={t("subject")} htmlFor="subject" required>
                 <input
                   id="subject"
                   name="subject"
                   type="text"
-                  placeholder="What is your message about?"
+                  placeholder={t("messageAbout")}
                   className={inputClass}
                   required
                 />
               </FormField>
 
-              <FormField label="Your Message" htmlFor="message" required>
+              <FormField label={t("yourMessage")} htmlFor="message" required>
                 <textarea
                   id="message"
                   name="message"
                   rows={5}
-                  placeholder="Write your message here..."
+                  placeholder={t("writeMessage")}
                   className={`${inputClass} resize-y`}
                   required
                 />
@@ -217,11 +218,11 @@ export default function ContactPage() {
                 {isSubmitting ? (
                   <>
                     <LoaderCircle size={18} className="animate-spin" />
-                    Sending...
+                    {t("sending")}
                   </>
                 ) : (
                   <>
-                    Send Message
+                    {t("sendMessage")}
                     <ArrowRight size={18} />
                   </>
                 )}
@@ -233,44 +234,43 @@ export default function ContactPage() {
           <div className="flex flex-col gap-6">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#b48a08]">
-                How can we help?
+                {t("howCanHelp")}
               </p>
 
               <h2 className="mt-3 text-3xl font-bold">
-                The right support for every need
+                {t("rightSupport")}
               </h2>
 
               <p className="mt-4 leading-7 text-gray-600">
-                Whether you are shopping, managing a store, or exploring a
-                partnership, we want to make your experience straightforward.
+                {t("supportDescription")}
               </p>
             </div>
 
             <SupportLink
               icon={ShoppingBag}
-              title="Customer Support"
-              description="Questions about orders, payments, returns, or delivery."
+              title={t("customerSupport")}
+              description={t("customerSupportDescription")}
               href="/help"
             />
 
             <SupportLink
               icon={Store}
-              title="Vendor Support"
-              description="Need help with your store, products, or seller account?"
+              title={t("vendorSupport")}
+              description={t("vendorSupportDescription")}
               href="/vendor"
             />
 
             <SupportLink
               icon={Handshake}
-              title="Business Partnerships"
-              description="Interested in collaborating with our marketplace?"
+              title={t("businessPartnerships")}
+              description={t("businessPartnershipDescription")}
               href="mailto:support@aladdinglobalb2b.com"
             />
 
             <SupportLink
               icon={Package}
-              title="Orders & Delivery"
-              description="Get help with shipping, tracking, and order updates."
+              title={t("ordersDelivery")}
+              description={t("ordersDeliveryDescription")}
               href="/orders"
             />
 
@@ -281,10 +281,9 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <h3 className="font-bold">We&apos;re on your side</h3>
+                  <h3 className="font-bold">{t("onYourSide")}</h3>
                   <p className="mt-2 text-sm leading-6 text-white/70">
-                    Our goal is to make every customer and vendor feel
-                    supported throughout their marketplace journey.
+                    {t("onYourSideDescription")}
                   </p>
                 </div>
               </div>
@@ -303,17 +302,15 @@ export default function ContactPage() {
 
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#b48a08]">
-                For businesses
+                {t("forBusinesses")}
               </p>
 
               <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
-                Let&apos;s grow together
+                {t("growTogether")}
               </h2>
 
               <p className="mt-3 max-w-2xl leading-7 text-gray-600">
-                Looking to sell products, reach new customers, or explore a
-                business partnership? Get in touch and let&apos;s discuss how
-                we can work together.
+                {t("businessDescription")}
               </p>
             </div>
           </div>
@@ -322,7 +319,7 @@ export default function ContactPage() {
             href="/vendor"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#D6A419] px-6 py-3.5 font-semibold text-[#12233F] transition hover:bg-[#e7b92d]"
           >
-            Become a Vendor
+            {t("becomeVendor")}
             <ArrowRight size={18} />
           </Link>
         </div>
@@ -333,17 +330,15 @@ export default function ContactPage() {
         <div className="mx-auto grid max-w-[1500px] gap-8 px-5 sm:px-8 lg:grid-cols-2 lg:items-center">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#b48a08]">
-              Find us
+              {t("findUs")}
             </p>
 
             <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-              Our Location
+              {t("ourLocation")}
             </h2>
 
             <p className="mt-4 leading-7 text-gray-600">
-              We are committed to supporting customers and vendors throughout
-              Bangladesh. Contact our team before visiting to confirm office
-              availability.
+              {t("locationDescription")}
             </p>
 
             <div className="mt-7 flex items-start gap-4">
@@ -353,9 +348,7 @@ export default function ContactPage() {
 
               <div>
                 <h3 className="font-bold">Gonata Road, Jashore - 7400</h3>
-                <p className="mt-1 text-sm leading-6 text-gray-600">
-                  Aladdin Global B2B Office Address & Directions.
-                </p>
+                <p className="mt-1 text-sm leading-6 text-gray-600">{t("officeAddressDirections")}</p>
               </div>
             </div>
 
@@ -365,9 +358,9 @@ export default function ContactPage() {
               </span>
 
               <div>
-                <h3 className="font-bold">Business Hours</h3>
+                <h3 className="font-bold">{t("businessHours")}</h3>
                 <p className="mt-1 text-sm leading-6 text-gray-600">
-                  Saturday – Thursday & Friday: 10:00 AM – 10:00 PM
+                  {t("officeHours")}
                 </p>
               </div>
             </div>
@@ -384,7 +377,7 @@ export default function ContactPage() {
               </h3>
 
               <p className="mt-3 text-sm leading-6 text-gray-600">
-                Reach out to us for directions and office information.
+                {t("directionsOfficeInfo")}
               </p>
 
               <a
@@ -393,7 +386,7 @@ export default function ContactPage() {
                 rel="noopener noreferrer"
                 className="mt-5 inline-flex items-center gap-2 rounded-xl border border-gray-200 px-5 py-3 text-sm font-semibold transition hover:border-[#D6A419] hover:bg-gray-50"
               >
-                View on Google Maps
+                {t("viewGoogleMaps")}
                 <ArrowRight size={16} />
               </a>
             </div>
@@ -411,12 +404,11 @@ export default function ContactPage() {
         <div className="mx-auto flex max-w-[1500px] flex-col gap-7 px-5 py-14 sm:px-8 md:flex-row md:items-center md:justify-between lg:py-16">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-bold text-white sm:text-4xl">
-              Still have questions?
+              {t("stillQuestions")}
             </h2>
 
             <p className="mt-4 leading-7 text-white/70">
-              We&apos;re happy to help. Send us a message and our team will
-              guide you in the right direction.
+              {t("happyToHelp")}
             </p>
           </div>
 
@@ -424,7 +416,7 @@ export default function ContactPage() {
             href="#contact-form"
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#D6A419] px-6 py-4 font-semibold text-[#12233F] transition hover:bg-[#e7b92d]"
           >
-            Get in Touch
+            {t("getInTouch")}
             <ArrowRight size={18} />
           </a>
         </div>

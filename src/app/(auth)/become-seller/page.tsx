@@ -8,12 +8,15 @@ import { toast } from "react-toastify";
 
 import { OtpModal } from "./components/OtpModal";
 import { PayoutStep, type PayoutData } from "./components/Payout-step";
-import { VerificationStep, type VerificationData } from "./components/Verification-step";
+import {
+  VerificationStep,
+  type VerificationData,
+} from "./components/Verification-step";
 import { BusinessInfoStep } from "./components/Business-info-step";
 import { AccountStep } from "./components/Account-step";
 import { LocationStep } from "./components/Location-step";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 const STEPS = [
   "Account",
@@ -44,8 +47,6 @@ type LocationData = {
   area: string;
   fullAddress: string;
 };
-
-
 
 type ApiResult = {
   success?: boolean;

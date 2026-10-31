@@ -16,8 +16,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase-client";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 const NAV_ITEMS = [
   { label: "Overview", href: "/vendor/dashboard", icon: LayoutDashboard },
@@ -77,8 +76,7 @@ export function SellerSidebar() {
           const data = payload?.data;
           if (isMounted && data) {
             if (data.storeName) setStoreName(data.storeName);
-            const resolvedName =
-              data.vendorName || data.fullName || metaName;
+            const resolvedName = data.vendorName || data.fullName || metaName;
             if (resolvedName) setVendorName(resolvedName);
             if (data.email) setEmail(data.email);
           }
@@ -113,8 +111,6 @@ export function SellerSidebar() {
           >
             {storeName || (loadingProfile ? "লোড হচ্ছে..." : "Seller Store")}
           </div>
-
-         
         </div>
       </div>
 

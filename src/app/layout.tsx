@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Inter, Poppins } from "next/font/google";
 
 import "./globals.css";
@@ -7,6 +8,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { SiteSettingsProvider } from "../context/SiteSettingsContext";
 import { CompareProvider } from "../context/CompareContext";
+import { LanguageProvider } from "../context/LanguageContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,33 +27,39 @@ export const metadata: Metadata = {
     "Direct sourcing from manufacturers across Bangladesh. Reliable and transparent B2B platform.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const savedLanguage = cookieStore.get("aladin_language")?.value;
+  const initialLanguage = savedLanguage === "bn" ? "bn" : "en";
+
   return (
-    <html lang="en">
+    <html lang={initialLanguage === "bn" ? "bn" : "en"}>
       <body
         className={`${inter.variable} ${poppins.variable} font-sans antialiased`}
       >
         <SiteSettingsProvider>
-          <CompareProvider>
-            {children}
+          <LanguageProvider initialLanguage={initialLanguage}>
+            <CompareProvider>
+              {children}
 
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="colored"
-            />
-          </CompareProvider>
+              <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+              />
+            </CompareProvider>
+          </LanguageProvider>
         </SiteSettingsProvider>
       </body>
     </html>

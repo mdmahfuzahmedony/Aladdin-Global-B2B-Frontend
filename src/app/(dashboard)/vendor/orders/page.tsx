@@ -105,7 +105,7 @@ type ApiResponse = {
   orders?: ApiOrder[];
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 const VENDOR_ORDERS_URL = `${API_BASE_URL}/api/vendor/orders`;
 const supabase = createClient();
@@ -553,7 +553,9 @@ export default function VendorOrdersPage() {
   }
 
   function requestBulkDelete() {
-    toast.info("Bulk order deletion API এখনো যুক্ত করা হয়নি। কোনো অর্ডার মুছে ফেলা হয়নি।",);
+    toast.info(
+      "Bulk order deletion API এখনো যুক্ত করা হয়নি। কোনো অর্ডার মুছে ফেলা হয়নি।",
+    );
   }
 
   return (

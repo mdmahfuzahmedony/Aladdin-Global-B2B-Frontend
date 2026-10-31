@@ -5,6 +5,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
+import { useLanguage } from "@/context/LanguageContext";
 
 type Product = {
   id: string;
@@ -22,6 +23,7 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 export default function NewArrivalsPage() {
+  const { t } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -138,24 +140,23 @@ export default function NewArrivalsPage() {
         <div className="mb-5 flex items-center justify-between gap-2">
           <div className="min-w-0">
             <h2 className="text-xl font-bold text-slate-900">
-              New Arrivals
+              {t("newArrivals")}
             </h2>
 
             <p className="mt-1 text-xs text-slate-500 sm:text-sm">
-              Discover our latest products
+              {t("discoverLatest")}
             </p>
           </div>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            ```tsx
+          
 <Link
   href="/products?type=new-arrivals"
   className="hidden items-center gap-1 text-sm font-semibold text-[#12233F] sm:flex"
 >
-  View all
+  {t("viewAll")}
   <ArrowRight size={16} />
 </Link>
-```
 
             {/* Slider controls: mobile/tablet only */}
             <div className="flex items-center gap-2 lg:hidden">
@@ -163,7 +164,7 @@ export default function NewArrivalsPage() {
                 type="button"
                 onClick={scrollLeft}
                 className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 sm:h-9 sm:w-9"
-                aria-label="Previous products"
+                aria-label={t("previousProducts")}
               >
                 <ChevronLeft size={18} />
               </button>
@@ -172,7 +173,7 @@ export default function NewArrivalsPage() {
                 type="button"
                 onClick={scrollRight}
                 className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 sm:h-9 sm:w-9"
-                aria-label="Next products"
+                aria-label={t("nextProducts")}
               >
                 <ChevronRight size={18} />
               </button>
@@ -194,11 +195,11 @@ export default function NewArrivalsPage() {
         >
           {loading ? (
             <div className="col-span-full py-10 text-center text-sm text-slate-500">
-              Loading new arrivals...
+              {t("loadingNewArrivals")}
             </div>
           ) : products.length === 0 ? (
             <div className="col-span-full py-10 text-center text-sm text-slate-500">
-              No new arrivals found.
+              {t("noNewArrivals")}
             </div>
           ) : (
             products.map((product) => (
@@ -219,7 +220,7 @@ export default function NewArrivalsPage() {
             href="/products?placement=new-arrivals"
             className="inline-flex items-center gap-1 text-xs font-semibold text-[#12233F]"
           >
-            View all products
+            {t("viewAllProducts")}
             <ArrowRight size={14} />
           </Link>
         </div>

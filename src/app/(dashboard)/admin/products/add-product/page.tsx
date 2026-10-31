@@ -4,13 +4,7 @@ import { toast } from "react-toastify";
 
 import { useEffect, useState, type FormEvent } from "react";
 
-import {
-  ArrowLeft,
-  Save,
-  Store,
-  UserRound,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowLeft, Save, Store, UserRound, ChevronDown } from "lucide-react";
 
 import ProductInformation, {
   type Category,
@@ -38,8 +32,7 @@ import { createClient } from "../../../../../../lib/supabase-client";
 import ProductDelivery from "./components/ProductDelivery";
 import ProductImageUploader from "./components/product-field/ProductImageUploader";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type VendorOption = {
   id: string;
@@ -122,13 +115,13 @@ export default function AddProductPage() {
     Record<string, any>
   >({});
 
-  const [customFields, setCustomFields] = useState<
-    ProductFieldDefinition[]
-  >([]);
+  const [customFields, setCustomFields] = useState<ProductFieldDefinition[]>(
+    [],
+  );
 
-  const [selectedPlacements, setSelectedPlacements] = useState<
-    PlacementType[]
-  >([]);
+  const [selectedPlacements, setSelectedPlacements] = useState<PlacementType[]>(
+    [],
+  );
 
   // =====================================================
   // PRODUCT COUPON STATE
@@ -259,18 +252,14 @@ export default function AddProductPage() {
         const currentUserId = session.user.id;
 
         const currentVendor =
-          vendorList.find(
-            (vendor) => vendor.userId === currentUserId,
-          ) || null;
+          vendorList.find((vendor) => vendor.userId === currentUserId) || null;
 
         setMyVendor(currentVendor);
       } catch (error: any) {
         console.error("LOAD VENDORS ERROR:", error);
 
         if (isMounted) {
-          setVendorLoadError(
-            error?.message || "Failed to load vendors.",
-          );
+          setVendorLoadError(error?.message || "Failed to load vendors.");
         }
       } finally {
         if (isMounted) {
@@ -290,10 +279,7 @@ export default function AddProductPage() {
   // FIELD HANDLERS
   // =====================================================
 
-  const updateField = (
-    field: keyof ProductBasicInfo,
-    value: string,
-  ) => {
+  const updateField = (field: keyof ProductBasicInfo, value: string) => {
     setForm((prev) => ({
       ...prev,
       [field]: value,
@@ -352,15 +338,10 @@ export default function AddProductPage() {
     const newErrors: string[] = [];
 
     if (ownershipType === "MY_STORE" && !myVendor) {
-      newErrors.push(
-        "Your vendor/store profile could not be found.",
-      );
+      newErrors.push("Your vendor/store profile could not be found.");
     }
 
-    if (
-      ownershipType === "SELLER_PRODUCT" &&
-      !selectedSellerId
-    ) {
+    if (ownershipType === "SELLER_PRODUCT" && !selectedSellerId) {
       newErrors.push("Please select a seller.");
     }
 
@@ -386,19 +367,14 @@ export default function AddProductPage() {
       !Number.isFinite(Number(form.customerRegularPrice)) ||
       Number(form.customerRegularPrice) < 0
     ) {
-      newErrors.push(
-        "Regular price must be a valid non-negative number.",
-      );
+      newErrors.push("Regular price must be a valid non-negative number.");
     }
 
     if (
       form.customerSalePrice.trim() &&
-      Number(form.customerSalePrice) >=
-        Number(form.customerRegularPrice)
+      Number(form.customerSalePrice) >= Number(form.customerRegularPrice)
     ) {
-      newErrors.push(
-        "Sale price must be less than the regular price.",
-      );
+      newErrors.push("Sale price must be less than the regular price.");
     }
 
     if (!form.stockQuantity.trim()) {
@@ -430,9 +406,7 @@ export default function AddProductPage() {
       );
 
       if (!normalizedCouponName) {
-        newErrors.push(
-          "Coupon name is required when the coupon is enabled.",
-        );
+        newErrors.push("Coupon name is required when the coupon is enabled.");
       } else if (!/^[A-Z0-9_-]{2,40}$/.test(normalizedCouponName)) {
         newErrors.push(
           "Coupon name must be 2–40 characters and contain only letters, numbers, hyphens, or underscores.",
@@ -441,13 +415,8 @@ export default function AddProductPage() {
 
       if (!couponDiscount.trim()) {
         newErrors.push("Coupon discount amount is required.");
-      } else if (
-        !Number.isFinite(discount) ||
-        discount <= 0
-      ) {
-        newErrors.push(
-          "Coupon discount must be a number greater than zero.",
-        );
+      } else if (!Number.isFinite(discount) || discount <= 0) {
+        newErrors.push("Coupon discount must be a number greater than zero.");
       } else if (
         Number.isFinite(productPrice) &&
         productPrice > 0 &&
@@ -479,81 +448,75 @@ export default function AddProductPage() {
         !Number.isFinite(Number(delivery.weightKg)) ||
         Number(delivery.weightKg) <= 0
       ) {
-        newErrors.push(
-          "Product delivery weight must be greater than 0 kg.",
-        );
+        newErrors.push("Product delivery weight must be greater than 0 kg.");
       }
 
       if (!delivery.rates.length) {
-        newErrors.push(
-          "At least one delivery distance slab is required.",
-        );
+        newErrors.push("At least one delivery distance slab is required.");
       }
 
       delivery.rates.forEach((rate: any, index: number) => {
-      const slabNumber = index + 1;
-      const min = Number(rate.minDistanceKm);
-      const max = Number(rate.maxDistanceKm);
-      const firstCharge = Number(rate.firstKgCharge);
-      const additionalCharge = Number(
-        rate.additionalKgCharge,
-      );
-
-      if (
-        !hasValue(rate.minDistanceKm) ||
-        !Number.isInteger(min) ||
-        min < 0
-      ) {
-        newErrors.push(
-          `Delivery slab ${slabNumber}: minimum distance must be a valid non-negative whole number.`,
-        );
-      }
-
-      if (
-        !hasValue(rate.maxDistanceKm) ||
-        !Number.isInteger(max) ||
-        max <= min
-      ) {
-        newErrors.push(
-          `Delivery slab ${slabNumber}: maximum distance must be greater than minimum distance.`,
-        );
-      }
-
-      if (
-        !hasValue(rate.firstKgCharge) ||
-        !Number.isFinite(firstCharge) ||
-        firstCharge < 0
-      ) {
-        newErrors.push(
-          `Delivery slab ${slabNumber}: first kg charge must be a valid non-negative amount.`,
-        );
-      }
-
-      if (
-        !hasValue(rate.additionalKgCharge) ||
-        !Number.isFinite(additionalCharge) ||
-        additionalCharge < 0
-      ) {
-        newErrors.push(
-          `Delivery slab ${slabNumber}: additional kg charge must be a valid non-negative amount.`,
-        );
-      }
-
-      if (index > 0) {
-        const previousRate = delivery.rates[index - 1];
-        const previousMax = Number(previousRate.maxDistanceKm);
+        const slabNumber = index + 1;
+        const min = Number(rate.minDistanceKm);
+        const max = Number(rate.maxDistanceKm);
+        const firstCharge = Number(rate.firstKgCharge);
+        const additionalCharge = Number(rate.additionalKgCharge);
 
         if (
-          Number.isInteger(min) &&
-          Number.isInteger(previousMax) &&
-          min < previousMax
+          !hasValue(rate.minDistanceKm) ||
+          !Number.isInteger(min) ||
+          min < 0
         ) {
           newErrors.push(
-            `Delivery slab ${slabNumber}: distance range overlaps with the previous slab.`,
+            `Delivery slab ${slabNumber}: minimum distance must be a valid non-negative whole number.`,
           );
         }
-      }
-    });
+
+        if (
+          !hasValue(rate.maxDistanceKm) ||
+          !Number.isInteger(max) ||
+          max <= min
+        ) {
+          newErrors.push(
+            `Delivery slab ${slabNumber}: maximum distance must be greater than minimum distance.`,
+          );
+        }
+
+        if (
+          !hasValue(rate.firstKgCharge) ||
+          !Number.isFinite(firstCharge) ||
+          firstCharge < 0
+        ) {
+          newErrors.push(
+            `Delivery slab ${slabNumber}: first kg charge must be a valid non-negative amount.`,
+          );
+        }
+
+        if (
+          !hasValue(rate.additionalKgCharge) ||
+          !Number.isFinite(additionalCharge) ||
+          additionalCharge < 0
+        ) {
+          newErrors.push(
+            `Delivery slab ${slabNumber}: additional kg charge must be a valid non-negative amount.`,
+          );
+        }
+
+        if (index > 0) {
+          const previousRate = delivery.rates[index - 1];
+          const previousMax = Number(previousRate.maxDistanceKm);
+
+          if (
+            Number.isInteger(min) &&
+            Number.isInteger(previousMax) &&
+            min < previousMax
+          ) {
+            newErrors.push(
+              `Delivery slab ${slabNumber}: distance range overlaps with the previous slab.`,
+            );
+          }
+        }
+      });
     }
 
     // -----------------------------------------------------
@@ -580,12 +543,9 @@ export default function AddProductPage() {
       if (
         newArrival.startDate &&
         newArrival.endDate &&
-        new Date(newArrival.endDate) <=
-          new Date(newArrival.startDate)
+        new Date(newArrival.endDate) <= new Date(newArrival.startDate)
       ) {
-        newErrors.push(
-          "New Arrival end date must be after start date.",
-        );
+        newErrors.push("New Arrival end date must be after start date.");
       }
     }
 
@@ -613,12 +573,9 @@ export default function AddProductPage() {
       if (
         flashSale.startTime &&
         flashSale.endTime &&
-        new Date(flashSale.endTime) <=
-          new Date(flashSale.startTime)
+        new Date(flashSale.endTime) <= new Date(flashSale.startTime)
       ) {
-        newErrors.push(
-          "Flash Sale end time must be after start time.",
-        );
+        newErrors.push("Flash Sale end time must be after start time.");
       }
     }
 
@@ -651,9 +608,7 @@ export default function AddProductPage() {
         !Number.isFinite(Number(topSeller.unitsSold)) ||
         Number(topSeller.unitsSold) < 0
       ) {
-        newErrors.push(
-          "Top Seller units sold cannot be negative.",
-        );
+        newErrors.push("Top Seller units sold cannot be negative.");
       }
 
       if (!hasValue(topSeller.salesBadge)) {
@@ -667,16 +622,12 @@ export default function AddProductPage() {
 
     if (isPlacementSelected("TOP_RATED")) {
       if (!hasValue(topRated.averageRating)) {
-        newErrors.push(
-          "Top Rated average rating is required.",
-        );
+        newErrors.push("Top Rated average rating is required.");
       } else if (
         Number(topRated.averageRating) < 0 ||
         Number(topRated.averageRating) > 5
       ) {
-        newErrors.push(
-          "Top Rated average rating must be between 0 and 5.",
-        );
+        newErrors.push("Top Rated average rating must be between 0 and 5.");
       }
 
       if (!hasValue(topRated.totalReviews)) {
@@ -684,9 +635,7 @@ export default function AddProductPage() {
       }
 
       if (!hasValue(topRated.reviewSnippet)) {
-        newErrors.push(
-          "Top Rated review snippet is required.",
-        );
+        newErrors.push("Top Rated review snippet is required.");
       }
     }
 
@@ -700,9 +649,7 @@ export default function AddProductPage() {
       }
 
       if (!hasValue(trusted.warrantyInfo)) {
-        newErrors.push(
-          "Trusted warranty information is required.",
-        );
+        newErrors.push("Trusted warranty information is required.");
       }
     }
 
@@ -715,9 +662,7 @@ export default function AddProductPage() {
   // SUBMIT
   // =====================================================
 
-  const handleSubmit = async (
-    e: FormEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const validationErrors = validate();
@@ -728,14 +673,10 @@ export default function AddProductPage() {
     }
 
     const finalVendorId =
-      ownershipType === "MY_STORE"
-        ? myVendor?.id
-        : selectedSeller?.id;
+      ownershipType === "MY_STORE" ? myVendor?.id : selectedSeller?.id;
 
     if (!finalVendorId) {
-      setErrors([
-        "A valid vendor is required before creating the product.",
-      ]);
+      setErrors(["A valid vendor is required before creating the product."]);
       return;
     }
 
@@ -765,10 +706,9 @@ export default function AddProductPage() {
         ? Number(form.customerSalePrice)
         : null,
 
-      wholesalerRegularPrice:
-        form.wholesalerRegularPrice.trim()
-          ? Number(form.wholesalerRegularPrice)
-          : null,
+      wholesalerRegularPrice: form.wholesalerRegularPrice.trim()
+        ? Number(form.wholesalerRegularPrice)
+        : null,
 
       wholesalerSalePrice: form.wholesalerSalePrice.trim()
         ? Number(form.wholesalerSalePrice)
@@ -778,13 +718,11 @@ export default function AddProductPage() {
         ? Number(form.dropshipPrice)
         : null,
 
-      affiliateCommissionType:
-        form.affiliateCommissionType || null,
+      affiliateCommissionType: form.affiliateCommissionType || null,
 
-      affiliateCommissionValue:
-        form.affiliateCommissionValue.trim()
-          ? Number(form.affiliateCommissionValue)
-          : null,
+      affiliateCommissionValue: form.affiliateCommissionValue.trim()
+        ? Number(form.affiliateCommissionValue)
+        : null,
 
       customFields,
 
@@ -807,9 +745,7 @@ export default function AddProductPage() {
       deliverySettings: {
         scope: delivery.scope,
         weightKg:
-          delivery.scope === "NATIONWIDE"
-            ? null
-            : Number(delivery.weightKg),
+          delivery.scope === "NATIONWIDE" ? null : Number(delivery.weightKg),
         nationwideCharge:
           delivery.scope === "NATIONWIDE"
             ? Number(delivery.nationwideCharge)
@@ -821,9 +757,7 @@ export default function AddProductPage() {
                 minDistanceKm: Number(rate.minDistanceKm),
                 maxDistanceKm: Number(rate.maxDistanceKm),
                 firstKgCharge: Number(rate.firstKgCharge),
-                additionalKgCharge: Number(
-                  rate.additionalKgCharge,
-                ),
+                additionalKgCharge: Number(rate.additionalKgCharge),
               })),
       },
 
@@ -834,9 +768,7 @@ export default function AddProductPage() {
       placements: {
         newArrival: isPlacementSelected("NEW_ARRIVAL")
           ? {
-              badgeText: String(
-                newArrival.badgeText ?? "",
-              ).trim(),
+              badgeText: String(newArrival.badgeText ?? "").trim(),
               displayOrder: Number(newArrival.displayOrder),
               startDate: newArrival.startDate,
               endDate: newArrival.endDate,
@@ -845,30 +777,21 @@ export default function AddProductPage() {
 
         flashSale: isPlacementSelected("FLASH_SALE")
           ? {
-              flashSalePrice: Number(
-                flashSale.flashSalePrice,
-              ),
-              flashSaleStock: Number(
-                flashSale.flashSaleStock,
-              ),
+              flashSalePrice: Number(flashSale.flashSalePrice),
+              flashSaleStock: Number(flashSale.flashSaleStock),
               soldCount: 0,
               startTime: flashSale.startTime,
               endTime: flashSale.endTime,
               discountBadge:
-                String(flashSale.discountBadge ?? "").trim() ||
-                null,
+                String(flashSale.discountBadge ?? "").trim() || null,
             }
           : null,
 
         featured: isPlacementSelected("FEATURED")
           ? {
               featuredBadgeText:
-                String(
-                  featured.featuredBadgeText ?? "",
-                ).trim() || null,
-              bannerImage:
-                String(featured.bannerImage ?? "").trim() ||
-                null,
+                String(featured.featuredBadgeText ?? "").trim() || null,
+              bannerImage: String(featured.bannerImage ?? "").trim() || null,
               displayOrder: hasValue(featured.displayOrder)
                 ? Number(featured.displayOrder)
                 : null,
@@ -880,11 +803,8 @@ export default function AddProductPage() {
               unitsSold: hasValue(topSeller.unitsSold)
                 ? Number(topSeller.unitsSold)
                 : 0,
-              salesBadge:
-                String(topSeller.salesBadge ?? "").trim() ||
-                null,
-              isExpressEligible:
-                topSeller.isExpressEligible,
+              salesBadge: String(topSeller.salesBadge ?? "").trim() || null,
+              isExpressEligible: topSeller.isExpressEligible,
             }
           : null,
 
@@ -897,20 +817,15 @@ export default function AddProductPage() {
                 ? Number(topRated.totalReviews)
                 : 0,
               reviewSnippet:
-                String(topRated.reviewSnippet ?? "").trim() ||
-                null,
+                String(topRated.reviewSnippet ?? "").trim() || null,
             }
           : null,
 
         trusted: isPlacementSelected("TRUSTED")
           ? {
               trustBadgeText:
-                String(
-                  trusted.trustBadgeText ?? "",
-                ).trim() || null,
-              warrantyInfo:
-                String(trusted.warrantyInfo ?? "").trim() ||
-                null,
+                String(trusted.trustBadgeText ?? "").trim() || null,
+              warrantyInfo: String(trusted.warrantyInfo ?? "").trim() || null,
               officialStore: trusted.officialStore,
             }
           : null,
@@ -934,41 +849,30 @@ export default function AddProductPage() {
         return;
       }
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/products`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify(payload),
+      const response = await fetch(`${API_BASE_URL}/api/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
-      );
+        body: JSON.stringify(payload),
+      });
 
-      const result = await response
-        .json()
-        .catch(() => null);
+      const result = await response.json().catch(() => null);
 
       if (!response.ok) {
         throw new Error(
-          result?.error ||
-            result?.message ||
-            "Failed to create product",
+          result?.error || result?.message || "Failed to create product",
         );
       }
 
-      console.log(
-        "PRODUCT CREATED SUCCESSFULLY:",
-        result,
-      );
+      console.log("PRODUCT CREATED SUCCESSFULLY:", result);
 
       toast.success("Product created successfully.");
     } catch (error: any) {
       console.error("CREATE PRODUCT ERROR:", error);
 
-      toast.error(error?.message || "Failed to create product.",
-      );
+      toast.error(error?.message || "Failed to create product.");
     } finally {
       setIsSaving(false);
     }
@@ -1048,9 +952,7 @@ export default function AddProductPage() {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <button
                 type="button"
-                onClick={() =>
-                  handleOwnershipChange("MY_STORE")
-                }
+                onClick={() => handleOwnershipChange("MY_STORE")}
                 className={`group flex items-center gap-4 rounded-xl border p-4 text-left transition ${
                   ownershipType === "MY_STORE"
                     ? "border-[#12233F] bg-slate-50 ring-1 ring-[#12233F]"
@@ -1097,9 +999,7 @@ export default function AddProductPage() {
 
               <button
                 type="button"
-                onClick={() =>
-                  handleOwnershipChange("SELLER_PRODUCT")
-                }
+                onClick={() => handleOwnershipChange("SELLER_PRODUCT")}
                 className={`group flex items-center gap-4 rounded-xl border p-4 text-left transition ${
                   ownershipType === "SELLER_PRODUCT"
                     ? "border-[#12233F] bg-slate-50 ring-1 ring-[#12233F]"
@@ -1154,9 +1054,7 @@ export default function AddProductPage() {
 
                   <select
                     value={selectedSellerId}
-                    onChange={(event) =>
-                      handleSellerChange(event.target.value)
-                    }
+                    onChange={(event) => handleSellerChange(event.target.value)}
                     disabled={isLoadingVendors}
                     className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-9 pr-10 text-[12px] text-slate-700 outline-none transition focus:border-[#D6A419] focus:ring-1 focus:ring-[#D6A419] disabled:cursor-not-allowed disabled:bg-slate-50"
                   >
@@ -1167,10 +1065,7 @@ export default function AddProductPage() {
                     </option>
 
                     {vendors.map((vendor) => (
-                      <option
-                        key={vendor.id}
-                        value={vendor.id}
-                      >
+                      <option key={vendor.id} value={vendor.id}>
                         {vendor.name} — {vendor.storeName}
                       </option>
                     ))}
@@ -1220,8 +1115,8 @@ export default function AddProductPage() {
                 )}
 
                 <p className="mt-2 text-[10.5px] text-slate-400">
-                  Product ownership will use the selected vendor&apos;s
-                  database ID.
+                  Product ownership will use the selected vendor&apos;s database
+                  ID.
                 </p>
               </div>
             )}
@@ -1232,34 +1127,31 @@ export default function AddProductPage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-6">
               <ProductInformation
-  form={form}
-  isCategoryOpen={isCategoryOpen}
-  openCategoryIds={openCategoryIds}
-  onToggleCategory={() => setIsCategoryOpen((prev) => !prev)}
-  onCategorySelect={(selected) => {
-    updateField("categoryId", selected.id);
-    setSelectedCategory(selected);
-    setProductAttributes({});
-    setIsCategoryOpen(false);
-  }}
-  setOpenCategoryIds={setOpenCategoryIds}
-  onTitleChange={handleTitleChange}
-  onFieldChange={updateField}
-  productAttributes={productAttributes}
-  setProductAttributes={setProductAttributes}
-  couponEnabled={couponEnabled}
-  setCouponEnabled={setCouponEnabled}
-  couponName={couponName}
-  setCouponName={setCouponName}
-  couponDiscount={couponDiscount}
-  setCouponDiscount={setCouponDiscount}
-/>
+                form={form}
+                isCategoryOpen={isCategoryOpen}
+                openCategoryIds={openCategoryIds}
+                onToggleCategory={() => setIsCategoryOpen((prev) => !prev)}
+                onCategorySelect={(selected) => {
+                  updateField("categoryId", selected.id);
+                  setSelectedCategory(selected);
+                  setProductAttributes({});
+                  setIsCategoryOpen(false);
+                }}
+                setOpenCategoryIds={setOpenCategoryIds}
+                onTitleChange={handleTitleChange}
+                onFieldChange={updateField}
+                productAttributes={productAttributes}
+                setProductAttributes={setProductAttributes}
+                couponEnabled={couponEnabled}
+                setCouponEnabled={setCouponEnabled}
+                couponName={couponName}
+                setCouponName={setCouponName}
+                couponDiscount={couponDiscount}
+                setCouponDiscount={setCouponDiscount}
+              />
 
               {/* Product images */}
-              <ProductImageUploader
-                images={images}
-                onChange={setImages}
-              />
+              <ProductImageUploader images={images} onChange={setImages} />
 
               <ProductPricing
                 form={form}
@@ -1267,15 +1159,9 @@ export default function AddProductPage() {
                 ownershipType={ownershipType}
               />
 
-              <ProductInventory
-                form={form}
-                onFieldChange={updateField}
-              />
+              <ProductInventory form={form} onFieldChange={updateField} />
 
-              <ProductDelivery
-                value={delivery}
-                onChange={setDelivery}
-              />
+              <ProductDelivery value={delivery} onChange={setDelivery} />
 
               <ProductPlacement
                 selectedPlacements={selectedPlacements}

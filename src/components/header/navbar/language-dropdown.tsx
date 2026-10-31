@@ -3,11 +3,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Globe2, ChevronDown } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function LanguageDropdown() {
   const [open, setOpen] = useState(false);
-  const [language, setLanguage] = useState("English");
   const [currency, setCurrency] = useState("BDT (৳)");
+  const { language, setLanguage, t } = useLanguage();
 
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +36,7 @@ export function LanguageDropdown() {
         type="button"
         onClick={() => setOpen((current) => !current)}
         className="group flex min-w-0 flex-col items-center justify-center rounded-xl px-2 py-2 !text-white transition hover:bg-white/10 sm:px-3"
-        aria-label="Language and currency"
+        aria-label={t("languageAndCurrency")}
         aria-expanded={open}
       >
         <Globe2
@@ -46,7 +47,7 @@ export function LanguageDropdown() {
 
         {/* Desktop: language label */}
         <span className="mt-1 hidden whitespace-nowrap text-[11px] font-semibold !text-white transition-colors group-hover:!text-[#D6A419] xl:inline">
-          {language}
+          {language === "en" ? "English" : "বাংলা"}
         </span>
 
         <ChevronDown
@@ -63,18 +64,18 @@ export function LanguageDropdown() {
           {/* LANGUAGE */}
           <div>
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-              Language
+              {t("language")}
             </p>
 
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  setLanguage("English");
+                  setLanguage("en");
                   setOpen(false);
                 }}
                 className={`rounded-lg border px-3 py-2 text-left text-sm font-medium transition ${
-                  language === "English"
+                  language === "en"
                     ? "border-[#D6A419] bg-slate-50 text-[#12233F]"
                     : "border-slate-200 bg-white text-[#12233F] hover:border-[#D6A419] hover:bg-slate-50"
                 }`}
@@ -85,11 +86,11 @@ export function LanguageDropdown() {
               <button
                 type="button"
                 onClick={() => {
-                  setLanguage("বাংলা");
+                  setLanguage("bn");
                   setOpen(false);
                 }}
                 className={`rounded-lg border px-3 py-2 text-left text-sm font-medium transition ${
-                  language === "বাংলা"
+                  language === "bn"
                     ? "border-[#D6A419] bg-slate-50 text-[#12233F]"
                     : "border-slate-200 bg-white text-[#12233F] hover:border-[#D6A419] hover:bg-slate-50"
                 }`}
@@ -102,7 +103,7 @@ export function LanguageDropdown() {
           {/* CURRENCY */}
           <div className="mt-4">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-              Currency
+              {t("currency")}
             </p>
 
             <div className="grid grid-cols-2 gap-2">

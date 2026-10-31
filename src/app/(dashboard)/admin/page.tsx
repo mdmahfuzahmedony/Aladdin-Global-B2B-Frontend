@@ -20,8 +20,7 @@ import {
 import AdminStatCard from "@/components/cards/AdminStatCard";
 import { createClient } from "../../../../lib/supabase-client";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type Activity = {
   id: string;
@@ -262,10 +261,18 @@ export default function AdminOverviewPage() {
       return { icon: UserCheck, bg: "bg-blue-50", iconColor: "text-blue-600" };
     }
     if (label.includes("Wholesaler")) {
-      return { icon: BadgeCheck, bg: "bg-violet-50", iconColor: "text-violet-600" };
+      return {
+        icon: BadgeCheck,
+        bg: "bg-violet-50",
+        iconColor: "text-violet-600",
+      };
     }
     if (label.includes("Payout")) {
-      return { icon: Wallet, bg: "bg-emerald-50", iconColor: "text-emerald-600" };
+      return {
+        icon: Wallet,
+        bg: "bg-emerald-50",
+        iconColor: "text-emerald-600",
+      };
     }
     return { icon: Package, bg: "bg-orange-50", iconColor: "text-orange-600" };
   };
@@ -420,7 +427,11 @@ export default function AdminOverviewPage() {
 
           <div className="space-y-2">
             {(overview?.actionItems || []).map((item) => {
-              const { icon: Icon, bg, iconColor } = getActionItemMeta(item.label);
+              const {
+                icon: Icon,
+                bg,
+                iconColor,
+              } = getActionItemMeta(item.label);
               return (
                 <Link
                   key={item.label}
@@ -492,12 +503,13 @@ export default function AdminOverviewPage() {
                   Best-selling product
                 </div>
                 <div className="truncate text-[12px] font-semibold text-[#12233F]">
-                  {overview?.topPerformers?.bestSellingProduct?.title ?? "No product sold yet"}
+                  {overview?.topPerformers?.bestSellingProduct?.title ??
+                    "No product sold yet"}
                 </div>
                 {overview?.topPerformers?.bestSellingProduct?.count ? (
                   <div className="text-[10px] font-medium text-emerald-600">
-                    {overview.topPerformers.bestSellingProduct.count} units sold (
-                    {overview.topPerformers.bestSellingProduct.revenue})
+                    {overview.topPerformers.bestSellingProduct.count} units sold
+                    ({overview.topPerformers.bestSellingProduct.revenue})
                   </div>
                 ) : null}
               </div>
@@ -512,7 +524,8 @@ export default function AdminOverviewPage() {
               <div className="min-w-0 flex-1">
                 <div className="text-[10px] text-slate-400">Top seller</div>
                 <div className="truncate text-[12px] font-semibold text-[#12233F]">
-                  {overview?.topPerformers?.topSeller?.storeName ?? "No seller yet"}
+                  {overview?.topPerformers?.topSeller?.storeName ??
+                    "No seller yet"}
                 </div>
                 {overview?.topPerformers?.topSeller?.total ? (
                   <div className="text-[10px] font-medium text-emerald-600">
@@ -531,7 +544,8 @@ export default function AdminOverviewPage() {
               <div className="min-w-0 flex-1">
                 <div className="text-[10px] text-slate-400">Top affiliate</div>
                 <div className="truncate text-[12px] font-semibold text-[#12233F]">
-                  {overview?.topPerformers?.topAffiliate?.name ?? "No affiliate yet"}
+                  {overview?.topPerformers?.topAffiliate?.name ??
+                    "No affiliate yet"}
                 </div>
               </div>
             </div>
@@ -582,7 +596,9 @@ export default function AdminOverviewPage() {
                 title={`${item.month}: ${item.value}`}
               />
 
-              <span className="pb-2 text-[10px] text-slate-400">{item.month}</span>
+              <span className="pb-2 text-[10px] text-slate-400">
+                {item.month}
+              </span>
             </div>
           ))}
         </div>
@@ -621,7 +637,7 @@ export default function AdminOverviewPage() {
                     />
                   </div>
                 </div>
-              )
+              ),
             )}
           </div>
         </div>
@@ -653,7 +669,7 @@ export default function AdminOverviewPage() {
                     />
                   </div>
                 </div>
-              )
+              ),
             )}
           </div>
         </div>
@@ -732,7 +748,8 @@ export default function AdminOverviewPage() {
               কোনো সাম্প্রতিক কার্যক্রম নেই
             </p>
             <p className="mt-1 text-[11px] text-slate-400">
-              ভেন্ডর বা অ্যাডমিন পণ্য যোগ বা আপডেট করলে এখানে স্বয়ংক্রিয়ভাবে দেখাবে।
+              ভেন্ডর বা অ্যাডমিন পণ্য যোগ বা আপডেট করলে এখানে স্বয়ংক্রিয়ভাবে
+              দেখাবে।
             </p>
           </div>
         ) : (
@@ -798,8 +815,8 @@ export default function AdminOverviewPage() {
                 Low stock alert
               </div>
               <div className="text-[11px] text-amber-700">
-                {overview?.stats?.lowStockProductsCount} টা প্রোডাক্টের stock কম আছে
-                (১০ বা তার কম) — review করুন
+                {overview?.stats?.lowStockProductsCount} টা প্রোডাক্টের stock কম
+                আছে (১০ বা তার কম) — review করুন
               </div>
             </div>
           </div>

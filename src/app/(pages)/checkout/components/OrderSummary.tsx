@@ -2,13 +2,18 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, ShieldCheck, Tag, Banknote, AlertCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  ShieldCheck,
+  Tag,
+  Banknote,
+  AlertCircle,
+} from "lucide-react";
 import { createClient } from "../../../../../lib/supabase-client";
 import { getValidImageUrl } from "../../../../../lib/image-util";
 import { Package } from "lucide-react";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 type AnyObject = Record<string, any>;
 type Role = "customer" | "wholesaler" | "dropshipper";
@@ -81,9 +86,7 @@ const getAuthToken = async (): Promise<string> => {
   return session.access_token;
 };
 
-async function readJsonResponse(
-  response: Response,
-): Promise<AnyObject> {
+async function readJsonResponse(response: Response): Promise<AnyObject> {
   const text = await response.text();
 
   try {
@@ -96,8 +99,7 @@ async function readJsonResponse(
 const getProductPrice = (product: AnyObject): number => {
   const pricing = product?.pricing ?? {};
 
-  const salePrice =
-    pricing.customerSalePrice ?? product?.customerSalePrice;
+  const salePrice = pricing.customerSalePrice ?? product?.customerSalePrice;
 
   if (
     salePrice !== null &&
@@ -123,11 +125,7 @@ const getProductPrice = (product: AnyObject): number => {
 const getVendorId = (item: AnyObject): string => {
   const product = item?.product ?? item?.Product ?? {};
   const vendor =
-    product?.vendor ??
-    product?.Vendor ??
-    item?.vendor ??
-    item?.Vendor ??
-    {};
+    product?.vendor ?? product?.Vendor ?? item?.vendor ?? item?.Vendor ?? {};
 
   return String(
     item?.vendorId ??
@@ -139,9 +137,7 @@ const getVendorId = (item: AnyObject): string => {
   );
 };
 
-const getDeliverySettings = (
-  item: AnyObject,
-): DeliverySettings | null => {
+const getDeliverySettings = (item: AnyObject): DeliverySettings | null => {
   const product = item?.product ?? item?.Product ?? {};
 
   return (
@@ -163,8 +159,7 @@ const getRates = (
       : [];
 
   return [...rates].sort(
-    (a, b) =>
-      Number(a.minDistanceKm) - Number(b.minDistanceKm),
+    (a, b) => Number(a.minDistanceKm) - Number(b.minDistanceKm),
   );
 };
 
@@ -176,19 +171,12 @@ const normalizeServerCartItem = (
   raw: AnyObject,
   previousItems: CartItem[] = [],
 ): CartItem => {
-  const product =
-    raw?.product ?? raw?.Product ?? raw?.variant?.product ?? {};
+  const product = raw?.product ?? raw?.Product ?? raw?.variant?.product ?? {};
 
   const vendor =
-    product?.vendor ??
-    product?.Vendor ??
-    raw?.vendor ??
-    raw?.Vendor ??
-    {};
+    product?.vendor ?? product?.Vendor ?? raw?.vendor ?? raw?.Vendor ?? {};
 
-  const productId = String(
-    raw?.productId ?? product?.id ?? "",
-  );
+  const productId = String(raw?.productId ?? product?.id ?? "");
 
   const cartItemId = String(raw?.id ?? "");
   const vendorId = getVendorId({ ...raw, product, vendor });
@@ -196,11 +184,8 @@ const normalizeServerCartItem = (
   const previousItem = previousItems.find(
     (item) =>
       (cartItemId &&
-        (item.cartItemId === cartItemId ||
-          item.id === cartItemId)) ||
-      (productId &&
-        item.productId === productId &&
-        item.vendorId === vendorId),
+        (item.cartItemId === cartItemId || item.id === cartItemId)) ||
+      (productId && item.productId === productId && item.vendorId === vendorId),
   );
 
   const deliverySettings =
@@ -261,9 +246,7 @@ const getDeliveryCharge = (item: CartItem): number => {
   if (scope === "NATIONWIDE") {
     const charge = Number(settings.nationwideCharge);
 
-    return Number.isFinite(charge) && charge >= 0
-      ? charge * quantity
-      : 0;
+    return Number.isFinite(charge) && charge >= 0 ? charge * quantity : 0;
   }
 
   if (scope === "UPAZILA_BASED") {
@@ -291,10 +274,7 @@ const getDeliveryCharge = (item: CartItem): number => {
       return 0;
     }
 
-    const additionalKg = Math.max(
-      0,
-      Math.ceil(weight * quantity) - 1,
-    );
+    const additionalKg = Math.max(0, Math.ceil(weight * quantity) - 1);
 
     return firstCharge + additionalKg * additionalCharge;
   }
@@ -328,8 +308,7 @@ const getDeliveryError = (item: CartItem): string | null => {
 
     const rate = getRates(settings).find(
       (entry) =>
-        Number(entry.minDistanceKm) ===
-        Number(item.selectedRateMinDistanceKm),
+        Number(entry.minDistanceKm) === Number(item.selectedRateMinDistanceKm),
     );
 
     if (!rate) {
@@ -359,10 +338,7 @@ const getDeliveryError = (item: CartItem): string | null => {
   return `${item.name}: Delivery Scope সঠিক নয়।`;
 };
 
-export default function OrderSummary({
-  role,
-  shipping,
-}: Props) {
+export default function OrderSummary({ role, shipping }: Props) {
   const router = useRouter();
 
   const [items, setItems] = useState<CartItem[]>([]);
@@ -403,25 +379,20 @@ export default function OrderSummary({
 
       const token = await getAuthToken();
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/customer/cart`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          cache: "no-store",
+      const response = await fetch(`${API_BASE_URL}/api/customer/cart`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      );
+        cache: "no-store",
+      });
 
       const result = await readJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(
-          result?.message ??
-            result?.error ??
-            "Cart load করা যায়নি।",
+          result?.message ?? result?.error ?? "Cart load করা যায়নি।",
         );
       }
 
@@ -445,9 +416,7 @@ export default function OrderSummary({
       localStorage.setItem("cart", JSON.stringify(normalized));
     } catch (err) {
       console.error("Load cart error:", err);
-      setError(
-        err instanceof Error ? err.message : "Cart load করা যায়নি।",
-      );
+      setError(err instanceof Error ? err.message : "Cart load করা যায়নি।");
     } finally {
       setLoading(false);
     }
@@ -471,14 +440,10 @@ export default function OrderSummary({
     .map(getDeliveryError)
     .filter((message): message is string => Boolean(message));
 
-  const deliveryReady =
-    items.length > 0 && deliveryErrors.length === 0;
+  const deliveryReady = items.length > 0 && deliveryErrors.length === 0;
 
   const discount = appliedCoupon ? Number(appliedCoupon.discount) : 0;
-  const total = Math.max(
-    0,
-    subtotal + deliveryCharge - discount,
-  );
+  const total = Math.max(0, subtotal + deliveryCharge - discount);
 
   const applyCoupon = async () => {
     setCouponMessage("");
@@ -591,46 +556,41 @@ export default function OrderSummary({
     try {
       const token = await getAuthToken();
 
-      const deliverySelections = Array.from(
-        vendorSlabs.entries(),
-      ).map(([vendorId, selectedRateMinDistanceKm]) => ({
-        vendorId,
-        selectedRateMinDistanceKm,
-      }));
-
-      const response = await fetch(
-        `${API_BASE_URL}/api/customer/orders/cod`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            shipping: {
-              fullName: shipping.fullName.trim(),
-              phone: shipping.phone.trim(),
-              email: shipping.email?.trim() ?? "",
-              division: shipping.division.trim(),
-              district: shipping.district.trim(),
-              upazila: shipping.upazila.trim(),
-              area: shipping.postalCode?.trim() ?? "",
-              address: shipping.address.trim(),
-              note: "",
-            },
-            deliverySelections,
-            couponCode: appliedCoupon?.couponName ?? undefined,
-          }),
-        },
+      const deliverySelections = Array.from(vendorSlabs.entries()).map(
+        ([vendorId, selectedRateMinDistanceKm]) => ({
+          vendorId,
+          selectedRateMinDistanceKm,
+        }),
       );
+
+      const response = await fetch(`${API_BASE_URL}/api/customer/orders/cod`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          shipping: {
+            fullName: shipping.fullName.trim(),
+            phone: shipping.phone.trim(),
+            email: shipping.email?.trim() ?? "",
+            division: shipping.division.trim(),
+            district: shipping.district.trim(),
+            upazila: shipping.upazila.trim(),
+            area: shipping.postalCode?.trim() ?? "",
+            address: shipping.address.trim(),
+            note: "",
+          },
+          deliverySelections,
+          couponCode: appliedCoupon?.couponName ?? undefined,
+        }),
+      });
 
       const result = await readJsonResponse(response);
 
       if (!response.ok || result?.success === false) {
         throw new Error(
-          result?.message ??
-            result?.error ??
-            "অর্ডার সম্পন্ন করা যায়নি।",
+          result?.message ?? result?.error ?? "অর্ডার সম্পন্ন করা যায়নি।",
         );
       }
 
@@ -657,9 +617,7 @@ export default function OrderSummary({
   if (loading) {
     return (
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <p className="text-sm text-gray-600">
-          Order Summary লোড হচ্ছে...
-        </p>
+        <p className="text-sm text-gray-600">Order Summary লোড হচ্ছে...</p>
       </div>
     );
   }
@@ -667,23 +625,15 @@ export default function OrderSummary({
   return (
     <div className="space-y-6">
       <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-xl font-bold text-[#12233F]">
-          Order Summary
-        </h2>
+        <h2 className="mb-4 text-xl font-bold text-[#12233F]">Order Summary</h2>
 
         {items.length === 0 ? (
-          <p className="py-4 text-sm text-gray-500">
-            আপনার Cart খালি।
-          </p>
+          <p className="py-4 text-sm text-gray-500">আপনার Cart খালি।</p>
         ) : (
           <div className="space-y-4">
             {items.map((item, index) => (
               <div
-                key={
-                  item.cartItemId ||
-                  item.id ||
-                  `${item.productId}-${index}`
-                }
+                key={item.cartItemId || item.id || `${item.productId}-${index}`}
                 className="flex gap-3 border-b border-gray-100 pb-4 last:border-0"
               >
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
@@ -694,23 +644,24 @@ export default function OrderSummary({
                       className="h-full w-full object-cover"
                       onError={(event) => {
                         event.currentTarget.style.display = "none";
-                        const fallback = event.currentTarget.nextElementSibling as HTMLElement;
+                        const fallback = event.currentTarget
+                          .nextElementSibling as HTMLElement;
                         if (fallback) fallback.style.display = "flex";
                       }}
                     />
                   ) : null}
                   <div
                     className="flex flex-col items-center justify-center text-[10px] text-gray-400"
-                    style={{ display: getValidImageUrl(item.image) ? "none" : "flex" }}
+                    style={{
+                      display: getValidImageUrl(item.image) ? "none" : "flex",
+                    }}
                   >
                     <Package size={20} className="text-gray-300" />
                   </div>
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-gray-800">
-                    {item.name}
-                  </p>
+                  <p className="font-semibold text-gray-800">{item.name}</p>
 
                   <p className="mt-1 text-sm text-gray-500">
                     Quantity: {item.quantity}
@@ -726,8 +677,7 @@ export default function OrderSummary({
 
                   {item.selectedRateMinDistanceKm != null && (
                     <p className="mt-1 text-xs text-gray-500">
-                      Selected Slab:{" "}
-                      {item.selectedRateMinDistanceKm} km
+                      Selected Slab: {item.selectedRateMinDistanceKm} km
                     </p>
                   )}
 
@@ -785,9 +735,7 @@ export default function OrderSummary({
         {couponMessage && (
           <p
             className={`mt-2 text-sm ${
-              appliedCoupon
-                ? "font-medium text-emerald-600"
-                : "text-red-600"
+              appliedCoupon ? "font-medium text-emerald-600" : "text-red-600"
             }`}
           >
             {couponMessage}
@@ -812,7 +760,8 @@ export default function OrderSummary({
                 Cash on Delivery (ক্যাশ অন ডেলিভারি)
               </p>
               <p className="mt-1 text-xs leading-5 text-gray-600">
-                কোনো অগ্রিম পেমেন্ট নেই। পণ্য এবং ডেলিভারি চার্জের সর্বমোট টাকা পার্সেলটি রিসিভ করার সময় ডেলিভারি ম্যানের কাছে পরিশোধ করবেন।
+                কোনো অগ্রিম পেমেন্ট নেই। পণ্য এবং ডেলিভারি চার্জের সর্বমোট টাকা
+                পার্সেলটি রিসিভ করার সময় ডেলিভারি ম্যানের কাছে পরিশোধ করবেন।
               </p>
             </div>
           </div>
@@ -834,9 +783,7 @@ export default function OrderSummary({
           <div className="flex justify-between gap-3">
             <span className="text-gray-600">Delivery Charge</span>
             <span className="font-medium">
-              {deliveryReady
-                ? money(deliveryCharge)
-                : "স্ল্যাব যাচাই করো"}
+              {deliveryReady ? money(deliveryCharge) : "স্ল্যাব যাচাই করো"}
             </span>
           </div>
 

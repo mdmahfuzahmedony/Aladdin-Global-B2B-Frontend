@@ -1,6 +1,8 @@
 import { ExternalLink, Share2, Globe } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function FooterSocial() {
+  const { t } = useLanguage();
   const socials = [
     { name: "Facebook", code: "FB", link: "https://facebook.com" },
     { name: "LinkedIn", code: "LN", link: "https://linkedin.com" },
@@ -10,7 +12,7 @@ export function FooterSocial() {
   return (
     <div className="flex flex-col gap-2 pt-2">
       <div className="flex items-center gap-2">
-        <span className="text-xs font-bold text-[#12233F]">Follow Us:</span>
+        <span className="text-xs font-bold text-[#12233F]">{t("followUs")}</span>
       </div>
       
       <div className="flex flex-wrap gap-2">

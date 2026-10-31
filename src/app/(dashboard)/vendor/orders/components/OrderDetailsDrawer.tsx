@@ -22,7 +22,6 @@ import {
 import { createClient } from "../../../../../../lib/supabase-client";
 import { getValidImageUrl } from "../../../../../../lib/image-util";
 
-
 /* -------------------------------------------------------------------------- */
 /*                                    TYPES                                   */
 /* -------------------------------------------------------------------------- */
@@ -264,7 +263,9 @@ export default function OrderDetailsDrawer({
       order.courierShipment.bookingStatus === "SUCCESS"
     ) {
       setCourierBooked(true);
-      setBookingMessage("অর্ডারটি ইতিমধ্যে Steadfast কুরিয়ারে বুক করা হয়েছে।");
+      setBookingMessage(
+        "অর্ডারটি ইতিমধ্যে Steadfast কুরিয়ারে বুক করা হয়েছে।",
+      );
       setTrackingCode(order.courierShipment.trackingCode || "");
       setConsignmentId(order.courierShipment.consignmentId || "");
       setDeliveryStatus(order.courierShipment.deliveryStatus || "PENDING");
@@ -294,11 +295,13 @@ export default function OrderDetailsDrawer({
       const token = sessionData.session?.access_token;
 
       if (!token) {
-        throw new Error("লগইন সেশন পাওয়া যায়নি। অনুগ্রহ করে পুনরায় লগইন করুন।");
+        throw new Error(
+          "লগইন সেশন পাওয়া যায়নি। অনুগ্রহ করে পুনরায় লগইন করুন।",
+        );
       }
 
       const apiBaseUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
       const response = await fetch(
         `${apiBaseUrl}/api/courier/vendor-orders/${encodeURIComponent(
@@ -359,7 +362,7 @@ export default function OrderDetailsDrawer({
       }
 
       const apiBaseUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
       const response = await fetch(
         `${apiBaseUrl}/api/courier/vendor-orders/${encodeURIComponent(
@@ -569,7 +572,9 @@ export default function OrderDetailsDrawer({
                 </div>
 
                 <div className="mt-5 border-t border-slate-100 pt-4">
-                  <p className="text-sm text-slate-500">Total order amount (COD)</p>
+                  <p className="text-sm text-slate-500">
+                    Total order amount (COD)
+                  </p>
 
                   <p className="mt-1 text-3xl font-bold text-[#12233F]">
                     {formatCurrency(order.totalAmount)}
@@ -606,15 +611,21 @@ export default function OrderDetailsDrawer({
                   <div className="space-y-3">
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
                       <div className="flex items-start gap-2.5">
-                        <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-600" />
+                        <CheckCircle2
+                          size={18}
+                          className="mt-0.5 shrink-0 text-emerald-600"
+                        />
                         <div className="min-w-0 flex-1 space-y-1.5 text-xs text-slate-700">
                           <p className="font-semibold text-emerald-800">
-                            {bookingMessage || "Steadfast Courier-এ সফলভাবে বুক করা হয়েছে"}
+                            {bookingMessage ||
+                              "Steadfast Courier-এ সফলভাবে বুক করা হয়েছে"}
                           </p>
 
                           {consignmentId && (
                             <p className="flex items-center gap-1.5">
-                              <span className="font-medium text-slate-500">Consignment ID:</span>
+                              <span className="font-medium text-slate-500">
+                                Consignment ID:
+                              </span>
                               <span className="font-mono font-bold text-slate-900">
                                 {consignmentId}
                               </span>
@@ -623,7 +634,9 @@ export default function OrderDetailsDrawer({
 
                           {trackingCode && (
                             <p className="flex items-center gap-1.5">
-                              <span className="font-medium text-slate-500">Tracking Code:</span>
+                              <span className="font-medium text-slate-500">
+                                Tracking Code:
+                              </span>
                               <span className="font-mono font-bold text-emerald-700">
                                 {trackingCode}
                               </span>
@@ -632,7 +645,9 @@ export default function OrderDetailsDrawer({
 
                           {deliveryStatus && (
                             <p className="flex items-center gap-1.5">
-                              <span className="font-medium text-slate-500">Status:</span>
+                              <span className="font-medium text-slate-500">
+                                Status:
+                              </span>
                               <span className="inline-block uppercase font-bold text-slate-800">
                                 {deliveryStatus}
                               </span>
@@ -651,9 +666,15 @@ export default function OrderDetailsDrawer({
                       >
                         <RefreshCw
                           size={14}
-                          className={trackingLoading ? "animate-spin text-emerald-600" : ""}
+                          className={
+                            trackingLoading
+                              ? "animate-spin text-emerald-600"
+                              : ""
+                          }
                         />
-                        {trackingLoading ? "যাচাই হচ্ছে..." : "Track / Status Refresh"}
+                        {trackingLoading
+                          ? "যাচাই হচ্ছে..."
+                          : "Track / Status Refresh"}
                       </button>
 
                       {trackingCode && (
@@ -671,7 +692,9 @@ export default function OrderDetailsDrawer({
                 ) : (
                   <div>
                     <p className="mb-4 text-xs leading-5 text-slate-600">
-                      এই অর্ডারের জন্য Steadfast কুরিয়ারে বুকিং নিশ্চিত করতে নিচের বাটনে ক্লিক করুন। স্বয়ংক্রিয়ভাবে Consignment তৈরি হবে ও Tracking Code পাওয়া যাবে।
+                      এই অর্ডারের জন্য Steadfast কুরিয়ারে বুকিং নিশ্চিত করতে
+                      নিচের বাটনে ক্লিক করুন। স্বয়ংক্রিয়ভাবে Consignment তৈরি
+                      হবে ও Tracking Code পাওয়া যাবে।
                     </p>
 
                     <div className="mb-4 rounded-xl bg-slate-50 p-3.5 text-xs space-y-1.5 border border-slate-200">
@@ -695,14 +718,19 @@ export default function OrderDetailsDrawer({
                       </div>
                       <div className="pt-1 border-t border-slate-200">
                         <span className="text-slate-500">Address: </span>
-                        <span className="text-slate-700 font-medium">{fullAddress}</span>
+                        <span className="text-slate-700 font-medium">
+                          {fullAddress}
+                        </span>
                       </div>
                     </div>
 
                     {bookingError && (
                       <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-800">
                         <div className="flex items-start gap-2.5">
-                          <AlertCircle size={18} className="mt-0.5 shrink-0 text-red-600" />
+                          <AlertCircle
+                            size={18}
+                            className="mt-0.5 shrink-0 text-red-600"
+                          />
                           <div className="space-y-1">
                             <p className="font-bold text-red-900">
                               বুকিং করা সম্ভব হয়নি:
@@ -831,22 +859,36 @@ export default function OrderDetailsDrawer({
                           className="flex gap-3 border-b border-slate-100 pb-4 last:border-0 last:pb-0"
                         >
                           <div className="flex h-[68px] w-[68px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                            {getValidImageUrl(item.productImage || (item as any).product?.images?.[0]) ? (
+                            {getValidImageUrl(
+                              item.productImage ||
+                                (item as any).product?.images?.[0],
+                            ) ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
-                                src={getValidImageUrl(item.productImage || (item as any).product?.images?.[0])}
+                                src={getValidImageUrl(
+                                  item.productImage ||
+                                    (item as any).product?.images?.[0],
+                                )}
                                 alt={getItemName(item)}
                                 className="h-full w-full object-cover"
                                 onError={(event) => {
                                   event.currentTarget.style.display = "none";
-                                  const fallback = event.currentTarget.nextElementSibling as HTMLElement;
+                                  const fallback = event.currentTarget
+                                    .nextElementSibling as HTMLElement;
                                   if (fallback) fallback.style.display = "flex";
                                 }}
                               />
                             ) : null}
                             <div
                               className="items-center justify-center text-slate-300"
-                              style={{ display: getValidImageUrl(item.productImage || (item as any).product?.images?.[0]) ? "none" : "flex" }}
+                              style={{
+                                display: getValidImageUrl(
+                                  item.productImage ||
+                                    (item as any).product?.images?.[0],
+                                )
+                                  ? "none"
+                                  : "flex",
+                              }}
                             >
                               <Package size={26} />
                             </div>
@@ -901,14 +943,17 @@ export default function OrderDetailsDrawer({
                     </span>
 
                     <span className="font-medium text-slate-800">
-                      {formatCurrency(order.deliveryCharge ?? (order as any).deliveryFee ?? 0)}
+                      {formatCurrency(
+                        order.deliveryCharge ?? (order as any).deliveryFee ?? 0,
+                      )}
                     </span>
                   </div>
 
                   {Number((order as any)?.discount ?? 0) > 0 && (
                     <div className="flex items-center justify-between gap-4 text-sm text-emerald-600">
                       <span className="font-medium">
-                        Coupon discount {(order as any)?.note ? `(${(order as any).note})` : ""}
+                        Coupon discount{" "}
+                        {(order as any)?.note ? `(${(order as any).note})` : ""}
                       </span>
                       <span className="font-semibold">
                         -{formatCurrency((order as any).discount)}

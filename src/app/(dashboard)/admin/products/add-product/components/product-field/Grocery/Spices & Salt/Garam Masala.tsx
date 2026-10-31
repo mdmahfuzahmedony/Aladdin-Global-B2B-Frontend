@@ -1,78 +1,131 @@
 "use client";
 
 export interface GaramMasalaData {
-  masalaType?: string;
-  form?: string;
-  spiceLevel?: string;
-  ingredients?: string;
-  aroma?: string;
-  usageType?: string;
-  storageCondition?: string;
-  shelfLife?: string;
+  brand?: string;
+  netWeight?: string;
+  packagingType?: string;
+  productType?: string;
+  countryOfOrigin?: string;
 }
 
 interface Props {
-  value: GaramMasalaData;
+  value?: GaramMasalaData;
   onChange: (value: GaramMasalaData) => void;
+  categoryName?: string;
 }
 
-export default function GaramMasala({ value, onChange }: Props) {
-  const update = (key: keyof GaramMasalaData, fieldValue: string) =>
-    onChange({ ...value, [key]: fieldValue });
+export default function GaramMasala({ value = {}, onChange }: Props) {
+  const update = (key: keyof GaramMasalaData, v: string) =>
+    onChange({ ...value, [key]: v });
 
   return (
     <section className="rounded-xl border border-slate-200 bg-white">
       <div className="p-5">
         <h3 className="text-base font-semibold text-slate-900">Garam Masala Information</h3>
-        <p className="mt-1 text-xs text-slate-500">Add product-specific information.</p>
+        <p className="mt-1 text-xs text-slate-500">Add product details for this item.</p>
         <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
-          <Select label="Garam Masala Type" value={value.masalaType}
-            onChange={(v) => update("masalaType", v)}
-            options={['Regular', 'Premium', 'Punjabi Style', 'Bengali Style', 'Special Blend', 'Other']} />
-          <Select label="Form" value={value.form}
-            onChange={(v) => update("form", v)}
-            options={['Powder', 'Whole Spice Blend']} />
-          <Select label="Spice Level" value={value.spiceLevel}
-            onChange={(v) => update("spiceLevel", v)}
-            options={['Mild', 'Medium', 'Hot']} />
-          <Input label="Main Ingredients" value={value.ingredients}
-            onChange={(v) => update("ingredients", v)} />
-          <Select label="Aroma" value={value.aroma}
-            onChange={(v) => update("aroma", v)}
-            options={['Mild', 'Medium', 'Strong']} />
-          <Select label="Usage Type" value={value.usageType}
-            onChange={(v) => update("usageType", v)}
-            options={['Curry', 'Meat', 'Rice', 'Vegetable', 'General Cooking']} />
-          <Select label="Storage Condition" value={value.storageCondition}
-            onChange={(v) => update("storageCondition", v)}
-            options={['Room Temperature', 'Cool & Dry']} />
-          <Input label="Shelf Life" value={value.shelfLife}
-            onChange={(v) => update("shelfLife", v)} />
+          <Input
+            label="Brand"
+            value={value.brand}
+            onChange={(v) => update("brand", v)}
+            placeholder="e.g. Pran, ACI, Square, Bashundhara"
+          />
+          <Input
+            label="Net Weight / Volume"
+            value={value.netWeight}
+            onChange={(v) => update("netWeight", v)}
+            placeholder="e.g. 500g, 1kg, 250ml"
+          />
+          <Select
+            label="Masala Type"
+            value={value.productType}
+            onChange={(v) => update("productType", v)}
+            options={["Garam Masala Powder","Whole Garam Masala Mix","Shahi Garam Masala","Other"]}
+          />
+          <Select
+            label="Packaging Type"
+            value={value.packagingType}
+            onChange={(v) => update("packagingType", v)}
+            options={[
+              "Packet / Pouch",
+              "Bottle",
+              "Jar / Tin",
+              "Box / Carton",
+              "Sachet",
+              "Cup / Bowl",
+              "Loose / Open",
+            ]}
+          />
+          <Select
+            label="Country of Origin"
+            value={value.countryOfOrigin}
+            onChange={(v) => update("countryOfOrigin", v)}
+            options={[
+              "Bangladesh",
+              "India",
+              "China",
+              "Malaysia",
+              "Thailand",
+              "USA",
+              "Other",
+            ]}
+          />
         </div>
       </div>
     </section>
   );
 }
 
-function Input({ label, value, onChange }: {
-  label: string; value?: string; onChange: (value: string) => void;
+function Input({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value?: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
 }) {
-  return (<div>
-    <label className="mb-1.5 block text-xs font-medium text-slate-700">{label}</label>
-    <input value={value ?? ""} onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-slate-500" />
-  </div>);
+  return (
+    <div>
+      <label className="mb-1.5 block text-xs font-medium text-slate-700">{label}</label>
+      <input
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-slate-500"
+      />
+    </div>
+  );
 }
 
-function Select({ label, value, options, onChange }: {
-  label: string; value?: string; options: string[]; onChange: (value: string) => void;
+function Select({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value?: string;
+  options: string[];
+  onChange: (v: string) => void;
 }) {
-  return (<div>
-    <label className="mb-1.5 block text-xs font-medium text-slate-700">{label}</label>
-    <select value={value ?? ""} onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-slate-500">
-      <option value="">Select {label}</option>
-      {options.map((option) => <option key={option} value={option}>{option}</option>)}
-    </select>
-  </div>);
+  return (
+    <div>
+      <label className="mb-1.5 block text-xs font-medium text-slate-700">{label}</label>
+      <select
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-slate-500"
+      >
+        <option value="">Select {label}</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 }
