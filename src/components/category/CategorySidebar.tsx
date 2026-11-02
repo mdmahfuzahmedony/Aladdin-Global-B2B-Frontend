@@ -322,7 +322,7 @@ export default function CategorySidebar({
 
   // Parent callback না দেওয়া থাকলেও UI selection কাজ করবে।
   const [localAttributeFilters, setLocalAttributeFilters] =
-    useState<Record<string, string[]>>({});
+    useState<Record<string, string[]>>(selectedAttributeFilters);
 
   const activeAttributeFilters =
     onAttributeFiltersChange
@@ -335,7 +335,7 @@ export default function CategorySidebar({
     if (scrollPositionRef.current !== null) {
       window.scrollTo({
         top: scrollPositionRef.current,
-        behavior: "instant",
+        behavior: "auto",
       });
 
       scrollPositionRef.current = null;

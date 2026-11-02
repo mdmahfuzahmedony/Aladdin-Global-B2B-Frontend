@@ -265,18 +265,20 @@ export function formatAttributeValue(val: unknown): string {
   }
   if (Array.isArray(val)) {
     return val
-      .map((item) => (typeof item === "string" ? item : JSON.stringify(item)))
+      .map(formatAttributeValue)
       .filter(Boolean)
       .join(", ");
   }
   if (typeof val === "object") {
-    try {
-      const entries = Object.entries(val);
-      if (entries.length === 0) return "";
-      return entries.map(([k, v]) => `${formatKeyLabel(k)}: ${String(v)}`).join(", ");
-    } catch {
-      return String(val);
-    }
+    return Object.entries(val)
+      .map(([key, value]) => {
+        const formattedValue = formatAttributeValue(value);
+        return formattedValue
+          ? `${formatKeyLabel(key)}: ${formattedValue}`
+          : "";
+      })
+      .filter(Boolean)
+      .join(", ");
   }
   return String(val);
 }
@@ -470,11 +472,11 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
     attrs
   );
 
+  const highlightedAttributeKeys = new Set<string>();
   const getVal = (k: string) => {
-    const v = attrs[k];
-    return v !== null && v !== undefined && String(v).trim() !== ""
-      ? formatAttributeValue(v)
-      : null;
+    highlightedAttributeKeys.add(k);
+    const value = formatAttributeValue(attrs[k]);
+    return value || null;
   };
 
   const highlights: HighlightItem[] = [];
@@ -496,6 +498,8 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
       const isHalal = getVal("isHalal");
       if (isHalal === "Yes" || isHalal === "Halal" || isHalal === "Halal Certified") {
         highlights.push({ id: "halal", label: "Certification", value: "Halal Certified", icon: <ShieldCheck size={13} />, variant: "emerald" });
+      } else if (isHalal) {
+        highlights.push({ id: "halal", label: "Certification", value: isHalal, icon: <ShieldCheck size={13} />, variant: "slate" });
       }
       break;
     }
@@ -506,12 +510,13 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
 
       const organic = getVal("organic");
       if (organic === "Yes") highlights.push({ id: "organic", label: "Standard", value: "100% Organic", icon: <CheckCircle2 size={13} />, variant: "emerald" });
+      else if (organic) highlights.push({ id: "organic", label: "Organic Status", value: organic, icon: <CheckCircle2 size={13} />, variant: "slate" });
 
       const origin = getVal("origin");
       if (origin) highlights.push({ id: "origin", label: "Origin", value: origin, icon: <MapPin size={13} />, variant: "blue" });
 
-      const freshness = getVal("freshnessGuarantee") || "Guaranteed Fresh";
-      highlights.push({ id: "freshness", label: "Freshness", value: freshness, icon: <Sparkles size={13} />, variant: "emerald" });
+      const freshness = getVal("freshnessGuarantee");
+      if (freshness) highlights.push({ id: "freshness", label: "Freshness", value: freshness, icon: <Sparkles size={13} />, variant: "emerald" });
 
       const storage = getVal("storageCondition");
       if (storage) highlights.push({ id: "storage", label: "Storage", value: storage, icon: <Box size={13} />, variant: "indigo" });
@@ -599,24 +604,29 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
       break;
     }
 
-    default: {
-      // General highlights: extract first 4 valid scalar attributes
-      const entries = Object.entries(attrs).filter(
-        ([k, v]) => !IGNORED_ATTRIBUTE_KEYS.has(k) && v !== null && v !== undefined && String(v).trim() !== ""
-      );
-
-      entries.slice(0, 4).forEach(([k, v]) => {
-        highlights.push({
-          id: k,
-          label: formatKeyLabel(k),
-          value: formatAttributeValue(v),
-          icon: <Tag size={13} />,
-          variant: "indigo",
-        });
-      });
+    default:
       break;
-    }
   }
+
+  Object.entries(attrs).forEach(([key, value]) => {
+    if (
+      IGNORED_ATTRIBUTE_KEYS.has(key) ||
+      highlightedAttributeKeys.has(key)
+    ) {
+      return;
+    }
+
+    const formattedValue = formatAttributeValue(value);
+    if (!formattedValue) return;
+
+    highlights.push({
+      id: key,
+      label: formatKeyLabel(key),
+      value: formattedValue,
+      icon: <Tag size={13} />,
+      variant: "indigo",
+    });
+  });
 
   return highlights;
 }
@@ -681,9 +691,9 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
     const rows: SpecRow[] = [];
     keys.forEach((k) => {
       const v = attrs[k];
-      if (v !== null && v !== undefined && String(v).trim() !== "") {
+      const formattedVal = formatAttributeValue(v);
+      if (formattedVal) {
         processedKeys.add(k);
-        const formattedVal = formatAttributeValue(v);
         const isCertBadge =
           k.toLowerCase().includes("halal") ||
           k.toLowerCase().includes("organic") ||
@@ -878,17 +888,16 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
   // 3. Fallback / Remaining Attributes
   const remainingRows: SpecRow[] = [];
   Object.entries(attrs).forEach(([k, v]) => {
+    const formattedVal = formatAttributeValue(v);
     if (
       !IGNORED_ATTRIBUTE_KEYS.has(k) &&
       !processedKeys.has(k) &&
-      v !== null &&
-      v !== undefined &&
-      String(v).trim() !== ""
+      formattedVal
     ) {
       remainingRows.push({
         key: k,
         label: formatKeyLabel(k),
-        value: formatAttributeValue(v),
+        value: formattedVal,
       });
     }
   });

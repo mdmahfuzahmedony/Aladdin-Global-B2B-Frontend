@@ -15,7 +15,10 @@ import {
 
 import { createClient } from "../../../../../../../lib/supabase-client";
 import CategoryIcon from "@/components/category/CategoryIcon";
-import { FASHION_CATEGORY_TREE_TEXT } from "./product-field/Fashion/FashionCategoryTree";
+import {
+  FASHION_CATEGORY_TREE_TEXT,
+  KIDS_FOOTWEAR_CATEGORY_TREE_TEXT,
+} from "./product-field/Fashion/FashionCategoryTree";
 
 type Category = {
   id: string;
@@ -1466,6 +1469,25 @@ export default function CategoryModal({
 
           {mode === "paste" && (
             <>
+              <button
+                type="button"
+                onClick={() => {
+                  setError("");
+                  void handlePasteSubmit(KIDS_FOOTWEAR_CATEGORY_TREE_TEXT);
+                }}
+                disabled={loading}
+                className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-500 px-4 py-3 text-xs font-semibold text-amber-800 disabled:opacity-40"
+              >
+                <Plus size={14} />
+                {loading ? "Creating..." : "Create Kids Footwear Categories"}
+              </button>
+
+              <p className="mb-3 text-[11px] leading-5 text-slate-500">
+                Fashion → Kid&apos;s Fashion → Footwear → Boys/Girls Footwear
+                এবং তাদের product category তৈরি হবে। আগে থাকা category আবার
+                তৈরি হবে না।
+              </p>
+
               <button
                 type="button"
                 onClick={() => {

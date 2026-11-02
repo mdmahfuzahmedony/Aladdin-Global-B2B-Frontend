@@ -23,7 +23,7 @@ import Juice from "./product-field/Grocery/Beverages/Juice";
 import MineralDrinks from "./product-field/Grocery/Beverages/MineralDrinks";
 import SoftDrinks from "./product-field/Grocery/Beverages/SoftDrinks";
 import EnergyDrinks from "./product-field/Grocery/Beverages/EnergyDrinks";
-import SportsDrinks from "./product-field/Grocery/Beverages/SportsDrinks";
+import SportsDrinks from "./product-field/Grocery/Beverages/sportsDrinks";
 import SyrupsPowderDrinks from "./product-field/Grocery/Beverages/SyrupsPowderDrinks";
 import TeaCoffee from "./product-field/Grocery/Beverages/TeaCoffee";
 
