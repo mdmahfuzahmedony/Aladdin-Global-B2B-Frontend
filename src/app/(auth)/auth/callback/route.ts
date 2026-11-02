@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  "https://irjztafvbaykdykkhawy.supabase.co";
+
+const SUPABASE_ANON_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyanp0YWZ2YmF5a2R5a2toYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTI5MTAsImV4cCI6MjEwNDE2ODkxMH0.E5rbS6jIfEqvvPGOzq2T_HQK6qFiLjAB-CeWCKgRC14";
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -16,25 +24,19 @@ export async function GET(request: Request) {
 
   const cookieStore = await cookies();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(
-            ({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            }
-          );
-        },
+  const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
       },
-    }
-  );
+
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          cookieStore.set(name, value, options);
+        });
+      },
+    },
+  });
 
   // ============================
   // Exchange Google code
@@ -44,10 +46,7 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
-    console.error(
-      "AUTH CALLBACK ERROR:",
-      error.message
-    );
+    console.error("AUTH CALLBACK ERROR:", error.message);
 
     return NextResponse.redirect(
       `${requestUrl.origin}/sign-in?error=auth-code-error`
@@ -65,8 +64,11 @@ export async function GET(request: Request) {
   // ============================
 
   try {
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+
     const syncResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/users/sync-profile`,
+      `${apiUrl}/api/users/sync-profile`,
       {
         method: "POST",
 
@@ -94,20 +96,14 @@ export async function GET(request: Request) {
       const syncError =
         await syncResponse.json().catch(() => null);
 
-      console.error(
-        "PROFILE SYNC ERROR:",
-        syncError
-      );
+      console.error("PROFILE SYNC ERROR:", syncError);
 
       return NextResponse.redirect(
         `${requestUrl.origin}/sign-in?error=profile-sync-error`
       );
     }
   } catch (err) {
-    console.error(
-      "PROFILE SYNC FETCH ERROR:",
-      err
-    );
+    console.error("PROFILE SYNC FETCH ERROR:", err);
 
     return NextResponse.redirect(
       `${requestUrl.origin}/sign-in?error=profile-sync-error`
@@ -118,7 +114,5 @@ export async function GET(request: Request) {
   // Success
   // ============================
 
-  return NextResponse.redirect(
-    `${requestUrl.origin}${next}`
-  );
+  return NextResponse.redirect(`${requestUrl.origin}${next}`);
 }

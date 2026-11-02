@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAutoSlider } from "@/hooks/useAutoSlider";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
@@ -37,6 +38,8 @@ export default function FlashSaleSection() {
   const [saleEndTime, setSaleEndTime] = useState<Date | null>(null);
 
   const sliderRef = useRef<HTMLDivElement>(null);
+
+  const { start: autoStart, stop: autoStop } = useAutoSlider(sliderRef);
 
   const scrollLeft = () => {
     const slider = sliderRef.current;
