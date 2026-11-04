@@ -835,6 +835,7 @@ type CategoryTreeItemProps = {
   categories: Category[];
   level: number;
   openCategoryIds: string[];
+  selectedCategoryId?: string;
   onToggleCategory: (category: Category) => void;
   onSelectCategory: (category: Category) => void;
 };
@@ -844,6 +845,7 @@ function CategoryTreeItem({
   categories,
   level,
   openCategoryIds,
+  selectedCategoryId,
   onToggleCategory,
   onSelectCategory,
 }: CategoryTreeItemProps) {
@@ -851,41 +853,56 @@ function CategoryTreeItem({
 
   const hasChildren = children.length > 0;
   const isOpen = openCategoryIds.includes(category.id);
+  const isSelected = selectedCategoryId === category.id;
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => {
-          if (hasChildren) {
-            onToggleCategory(category);
-          } else {
-            onSelectCategory(category);
-          }
-        }}
+      <div
         className={[
-          "flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left transition",
-          "hover:bg-slate-50",
-          level === 0
-            ? "text-sm font-semibold text-slate-700"
-            : "text-xs font-medium text-slate-600",
+          "flex items-center rounded-lg transition",
+          isSelected ? "bg-amber-50" : "hover:bg-slate-50",
         ].join(" ")}
         style={{
           paddingLeft: `${12 + level * 20}px`,
         }}
       >
         {hasChildren ? (
-          isOpen ? (
-            <ChevronDown size={15} className="shrink-0 text-slate-400" />
-          ) : (
-            <ChevronRight size={15} className="shrink-0 text-slate-400" />
-          )
+          <button
+            type="button"
+            onClick={() => onToggleCategory(category)}
+            aria-label={`${isOpen ? "Collapse" : "Expand"} ${category.name}`}
+            aria-expanded={isOpen}
+            className="flex h-9 w-8 shrink-0 items-center justify-center rounded-md text-slate-400 hover:text-slate-700"
+          >
+            {isOpen ? (
+              <ChevronDown size={15} />
+            ) : (
+              <ChevronRight size={15} />
+            )}
+          </button>
         ) : (
-          <span className="w-[15px] shrink-0" />
+          <span className="w-8 shrink-0" />
         )}
 
-        <span className="truncate">{category.name}</span>
-      </button>
+        <button
+          type="button"
+          onClick={() => onSelectCategory(category)}
+          aria-pressed={isSelected}
+          className={[
+            "min-w-0 flex-1 truncate rounded-lg px-2 py-2.5 text-left transition",
+            level === 0
+              ? "text-sm font-semibold"
+              : "text-xs font-medium",
+            isSelected
+              ? "font-semibold text-amber-900"
+              : level === 0
+                ? "text-slate-700"
+                : "text-slate-600",
+          ].join(" ")}
+        >
+          {category.name}
+        </button>
+      </div>
 
       {hasChildren && isOpen && (
         <div>
@@ -896,6 +913,7 @@ function CategoryTreeItem({
               categories={categories}
               level={level + 1}
               openCategoryIds={openCategoryIds}
+              selectedCategoryId={selectedCategoryId}
               onToggleCategory={onToggleCategory}
               onSelectCategory={onSelectCategory}
             />
@@ -1264,6 +1282,7 @@ export default function ProductInformation({
                     categories={categories}
                     level={0}
                     openCategoryIds={openCategoryIds}
+                    selectedCategoryId={selectedCategory?.id}
                     onToggleCategory={handleToggleCategory}
                     onSelectCategory={handleSelectCategory}
                   />

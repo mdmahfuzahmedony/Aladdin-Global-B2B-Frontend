@@ -11,6 +11,8 @@ import {
   ImagePlus,
   Save,
   Trash2,
+  Pencil,
+  Check,
 } from "lucide-react";
 
 import { createClient } from "../../../../../../../lib/supabase-client";
@@ -252,6 +254,9 @@ export default function CategoryModal({
     useState(false);
   const [savingCurrentCategoryImage, setSavingCurrentCategoryImage] =
     useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [categoryNameDraft, setCategoryNameDraft] = useState("");
+  const [savingCategoryName, setSavingCategoryName] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [mode, setMode] = useState<Mode>("manual");
@@ -345,6 +350,73 @@ export default function CategoryModal({
     onCreated?.();
   }
 
+  async function handleSaveCategoryName(category: Category) {
+    const name = categoryNameDraft.trim();
+
+    if (!name) {
+      setError("Category name দিতে হবে।");
+      return;
+    }
+
+    try {
+      setSavingCategoryName(true);
+      setError("");
+      setSuccessMessage("");
+
+      const token = await getToken();
+      const response = await fetch(
+        `${apiUrl}/api/categories/${encodeURIComponent(category.id)}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ name }),
+        },
+      );
+      const result = await response.json();
+
+      if (!response.ok || !result?.success || !result?.data?.id) {
+        throw new Error(result?.error || "Category name update করা যায়নি।");
+      }
+
+      const updatedCategory = result.data as Category;
+      const updateCategory = (item: Category) =>
+        item.id === updatedCategory.id ? updatedCategory : item;
+
+      setCategories((previous) => previous.map(updateCategory));
+      setCurrentParent((previous) =>
+        previous?.id === updatedCategory.id
+          ? { ...previous, ...updatedCategory }
+          : previous,
+      );
+      setSelectedMainCategory((previous) =>
+        previous?.id === updatedCategory.id
+          ? { ...previous, ...updatedCategory }
+          : previous,
+      );
+      setCategoryPath((previous) =>
+        previous.map((item) =>
+          item.id === updatedCategory.id
+            ? { ...item, name: updatedCategory.name }
+            : item,
+        ),
+      );
+      setEditingCategoryId(null);
+      setSuccessMessage(`Category name "${updatedCategory.name}" save হয়েছে।`);
+      onCreated?.();
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Category name update করা যায়নি।",
+      );
+    } finally {
+      setSavingCategoryName(false);
+    }
+  }
+
   function resetModal() {
     setSelectedMainCategory(null);
     setCurrentParent(null);
@@ -362,6 +434,8 @@ export default function CategoryModal({
     setSavingOrder(false);
     setOrderChanged(false);
     setDraggingId(null);
+    setEditingCategoryId(null);
+    setCategoryNameDraft("");
   }
 
   useEffect(() => {
@@ -378,7 +452,7 @@ export default function CategoryModal({
   }, [open]);
 
   function handleClose() {
-    if (loading || savingOrder) return;
+    if (loading || savingOrder || savingCategoryName) return;
     resetModal();
     onClose();
   }
@@ -1152,22 +1226,75 @@ export default function CategoryModal({
                           onSaved={handleCategoryImageSaved}
                         />
 
-                        <button
-                          type="button"
-                          onClick={() => selectMainCategory(category)}
-                          disabled={loading || savingOrder}
-                          className="flex min-w-0 flex-1 items-center justify-between gap-2 py-1 text-left"
-                        >
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-xs font-semibold text-slate-800">
-                              {category.name}
-                            </span>
-                            <span className="mt-1 block text-[10px] text-slate-400">
-                              {count} subcategories
-                            </span>
-                          </span>
-                          <ChevronRight size={16} className="text-slate-400" />
-                        </button>
+                        {editingCategoryId === category.id ? (
+                          <form
+                            onSubmit={(event) => {
+                              event.preventDefault();
+                              void handleSaveCategoryName(category);
+                            }}
+                            className="flex min-w-0 flex-1 items-center gap-1"
+                          >
+                            <input
+                              autoFocus
+                              value={categoryNameDraft}
+                              onChange={(event) =>
+                                setCategoryNameDraft(event.target.value)
+                              }
+                              disabled={savingCategoryName}
+                              aria-label="Main category name"
+                              className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-2 text-xs outline-none focus:border-[#12233F]"
+                            />
+                            <button
+                              type="submit"
+                              disabled={savingCategoryName || !categoryNameDraft.trim()}
+                              aria-label="Save category name"
+                              className="rounded-lg bg-[#12233F] p-2 text-white disabled:opacity-40"
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingCategoryId(null)}
+                              disabled={savingCategoryName}
+                              aria-label="Cancel category name edit"
+                              className="rounded-lg border border-slate-200 p-2 text-slate-500 disabled:opacity-40"
+                            >
+                              <X size={14} />
+                            </button>
+                          </form>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => selectMainCategory(category)}
+                              disabled={loading || savingOrder || savingCategoryName}
+                              className="flex min-w-0 flex-1 items-center justify-between gap-2 py-1 text-left"
+                            >
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-xs font-semibold text-slate-800">
+                                  {category.name}
+                                </span>
+                                <span className="mt-1 block text-[10px] text-slate-400">
+                                  {count} subcategories
+                                </span>
+                              </span>
+                              <ChevronRight size={16} className="text-slate-400" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCategoryId(category.id);
+                                setCategoryNameDraft(category.name);
+                                setError("");
+                              }}
+                              disabled={loading || savingOrder || savingCategoryName}
+                              aria-label={`Edit ${category.name} name`}
+                              className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-40"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     );
                   })}
@@ -1337,24 +1464,77 @@ export default function CategoryModal({
                             onSaved={handleCategoryImageSaved}
                           />
 
-                          <button
-                            type="button"
-                            onClick={() => handleChildClick(child)}
-                            disabled={loading || savingOrder}
-                            className="flex min-w-0 flex-1 items-center justify-between gap-2 py-2 text-left"
-                          >
-                            <span className="min-w-0 flex-1">
-                                <span className="block truncate text-xs font-semibold text-slate-800">
-                                  {child.name}
+                          {editingCategoryId === child.id ? (
+                            <form
+                              onSubmit={(event) => {
+                                event.preventDefault();
+                                void handleSaveCategoryName(child);
+                              }}
+                              className="flex min-w-0 flex-1 items-center gap-1"
+                            >
+                              <input
+                                autoFocus
+                                value={categoryNameDraft}
+                                onChange={(event) =>
+                                  setCategoryNameDraft(event.target.value)
+                                }
+                                disabled={savingCategoryName}
+                                aria-label="Subcategory name"
+                                className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-2 text-xs outline-none focus:border-[#12233F]"
+                              />
+                              <button
+                                type="submit"
+                                disabled={savingCategoryName || !categoryNameDraft.trim()}
+                                aria-label="Save category name"
+                                className="rounded-lg bg-[#12233F] p-2 text-white disabled:opacity-40"
+                              >
+                                <Check size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingCategoryId(null)}
+                                disabled={savingCategoryName}
+                                aria-label="Cancel category name edit"
+                                className="rounded-lg border border-slate-200 p-2 text-slate-500 disabled:opacity-40"
+                              >
+                                <X size={14} />
+                              </button>
+                            </form>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleChildClick(child)}
+                                disabled={loading || savingOrder || savingCategoryName}
+                                className="flex min-w-0 flex-1 items-center justify-between gap-2 py-2 text-left"
+                              >
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate text-xs font-semibold text-slate-800">
+                                    {child.name}
+                                  </span>
+                                  <span className="mt-1 block text-[10px] text-slate-400">
+                                    {childCount
+                                      ? `${childCount} child categories`
+                                      : "Click to open"}
+                                  </span>
                                 </span>
-                                <span className="mt-1 block text-[10px] text-slate-400">
-                                  {childCount
-                                    ? `${childCount} child categories`
-                                    : "Click to open"}
-                                </span>
-                            </span>
-                            <ChevronRight size={15} className="shrink-0 text-slate-400" />
-                          </button>
+                                <ChevronRight size={15} className="shrink-0 text-slate-400" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingCategoryId(child.id);
+                                  setCategoryNameDraft(child.name);
+                                  setError("");
+                                }}
+                                disabled={loading || savingOrder || savingCategoryName}
+                                aria-label={`Edit ${child.name} name`}
+                                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-40"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       );
                     })}

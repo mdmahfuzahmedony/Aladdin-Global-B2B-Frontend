@@ -12,7 +12,7 @@ import FashionField9 from "./Kid's Fashion/Footwear/Boys Footwear/School-Footwea
 import FashionField10 from "./Kid's Fashion/Footwear/Boys Footwear/Slippers";
 import FashionField11 from "./Kid's Fashion/Footwear/Boys Footwear/Sneakers";
 import FashionField12 from "./Kid's Fashion/Footwear/Boys Footwear/Sports-Footwear";
-import FashionField13 from "./Kid's Fashion/Footwear/Boys-Footwear";
+import FashionField13 from "./Kid's Fashion/Footwear/Boys Footwear/Boys-Footwear";
 import FashionField14 from "./Kid's Fashion/Footwear/Girls Footwear/Ballerinas";
 import FashionField15 from "./Kid's Fashion/Footwear/Girls Footwear/Flats";
 import FashionField16 from "./Kid's Fashion/Footwear/Girls Footwear/Flip-Flops";
@@ -21,7 +21,7 @@ import FashionField18 from "./Kid's Fashion/Footwear/Girls Footwear/Sandals";
 import FashionField19 from "./Kid's Fashion/Footwear/Girls Footwear/School-Footwear";
 import FashionField20 from "./Kid's Fashion/Footwear/Girls Footwear/Sneakers";
 import FashionField21 from "./Kid's Fashion/Footwear/Girls Footwear/Sports-Footwear";
-import FashionField22 from "./Kid's Fashion/Footwear/Girls-Footwear";
+import FashionField22 from "./Kid's Fashion/Footwear/Girls Footwear/Girls-Footwear";
 import FashionField23 from "./Kid's Fashion/Jewellery/Bracelets";
 import FashionField24 from "./Kid's Fashion/Jewellery/Chains";
 import FashionField25 from "./Kid's Fashion/Jewellery/Pendants";
@@ -64,7 +64,7 @@ import FashionField61 from "./Kid's Fashion/Watches/Accessories";
 import FashionField62 from "./Kid's Fashion/Watches/Classic-Watches";
 import FashionField63 from "./Kid's Fashion/Watches/Premium-Watches";
 import FashionField64 from "./Kid's Fashion/Watches/Smart-Watches";
-import FashionField65 from "./Men's Fashion/Backpacks";
+import FashionField65 from "./Men's Fashion/Backpacks & Bags-Luggage";
 import FashionField66 from "./Men's Fashion/Belts";
 import FashionField67 from "./Men's Fashion/Caps";
 import FashionField68 from "./Men's Fashion/Footwear/Boots";
@@ -81,7 +81,7 @@ import FashionField78 from "./Men's Fashion/Jewellery/Bracelets";
 import FashionField79 from "./Men's Fashion/Jewellery/Chains";
 import FashionField80 from "./Men's Fashion/Jewellery/Pendants";
 import FashionField81 from "./Men's Fashion/Jewellery/Rings";
-import FashionField82 from "./Men's Fashion/Sunglasses@frames";
+import FashionField82 from "./Men's Fashion/Sunglasses&frames";
 import FashionField83 from "./Men's Fashion/Wallets";
 import FashionField84 from "./Men's Fashion/Watches/Accessories";
 import FashionField85 from "./Men's Fashion/Watches/Classic-Watches";
@@ -139,12 +139,30 @@ import FashionField136 from "./Women's Fashion/Jewellery/Hair-Accessories";
 import FashionField137 from "./Women's Fashion/Jewellery/Jewellery-Set";
 import FashionField138 from "./Women's Fashion/Jewellery/Necklaces";
 import FashionField139 from "./Women's Fashion/Jewellery/Rings";
-import FashionField140 from "./Women's Fashion/Sunglasses@frames";
+import FashionField140 from "./Women's Fashion/Sunglasses & frames";
 import FashionField141 from "./Women's Fashion/Wallets";
 import FashionField142 from "./Women's Fashion/Watches/Accessories";
 import FashionField143 from "./Women's Fashion/Watches/Classic-Watches";
 import FashionField144 from "./Women's Fashion/Watches/Premium-Watches";
 import FashionField145 from "./Women's Fashion/Watches/Smart-Watches";
+import FashionField146 from "./Men's Fashion/Clothing/Accessories";
+import FashionField147 from "./Men's Fashion/Clothing/Blazers & Suits";
+import FashionField148 from "./Men's Fashion/Clothing/Casual Shirts";
+import FashionField149 from "./Men's Fashion/Clothing/Ethnic Clothing/Dhoti";
+import FashionField150 from "./Men's Fashion/Clothing/Ethnic Clothing/Fatua";
+import FashionField151 from "./Men's Fashion/Clothing/Ethnic Clothing/Jubbah";
+import FashionField152 from "./Men's Fashion/Clothing/Ethnic Clothing/Pajama";
+import FashionField153 from "./Men's Fashion/Clothing/Ethnic Clothing/Panjabi";
+import FashionField154 from "./Men's Fashion/Clothing/Formal Shirts";
+import FashionField155 from "./Men's Fashion/Clothing/Jackets & Coats";
+import FashionField156 from "./Men's Fashion/Clothing/Jeans";
+import FashionField157 from "./Men's Fashion/Clothing/Polo Shirts";
+import FashionField158 from "./Men's Fashion/Clothing/Raincoats";
+import FashionField159 from "./Men's Fashion/Clothing/Sports Clothing";
+import FashionField160 from "./Men's Fashion/Clothing/Sweaters & Hoodies";
+import FashionField161 from "./Men's Fashion/Clothing/T-Shirts";
+import FashionField162 from "./Men's Fashion/Clothing/Trousers";
+import FashionField163 from "./Men's Fashion/Clothing/Winter Wear";
 
 type FashionFieldProps = {
   categoryName?: string;
@@ -308,6 +326,24 @@ const fashionFieldsByPath: Record<string, ComponentType<FashionFieldProps>> = {
   "men-s-fashion/backpacks-and-bags": FashionField65,
   "men-s-fashion/belts": FashionField66,
   "men-s-fashion/caps": FashionField67,
+  "men-s-fashion/clothing/accessories": FashionField146,
+  "men-s-fashion/clothing/blazers-and-suits": FashionField147,
+  "men-s-fashion/clothing/casual-shirts": FashionField148,
+  "men-s-fashion/clothing/ethnic-clothing/dhoti": FashionField149,
+  "men-s-fashion/clothing/ethnic-clothing/fatua": FashionField150,
+  "men-s-fashion/clothing/ethnic-clothing/jubbah": FashionField151,
+  "men-s-fashion/clothing/ethnic-clothing/pajama": FashionField152,
+  "men-s-fashion/clothing/ethnic-clothing/panjabi": FashionField153,
+  "men-s-fashion/clothing/formal-shirts": FashionField154,
+  "men-s-fashion/clothing/jackets-and-coats": FashionField155,
+  "men-s-fashion/clothing/jeans": FashionField156,
+  "men-s-fashion/clothing/polo-shirts": FashionField157,
+  "men-s-fashion/clothing/raincoats": FashionField158,
+  "men-s-fashion/clothing/sports-clothing": FashionField159,
+  "men-s-fashion/clothing/sweaters-and-hoodies": FashionField160,
+  "men-s-fashion/clothing/t-shirts": FashionField161,
+  "men-s-fashion/clothing/trousers": FashionField162,
+  "men-s-fashion/clothing/winter-wear": FashionField163,
   "men-s-fashion/footwear/boots": FashionField68,
   "men-s-fashion/footwear/casual-footwear": FashionField69,
   "men-s-fashion/footwear/flip-flops": FashionField70,
@@ -396,13 +432,13 @@ export function getFashionFieldComponent(categoryName: string, parentNames: stri
   const key = normalizeCategoryName(categoryName);
   const parents = parentNames.map(normalizeCategoryName);
   const path = [...parents.reverse(), key];
-  if (key === "accessories") {
-    if (path.some((part) => part.includes("watch"))) return fashionFieldsByCategory["watch-accessories"] ?? null;
-    if (path.some((part) => part.includes("clothing"))) return fashionFieldsByCategory["clothing-accessories"] ?? null;
-  }
   for (let index = 0; index < path.length; index++) {
     const component = fashionFieldsByPath[path.slice(index).join("/")];
     if (component) return component;
+  }
+  if (key === "accessories") {
+    if (path.some((part) => part.includes("watch"))) return fashionFieldsByCategory["watch-accessories"] ?? null;
+    if (path.some((part) => part.includes("clothing"))) return fashionFieldsByCategory["clothing-accessories"] ?? null;
   }
   const direct = fashionFieldsByCategory[key];
   if (direct) return direct;
