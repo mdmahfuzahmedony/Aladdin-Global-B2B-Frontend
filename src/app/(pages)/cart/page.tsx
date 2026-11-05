@@ -15,6 +15,7 @@ import {
   Minus,
   ArrowRight,
   ChevronRight,
+  LogIn,
 } from "lucide-react";
 
 type DeliveryRate = {
@@ -177,6 +178,7 @@ export default function CartPage() {
 
   const [items, setItems] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
   const loadLocalCart = () => {
     try {
@@ -203,6 +205,8 @@ export default function CartPage() {
 
   useEffect(() => {
     const fetchCartFromServer = async () => {
+      let isAuthenticated = false;
+
       try {
         const supabase = createClient();
         const {
@@ -210,10 +214,13 @@ export default function CartPage() {
         } = await supabase.auth.getSession();
 
         if (!session?.access_token) {
-          loadLocalCart();
-          setLoaded(true);
+          setIsSignedIn(false);
+          setItems([]);
           return;
         }
+
+        isAuthenticated = true;
+        setIsSignedIn(true);
 
         const response = await fetch(`${API_BASE_URL}/api/customer/cart`, {
           headers: {
@@ -224,7 +231,6 @@ export default function CartPage() {
 
         if (!response.ok) {
           loadLocalCart();
-          setLoaded(true);
           return;
         }
 
@@ -234,7 +240,6 @@ export default function CartPage() {
         if (serverItems.length === 0) {
           setItems([]);
           localStorage.setItem("cart", "[]");
-          setLoaded(true);
           return;
         }
 
@@ -269,8 +274,13 @@ export default function CartPage() {
         setItems(mapped);
         localStorage.setItem("cart", JSON.stringify(mapped));
       } catch (e) {
-        console.error("Cart server load failed, falling back to local:", e);
-        loadLocalCart();
+        console.error("Cart server load failed:", e);
+
+        if (isAuthenticated) {
+          loadLocalCart();
+        } else {
+          setItems([]);
+        }
       } finally {
         setLoaded(true);
       }
@@ -427,6 +437,46 @@ export default function CartPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f5f6fa]">
         <p className="text-sm font-medium text-gray-500">{t("loadingCart")}</p>
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    return (
+      <div className="min-h-screen bg-[#f5f6fa] py-8">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <div className="mb-2 flex items-center gap-2 text-xs text-gray-500">
+              <Link href="/" className="transition-colors hover:text-[#F59E0B]">
+                {t("homeBreadcrumb")}
+              </Link>
+              <ChevronRight size={12} />
+              <span className="font-semibold text-[#0F172A]">{t("cart")}</span>
+            </div>
+            <h1 className="text-2xl font-extrabold text-[#0F172A]">
+              {t("shoppingCart")}
+            </h1>
+          </div>
+
+          <div className="mx-auto my-12 max-w-lg rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm sm:p-12">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 text-[#F59E0B]">
+              <LogIn size={30} />
+            </div>
+            <h2 className="text-xl font-bold text-[#0F172A]">
+              {t("cartLoginRequired")}
+            </h2>
+            <p className="mt-2 text-sm text-gray-500">
+              {t("cartLoginRequiredDescription")}
+            </p>
+            <Link
+              href="/sign-in"
+              className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-[#F59E0B] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#d97706]"
+            >
+              <LogIn size={16} />
+              {t("signIn")}
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

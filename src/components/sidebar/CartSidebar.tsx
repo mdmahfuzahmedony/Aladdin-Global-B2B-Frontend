@@ -2,10 +2,12 @@
 import { toast } from "react-toastify";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { X, Trash2, ShoppingBag, Plus, Minus } from "lucide-react";
+import { X, Trash2, ShoppingBag, Plus, Minus, LogIn } from "lucide-react";
 import { createClient } from "../../../lib/supabase-client";
 import { getValidImageUrl } from "../../../lib/image-util";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface CartProductPricing {
   customerRegularPrice: number;
@@ -39,10 +41,12 @@ export default function CartSidebar({
   onCartChanged,
 }: CartSidebarProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const supabase = createClient();
 
   const [items, setItems] = useState<CartApiItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
@@ -62,9 +66,12 @@ export default function CartSidebar({
       const accessToken = await getAccessToken();
 
       if (!accessToken) {
+        setIsSignedIn(false);
         setItems([]);
         return;
       }
+
+      setIsSignedIn(true);
 
       const response = await fetch(`${API_BASE_URL}/api/cart`, {
         method: "GET",
@@ -239,6 +246,24 @@ export default function CartSidebar({
             {loading ? (
               <div className="py-20 text-center">
                 <p className="font-medium text-gray-500">Loading cart...</p>
+              </div>
+            ) : !isSignedIn ? (
+              <div className="py-20 text-center">
+                <LogIn size={44} className="mx-auto mb-4 text-[#F59E0B]" />
+                <p className="font-semibold text-gray-700">
+                  {t("cartLoginRequired")}
+                </p>
+                <p className="mt-2 text-sm text-gray-500">
+                  {t("cartLoginRequiredDescription")}
+                </p>
+                <Link
+                  href="/sign-in"
+                  onClick={onClose}
+                  className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-[#F59E0B] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#d97706]"
+                >
+                  <LogIn size={16} />
+                  {t("signIn")}
+                </Link>
               </div>
             ) : items.length > 0 ? (
               items.map((item) => {

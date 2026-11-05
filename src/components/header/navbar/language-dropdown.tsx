@@ -2,7 +2,7 @@
 
 
 import { useEffect, useRef, useState } from "react";
-import { Globe2, ChevronDown } from "lucide-react";
+import { Globe2 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export function LanguageDropdown() {
@@ -50,12 +50,6 @@ export function LanguageDropdown() {
           {language === "en" ? "English" : "বাংলা"}
         </span>
 
-        <ChevronDown
-          size={12}
-          className={`hidden !text-white transition-transform group-hover:!text-[#D6A419] xl:inline ${
-            open ? "rotate-180" : ""
-          }`}
-        />
       </button>
 
       {/* LANGUAGE & CURRENCY MENU */}

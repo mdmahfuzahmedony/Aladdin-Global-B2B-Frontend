@@ -11,7 +11,6 @@ import {
   Package,
   ChevronDown,
   Tags,
-  BadgePercent,
   X,
   GitCompareArrows,
   Store,
@@ -266,18 +265,18 @@ export default function MainNavbar() {
   const handleOpenCart = async () => {
     const token = await getAccessToken();
 
-    if (!token) {
-      setIsSignedIn(false);
-      setCartItems([]);
-      setCartOpen(false);
-      return;
-    }
-
-    setIsSignedIn(true);
     setAccountOpen(false);
     setCategoryOpen(false);
     setMobileCategoriesOpen(false);
     setCartOpen(true);
+
+    if (!token) {
+      setIsSignedIn(false);
+      setCartItems([]);
+      return;
+    }
+
+    setIsSignedIn(true);
 
     await loadCart();
   };
@@ -442,58 +441,8 @@ export default function MainNavbar() {
             </button>
           </form>
 
-          {/* ACCOUNT */}
-          <div
-            data-account-area
-            className="relative shrink-0"
-            onMouseEnter={() => setAccountOpen(true)}
-            onMouseLeave={() => setAccountOpen(false)}
-          >
-            <button
-              type="button"
-              onClick={handleAccountToggle}
-              aria-expanded={accountOpen}
-              className="flex flex-col items-center text-white transition hover:text-[#D6A419]"
-            >
-              <User size={22} />
-              <span className="mt-1 text-[11px] font-semibold">{t("account")}</span>
-            </button>
-
-            {accountOpen && (
-              <div
-                data-account-dropdown
-                className="absolute right-0 top-full z-[100] w-[300px] pt-3"
-              >
-                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white text-white shadow-xl">
-                  <AccountDropdown onClose={() => setAccountOpen(false)} />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* COMPARE */}
-          <Link
-            href="/compare"
-            className="flex shrink-0 flex-col items-center text-white transition hover:text-[#D6A419]"
-          >
-            <div className="relative">
-              <GitCompareArrows size={22} />
-              {compareCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#D6A419] px-1 text-[10px] font-bold text-[#12233F]">
-                  {compareCount}
-                </span>
-              )}
-            </div>
-            <span className="mt-1 text-[11px] font-semibold">{t("compare")}</span>
-          </Link>
-
-          {/* LANGUAGE */}
-          <div className=" text-white">
-            <LanguageDropdown />
-          </div>
-
-          {/* CART */}
-          {authReady && isSignedIn && (
+          <div className="flex shrink-0 flex-row-reverse items-center gap-4">
+            {/* CART */}
             <button
               type="button"
               onClick={handleOpenCart}
@@ -509,7 +458,57 @@ export default function MainNavbar() {
               </div>
               <span className="mt-1 text-[11px] font-semibold">{t("cart")}</span>
             </button>
-          )}
+
+            {/* ACCOUNT */}
+            <div
+              data-account-area
+              className="relative shrink-0"
+              onMouseEnter={() => setAccountOpen(true)}
+              onMouseLeave={() => setAccountOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={handleAccountToggle}
+                aria-expanded={accountOpen}
+                className="flex flex-col items-center text-white transition hover:text-[#D6A419]"
+              >
+                <User size={22} />
+                <span className="mt-1 text-[11px] font-semibold">{t("account")}</span>
+              </button>
+
+              {accountOpen && (
+                <div
+                  data-account-dropdown
+                  className="absolute right-0 top-full z-[100] w-[300px] pt-3"
+                >
+                  <div className="overflow-hidden rounded-xl border border-slate-200 bg-white text-white shadow-xl">
+                    <AccountDropdown onClose={() => setAccountOpen(false)} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* COMPARE */}
+            <Link
+              href="/compare"
+              className="flex shrink-0 flex-col items-center text-white transition hover:text-[#D6A419]"
+            >
+              <div className="relative">
+                <GitCompareArrows size={22} />
+                {compareCount > 0 && (
+                  <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#D6A419] px-1 text-[10px] font-bold text-[#12233F]">
+                    {compareCount}
+                  </span>
+                )}
+              </div>
+              <span className="mt-1 text-[11px] font-semibold">{t("compare")}</span>
+            </Link>
+
+            {/* LANGUAGE */}
+            <div className="text-white">
+              <LanguageDropdown />
+            </div>
+          </div>
         </div>
 
         {/* SECTION 2: NAVIGATION */}
@@ -578,7 +577,7 @@ export default function MainNavbar() {
           </button>
 
           {/* LOGO */}
-          <Link href="/" className="flex min-w-0 shrink-0 items-center gap-1.5">
+          <Link href="/" className="flex min-w-0 flex-1 items-center gap-1.5">
             {settings.logoUrl ? (
               <img
                 src={settings.logoUrl}
@@ -604,39 +603,8 @@ export default function MainNavbar() {
             )}
           </Link>
 
-          {/* ACCOUNT */}
-          <button
-            type="button"
-            data-account-area
-            onClick={handleAccountToggle}
-            aria-label={t("openAccount")}
-            aria-expanded={accountOpen}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
-          >
-            <User size={21} />
-          </button>
-
-          {/* COMPARE */}
-          <Link
-            href="/compare"
-            aria-label={t("compare")}
-            className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
-          >
-            <GitCompareArrows size={20} />
-            {compareCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D6A419] px-1 text-[9px] font-bold text-[#12233F]">
-                {compareCount}
-              </span>
-            )}
-          </Link>
-
-          {/* LANGUAGE */}
-          <div className="flex min-w-0 shrink-0 items-center text-white">
-            <LanguageDropdown />
-          </div>
-
-          {/* CART */}
-          {authReady && isSignedIn && (
+          <div className="flex shrink-0 flex-row-reverse items-center gap-0.5">
+            {/* CART */}
             <button
               type="button"
               onClick={handleOpenCart}
@@ -651,7 +619,38 @@ export default function MainNavbar() {
                 </span>
               )}
             </button>
-          )}
+
+            {/* ACCOUNT */}
+            <button
+              type="button"
+              data-account-area
+              onClick={handleAccountToggle}
+              aria-label={t("openAccount")}
+              aria-expanded={accountOpen}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
+            >
+              <User size={21} />
+            </button>
+
+            {/* COMPARE */}
+            <Link
+              href="/compare"
+              aria-label={t("compare")}
+              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
+            >
+              <GitCompareArrows size={20} />
+              {compareCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D6A419] px-1 text-[9px] font-bold text-[#12233F]">
+                  {compareCount}
+                </span>
+              )}
+            </Link>
+
+            {/* LANGUAGE */}
+            <div className="flex shrink-0 items-center text-white">
+              <LanguageDropdown />
+            </div>
+          </div>
         </div>
 
         {/* MOBILE SEARCH */}
@@ -677,13 +676,13 @@ export default function MainNavbar() {
         </form>
 
         {/* MOBILE NAVIGATION */}
-        <nav className="mt-4 flex items-center justify-between gap-4 overflow-x-auto whitespace-nowrap border-t border-white/10  px-2 pt-4 pb-2 text-xs font-semibold text-white sm:gap-5 sm:text-sm">
+        <nav className="mt-4 flex items-center justify-start gap-5 border-t border-white/10 px-2 pt-4 pb-2 text-xs font-semibold text-white sm:text-sm">
           <Link
             href="/"
             className="flex shrink-0 items-center gap-1.5 transition hover:text-[#D6A419]"
           >
             <Home size={15} />
-            Home
+            {t("home")}
           </Link>
 
           <Link
@@ -691,30 +690,7 @@ export default function MainNavbar() {
             className="flex shrink-0 items-center gap-1.5 transition hover:text-[#D6A419]"
           >
             <Package size={15} />
-            Products
-          </Link>
-
-          <Link
-            href="/categories"
-            className="flex shrink-0 items-center gap-1.5 transition hover:text-[#D6A419]"
-          >
-            <Tags size={15} />
-            {t("categories")}
-          </Link>
-
-          <Link
-            href="/brands"
-            className="shrink-0 transition hover:text-[#D6A419]"
-          >
-            {t("brands")}
-          </Link>
-
-          <Link
-            href="/deals"
-            className="flex shrink-0 items-center gap-1.5 transition hover:text-[#D6A419]"
-          >
-            <BadgePercent size={15} className="text-[#D6A419]" />
-            {t("deals")}
+            {t("products")}
           </Link>
         </nav>
       </header>
@@ -730,7 +706,7 @@ export default function MainNavbar() {
           />
 
           <aside
-            className="absolute left-0 top-0 flex h-full w-[320px] max-w-[88vw] flex-col bg-white text-slate-800 shadow-2xl"
+            className="absolute left-0 top-0 flex h-full w-screen max-w-sm flex-col bg-white text-slate-800 shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-label={t("allCategories")}
@@ -775,7 +751,7 @@ export default function MainNavbar() {
 
           <aside
             data-account-dropdown
-            className="absolute right-0 top-0 flex h-full w-[280px] max-w-[88vw] flex-col bg-white text-slate-800 shadow-2xl sm:w-[320px]"
+            className="absolute right-0 top-0 flex h-full w-screen max-w-sm flex-col bg-white text-slate-800 shadow-2xl"
           >
             <div className="flex h-[60px] shrink-0 items-center justify-between border-b border-white/10 bg-[#193653] px-4">
               <div className="flex items-center gap-2">
@@ -801,7 +777,7 @@ export default function MainNavbar() {
       )}
 
       {/* CART SIDEBAR */}
-      {authReady && isSignedIn && (
+      {cartOpen && (
         <CartSidebar
           isOpen={cartOpen}
           onClose={() => setCartOpen(false)}
