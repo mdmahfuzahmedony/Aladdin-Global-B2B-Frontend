@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Home,
   Search,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -22,6 +24,7 @@ import CategorySidebar, {
   type CategoryNode,
   type SidebarBrand,
 } from "@/components/category/CategorySidebar";
+import { useLanguage } from "@/context/LanguageContext";
 
 /* ─── Types ────────────────────────────────────────────────────────────── */
 
@@ -99,6 +102,7 @@ export default function CategoryBrowser({
 }: {
   slug?: string;
 }) {
+  const { t } = useLanguage();
   const [categories, setCategories] = useState<CategoryNode[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [brands, setBrands] = useState<SidebarBrand[]>([]);
@@ -109,6 +113,7 @@ export default function CategoryBrowser({
 
   /* Brand filter only */
   const [selectedBrandId, setSelectedBrandId] = useState("");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   /* Sort */
   const [sortBy, setSortBy] = useState("best-seller");
@@ -459,25 +464,20 @@ export default function CategoryBrowser({
 
         {!error && (!slug || currentCategory) && (
           <div className="grid items-start gap-5 lg:grid-cols-[270px_minmax(0,1fr)]">
-            {/* Sidebar */}
-            <CategorySidebar
-              categories={categories}
-              categoriesLoading={categoriesLoading}
-              selectedCategoryId={currentCategory?.id}
-              brands={effectiveBrands}
-              selectedBrandId={selectedBrandId}
-              onBrandChange={setSelectedBrandId}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              hasActiveFilters={!!selectedBrandId}
-              onClearFilters={() => setSelectedBrandId("")}
-            />
-
-            {/* Right Content */}
             <section
               id="category-products"
-              className="min-w-0"
+              className="min-w-0 lg:col-start-2 lg:row-start-1"
             >
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(true)}
+                aria-expanded={mobileFiltersOpen}
+                className="mb-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#12233F] shadow-sm transition hover:border-amber-400 lg:hidden"
+              >
+                <SlidersHorizontal size={17} className="text-amber-500" />
+                {t("filters")}
+              </button>
+
               {/* Subcategory Auto Slider */}
               {currentCategory &&
                 currentCategory.children.length > 0 && (
@@ -637,6 +637,68 @@ export default function CategoryBrowser({
                 </div>
               )}
             </section>
+
+            <div
+              className={
+                mobileFiltersOpen
+                  ? "fixed inset-0 z-[70] lg:static lg:col-start-1 lg:row-start-1 lg:z-auto"
+                  : "hidden lg:col-start-1 lg:row-start-1 lg:block"
+              }
+            >
+              {mobileFiltersOpen && (
+                <button
+                  type="button"
+                  aria-label="Close filters"
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="absolute inset-0 bg-slate-950/50 lg:hidden"
+                />
+              )}
+              <div
+                className={
+                  mobileFiltersOpen
+                    ? "absolute inset-y-0 right-0 w-screen max-w-sm overflow-y-auto bg-[#f5f6fa] p-4 shadow-2xl lg:static lg:max-h-[calc(100vh-2rem)] lg:w-auto lg:max-w-none lg:overflow-visible lg:bg-transparent lg:p-0 lg:shadow-none"
+                    : ""
+                }
+              >
+                {mobileFiltersOpen && (
+                  <div className="mb-3 flex items-center justify-between rounded-xl bg-[#12233F] px-4 py-3 text-white lg:hidden">
+                    <h2 className="flex items-center gap-2 text-sm font-bold">
+                      <SlidersHorizontal size={17} className="text-amber-400" />
+                      {t("filters")}
+                    </h2>
+                    <button
+                      type="button"
+                      aria-label="Close filters"
+                      onClick={() => setMobileFiltersOpen(false)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10"
+                    >
+                      <X size={19} />
+                    </button>
+                  </div>
+                )}
+                <CategorySidebar
+                  categories={categories}
+                  categoriesLoading={categoriesLoading}
+                  selectedCategoryId={currentCategory?.id}
+                  brands={effectiveBrands}
+                  selectedBrandId={selectedBrandId}
+                  onBrandChange={setSelectedBrandId}
+                  sortBy={sortBy}
+                  onSortChange={setSortBy}
+                  hasActiveFilters={!!selectedBrandId}
+                  onClearFilters={() => setSelectedBrandId("")}
+                />
+                {mobileFiltersOpen && (
+                  <button
+                    type="button"
+                    onClick={() => setMobileFiltersOpen(false)}
+                    className="mt-3 w-full rounded-lg bg-[#12233F] px-4 py-3 text-sm font-bold text-white lg:hidden"
+                  >
+                    {t("showProducts")}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
