@@ -11,10 +11,10 @@ import {
   Store,
   Star,
   BarChart3,
-  User,
-  Mail,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase-client";
+import { useDashboardNavigation } from "@/components/dashboard/dashboard-navigation";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
@@ -30,6 +30,7 @@ const NAV_ITEMS = [
 
 export function SellerSidebar() {
   const pathname = usePathname();
+  const { isMenuOpen, closeMenu } = useDashboardNavigation();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   const [storeName, setStoreName] = useState("");
@@ -96,14 +97,29 @@ export function SellerSidebar() {
   }, []);
 
   return (
-    <aside className="flex h-screen w-[68px] shrink-0 flex-col bg-[#12233F] text-white md:w-64">
+    <>
+      {isMenuOpen && (
+        <button
+          type="button"
+          aria-label="Close dashboard menu"
+          onClick={closeMenu}
+          className="fixed inset-0 z-[100] bg-black/50 md:hidden"
+        />
+      )}
+      <aside
+        className={`z-[101] shrink-0 flex-col bg-[#12233F] text-white ${
+          isMenuOpen
+            ? "fixed inset-y-0 left-0 flex h-dvh w-[min(18rem,88vw)]"
+            : "hidden md:flex md:h-screen md:w-64"
+        }`}
+      >
       {/* Header */}
       <div className="flex min-h-[76px] shrink-0 items-center gap-3 border-b border-white/10 px-3.5 py-3 md:px-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#F1C453] to-[#D6A419] text-xl shadow-md">
           🏪
         </div>
 
-        <div className="hidden min-w-0 flex-1 leading-snug md:block">
+        <div className="min-w-0 flex-1 leading-snug">
           {/* Store Name */}
           <div
             className="truncate text-sm font-bold text-white tracking-tight"
@@ -112,6 +128,14 @@ export function SellerSidebar() {
             {storeName || (loadingProfile ? "লোড হচ্ছে..." : "Seller Store")}
           </div>
         </div>
+        <button
+          type="button"
+          aria-label="Close dashboard menu"
+          onClick={closeMenu}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white hover:bg-white/10 md:hidden"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -131,6 +155,7 @@ export function SellerSidebar() {
                 href={href}
                 aria-label={label}
                 aria-current={isActive ? "page" : undefined}
+                onClick={closeMenu}
                 onFocus={() => setHoveredItem(href)}
                 onBlur={() => setHoveredItem(null)}
                 className={`
@@ -146,13 +171,13 @@ export function SellerSidebar() {
               >
                 <Icon size={19} strokeWidth={2} className="shrink-0" />
 
-                <span className="hidden whitespace-nowrap md:inline">
+                <span className="whitespace-nowrap">
                   {label}
                 </span>
               </Link>
 
               {/* Mobile tooltip: sidebar width stays unchanged */}
-              {isHovered && (
+              {isHovered && !isMenuOpen && (
                 <div className="pointer-events-none absolute left-[58px] top-1/2 z-[60] -translate-y-1/2 whitespace-nowrap rounded-md border border-white/10 bg-[#1D3559] px-3 py-2 text-xs font-medium text-white shadow-lg md:hidden">
                   {label}
                 </div>
@@ -164,13 +189,11 @@ export function SellerSidebar() {
 
       {/* Footer */}
       <div className="shrink-0 overflow-hidden border-t border-white/10 px-5 py-4 text-[11px] text-slate-400">
-        <div className="hidden whitespace-nowrap md:block">
+        <div className="whitespace-nowrap">
           © 2024–2025 Aladdin Global B2B
         </div>
-        <div className="md:hidden" aria-hidden="true">
-          ©
-        </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

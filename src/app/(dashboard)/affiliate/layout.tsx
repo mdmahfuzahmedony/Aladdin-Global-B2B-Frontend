@@ -1,5 +1,6 @@
 import { AffiliateNavbar } from "@/components/header/affiliate-navbar";
 import { AffiliateSidebar } from "@/components/sidebar/affiliate-sidebar";
+import { DashboardNavigationProvider } from "@/components/dashboard/dashboard-navigation";
 
 export default function AffiliateLayout({
   children,
@@ -7,12 +8,14 @@ export default function AffiliateLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-slate-50">
-      <AffiliateSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <AffiliateNavbar />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+    <DashboardNavigationProvider>
+      <div className="flex h-screen bg-slate-50">
+        <AffiliateSidebar />
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <AffiliateNavbar />
+          <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </DashboardNavigationProvider>
   );
 }

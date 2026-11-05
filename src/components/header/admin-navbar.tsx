@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Bell, ChevronDown, LogOut, UserCircle } from "lucide-react";
+import { Search, Bell, ChevronDown, LogOut, UserCircle, Menu } from "lucide-react";
 import { createClient } from "../../../lib/supabase-client";
 import NotificationPanel from "./navbar/NotificationPanel";
+import { useDashboardNavigation } from "@/components/dashboard/dashboard-navigation";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 export function AdminNavbar() {
   const supabase = createClient();
+  const { isMenuOpen, toggleMenu } = useDashboardNavigation();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -106,8 +108,18 @@ export function AdminNavbar() {
   return (
     <>
       <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 sm:px-4 lg:px-6">
+        <button
+          type="button"
+          aria-label="Toggle dashboard menu"
+          aria-expanded={isMenuOpen}
+          onClick={toggleMenu}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 md:hidden"
+        >
+          <Menu size={21} />
+        </button>
+
         {/* ================= SEARCH ================= */}
-        <div className="flex min-w-0 max-w-sm flex-1 items-center gap-2 rounded-lg bg-slate-100 px-3 py-2">
+        <div className="flex min-w-0 max-w-sm flex-1 items-center gap-2 rounded-lg bg-slate-100 px-2 py-2 sm:px-3">
           <Search size={16} className="shrink-0 text-slate-400" />
 
           <input

@@ -103,7 +103,11 @@ export default function CartSidebar({
   useEffect(() => {
     if (!isOpen) return;
 
-    loadCart();
+    const timeoutId = window.setTimeout(() => {
+      void loadCart();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [isOpen]);
 
   const updateQuantity = async (itemId: string, newQuantity: number) => {
