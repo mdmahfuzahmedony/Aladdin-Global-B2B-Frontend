@@ -118,7 +118,7 @@ export default function HeroImageSlider() {
   }
 
   return (
-    <div className="group relative mx-3 mt-2 h-[220px] w-auto overflow-hidden rounded-lg bg-[#12233F] sm:mx-auto sm:mt-0 sm:h-[300px] sm:w-full sm:max-w-[1500px] sm:rounded-none lg:h-[300px] xl:h-300px]">
+    <div className="group relative mx-3 mt-2 h-[200px] w-auto overflow-hidden rounded-lg bg-[#12233F] sm:mx-auto sm:mt-0 sm:h-[300px] sm:w-full sm:max-w-[1500px] sm:rounded-none lg:h-[300px] xl:h-300px]">
       {/* Images container */}
       <div
         className="flex h-full transition-transform duration-700 ease-in-out"
