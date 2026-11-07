@@ -389,7 +389,7 @@ export default function MainNavbar() {
       </div>
 
       {/* DESKTOP HEADER */}
-      <header className="relative z-40 hidden border-b border-white/10 bg-[#24476B] xl:block">
+     <header className="sticky top-0 z-50 hidden border-b border-white/10 bg-[#24476B] xl:block">
         {/* SECTION 1: LOGO, SEARCH AND ACTIONS */}
         <div className="mx-auto flex min-h-[82px] max-w-[1500px] items-center gap-6 px-6 py-3">
           {/* LOGO */}
@@ -562,7 +562,7 @@ export default function MainNavbar() {
       </header>
 
       {/* MOBILE HEADER */}
-      <header className="relative z-40 border-b border-white/10 bg-[#24476B] px-3 py-5 text-white xl:hidden sm:px-5">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#24476B] px-3 py-5 text-white xl:hidden sm:px-5">
         {/* MOBILE TOP ROW */}
         <div className="flex items-center justify-between gap-2">
           {/* HAMBURGER */}

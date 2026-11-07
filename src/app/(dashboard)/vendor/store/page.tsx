@@ -22,6 +22,13 @@ import {
   Lock,
   AlertCircle,
   FileEdit,
+  HardDrive,
+  RefreshCw,
+  FileText,
+  ExternalLink,
+  Loader2,
+  XCircle,
+  WifiOff,
 } from "lucide-react";
 import RequestStoreChangeModal from "./components/RequestStoreChangeModal";
 import { createClient } from "../../../../../lib/supabase-client";
@@ -30,6 +37,23 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 const STORE_SETTINGS_URL = `${API_BASE_URL}/api/vendors/store/settings`;
 const STORE_IMAGE_UPLOAD_URL = `${API_BASE_URL}/api/uploads/store-image`;
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+type BackupRecord = {
+  id: string;
+  backupNumber: number;
+  status: "PENDING" | "SNAPSHOT_TAKEN" | "PDF_GENERATING" | "UPLOADING" | "VERIFYING" | "SUCCESS" | "FAILED";
+  errorMessage?: string | null;
+  retryCount: number;
+  customerCount: number;
+  productCount: number;
+  customerPdfUrl?: string | null;
+  productPdfUrl?: string | null;
+  backupFolderName?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+};
 
 type Day = {
   dayOfWeek: number;
@@ -79,6 +103,14 @@ export default function StoreSettingsPage() {
   const [vacationMode, setVacationMode] = useState(false);
   const [vacationStart, setVacationStart] = useState("");
   const [vacationEnd, setVacationEnd] = useState("");
+
+  // ─── Google Drive Backup State ────────────────────────────────────────────
+  const [driveConnected, setDriveConnected] = useState(false);
+  const [driveEmail, setDriveEmail] = useState<string | null>(null);
+  const [driveLoading, setDriveLoading] = useState(false);
+  const [backupHistory, setBackupHistory] = useState<BackupRecord[]>([]);
+  const [backupHistoryLoading, setBackupHistoryLoading] = useState(false);
+  const [toggleLoading, setToggleLoading] = useState(false);
 
   const [showPhone, setShowPhone] = useState(true);
   const [showEmail, setShowEmail] = useState(true);
@@ -196,7 +228,160 @@ export default function StoreSettingsPage() {
     };
   };
 
+  // ─── Google Drive functions ───────────────────────────────────────────────
+
+  const loadDriveStatus = async () => {
+    try {
+      setDriveLoading(true);
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`${API_BASE_URL}/api/vendor/google-drive/status`, {
+        headers: authHeaders,
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDriveConnected(data.data?.connected ?? false);
+        setDriveEmail(data.data?.email ?? null);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setDriveLoading(false);
+    }
+  };
+
+  const loadBackupHistory = async () => {
+    try {
+      setBackupHistoryLoading(true);
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`${API_BASE_URL}/api/vendor/backups`, {
+        headers: authHeaders,
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (data.success) setBackupHistory(data.data ?? []);
+    } catch {
+      // ignore
+    } finally {
+      setBackupHistoryLoading(false);
+    }
+  };
+
+  const connectGoogleDrive = async () => {
+    try {
+      setDriveLoading(true);
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`${API_BASE_URL}/api/vendor/google-drive/auth-url`, {
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      if (data.success && data.data?.url) {
+        window.location.href = data.data.url;
+      }
+    } catch {
+      alert("Failed to get Google auth URL. Please try again.");
+    } finally {
+      setDriveLoading(false);
+    }
+  };
+
+  const disconnectGoogleDrive = async () => {
+    if (!confirm("Disconnect Google Drive? You won't be able to go offline until reconnected.")) return;
+    try {
+      setDriveLoading(true);
+      const authHeaders = await getAuthHeaders();
+      await fetch(`${API_BASE_URL}/api/vendor/google-drive/disconnect`, {
+        method: "DELETE",
+        headers: authHeaders,
+      });
+      setDriveConnected(false);
+      setDriveEmail(null);
+    } catch {
+      alert("Failed to disconnect. Please try again.");
+    } finally {
+      setDriveLoading(false);
+    }
+  };
+
+  const retryBackupItem = async (backupId: string) => {
+    try {
+      const authHeaders = await getAuthHeaders();
+      await fetch(`${API_BASE_URL}/api/vendor/backups/${backupId}/retry`, {
+        method: "POST",
+        headers: authHeaders,
+      });
+      setTimeout(loadBackupHistory, 2000);
+    } catch {
+      alert("Retry failed.");
+    }
+  };
+
+  // ─── Store Toggle — Backup first, then offline ────────────────────────────
+
+  const handleStoreToggle = async (newActive: boolean) => {
+    // Turning ON — simple
+    if (newActive) {
+      try {
+        setToggleLoading(true);
+        const authHeaders = await getAuthHeaders();
+        const res = await fetch(`${API_BASE_URL}/api/vendor/settings/store-toggle`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...authHeaders },
+          body: JSON.stringify({ active: true }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setStoreActive(true);
+        } else {
+          alert(data.error || "Failed to turn store on.");
+        }
+      } catch {
+        alert("Network error.");
+      } finally {
+        setToggleLoading(false);
+      }
+      return;
+    }
+
+    // Turning OFF — backup first
+    if (!driveConnected) {
+      alert("⚠️ Please connect your Google Drive first.\nBackup is required before going offline.");
+      return;
+    }
+
+    if (!confirm("Turn store offline?\n\nThis will:\n1. Take a full data snapshot\n2. Generate Customer & Product PDFs\n3. Upload to your Google Drive\n4. Then set store to Offline\n\nThis may take 1-2 minutes.")) return;
+
+    try {
+      setToggleLoading(true);
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`${API_BASE_URL}/api/vendor/settings/store-toggle`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ active: false }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStoreActive(false);
+        alert("✅ Backup complete! Store is now offline.");
+        loadBackupHistory();
+      } else {
+        alert(`❌ ${data.error || "Backup failed. Store remains online."}`);
+      }
+    } catch {
+      alert("❌ Network error. Store remains online.");
+    } finally {
+      setToggleLoading(false);
+    }
+  };
+
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Load Drive status on mount
+  useEffect(() => {
+    loadDriveStatus();
+    loadBackupHistory();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Load existing settings from the database.
   useEffect(() => {
@@ -717,6 +902,170 @@ export default function StoreSettingsPage() {
             </section>
 
             {/* STORE STATUS */}
+            {/* ─── Google Drive Backup Section ─────────────────────────── */}
+            <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <SectionHeader
+                icon={<HardDrive size={18} />}
+                title="Google Drive Backup"
+                description="Connect your Google Drive. Backup is auto-created when you turn the store offline."
+              />
+
+              {/* Connection Status */}
+              <div className="mt-5">
+                {driveLoading ? (
+                  <div className="flex items-center gap-2 rounded-xl bg-slate-50 p-4">
+                    <Loader2 size={16} className="animate-spin text-slate-400" />
+                    <span className="text-sm text-slate-500">Checking Drive status...</span>
+                  </div>
+                ) : driveConnected ? (
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl bg-emerald-50 p-4">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 size={20} className="shrink-0 text-emerald-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-emerald-800">Google Drive Connected</p>
+                        <p className="text-xs text-emerald-700">{driveEmail}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={disconnectGoogleDrive}
+                      className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl bg-amber-50 p-4">
+                    <div className="flex items-center gap-3">
+                      <WifiOff size={20} className="shrink-0 text-amber-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-amber-800">Not Connected</p>
+                        <p className="text-xs text-amber-700">Connect to enable automatic backups when going offline.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={connectGoogleDrive}
+                      className="flex items-center gap-1.5 rounded-lg bg-[#12233F] px-4 py-2 text-xs font-semibold text-white hover:bg-[#1a3460]"
+                    >
+                      <HardDrive size={13} />
+                      Connect Drive
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Toggle loading indicator */}
+              {toggleLoading && (
+                <div className="mt-4 flex items-center gap-3 rounded-xl bg-blue-50 p-4">
+                  <Loader2 size={18} className="animate-spin text-blue-500" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-800">Backup in progress...</p>
+                    <p className="text-xs text-blue-600">Creating PDF snapshots and uploading to your Drive. Please wait.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Backup History */}
+              {backupHistory.length > 0 && (
+                <div className="mt-5 border-t border-slate-100 pt-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-[13px] font-bold text-[#12233F]">Backup History</h3>
+                    <button
+                      type="button"
+                      onClick={loadBackupHistory}
+                      className="flex items-center gap-1 text-xs text-slate-500 hover:text-[#12233F]"
+                    >
+                      <RefreshCw size={12} />
+                      Refresh
+                    </button>
+                  </div>
+
+                  {backupHistoryLoading ? (
+                    <div className="flex justify-center py-4">
+                      <Loader2 size={18} className="animate-spin text-slate-400" />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {backupHistory.slice(0, 5).map((backup) => (
+                        <div
+                          key={backup.id}
+                          className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-[#12233F]">
+                                Backup #{String(backup.backupNumber).padStart(3, "0")}
+                              </span>
+                              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                backup.status === "SUCCESS"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : backup.status === "FAILED"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-blue-100 text-blue-700"
+                              }`}>
+                                {backup.status === "SUCCESS" ? <CheckCircle2 size={9} /> : backup.status === "FAILED" ? <XCircle size={9} /> : <Loader2 size={9} className="animate-spin" />}
+                                {backup.status}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 text-[11px] text-slate-500">
+                              {backup.customerCount} customers · {backup.productCount} products
+                              {backup.completedAt && ` · ${new Date(backup.completedAt).toLocaleString("en-BD")}`}
+                            </p>
+                            {backup.errorMessage && (
+                              <p className="mt-1 text-[10px] text-red-500">{backup.errorMessage}</p>
+                            )}
+                          </div>
+
+                          <div className="flex shrink-0 items-center gap-2">
+                            {backup.status === "SUCCESS" && (
+                              <>
+                                {backup.customerPdfUrl && (
+                                  <a
+                                    href={backup.customerPdfUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+                                  >
+                                    <FileText size={11} />
+                                    Customers
+                                    <ExternalLink size={10} />
+                                  </a>
+                                )}
+                                {backup.productPdfUrl && (
+                                  <a
+                                    href={backup.productPdfUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+                                  >
+                                    <FileText size={11} />
+                                    Products
+                                    <ExternalLink size={10} />
+                                  </a>
+                                )}
+                              </>
+                            )}
+                            {backup.status === "FAILED" && (
+                              <button
+                                type="button"
+                                onClick={() => retryBackupItem(backup.id)}
+                                className="flex items-center gap-1 rounded-lg bg-amber-500 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-amber-600"
+                              >
+                                <RefreshCw size={11} />
+                                Retry
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+
+            {/* ─── Store Status ─────────────────────────────────────────── */}
             <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               <SectionHeader
                 icon={<Power size={18} />}
@@ -729,7 +1078,7 @@ export default function StoreSettingsPage() {
                   title="Store Active"
                   description="Customers can view and order from your store."
                   enabled={storeActive}
-                  onChange={setStoreActive}
+                  onChange={handleStoreToggle}
                 />
 
                 <ToggleRow
