@@ -21,7 +21,7 @@ export function FooterAccount() {
     t("myWishlist"),
     t("myCoupons"),
     t("trackOrder"),
-    t("orderHistory"),
+ 
   
   ];
 
