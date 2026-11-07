@@ -22,7 +22,7 @@ export function FooterAccount() {
     t("myCoupons"),
     t("trackOrder"),
     t("orderHistory"),
-    t("messages"),
+  
   ];
 
   return (
