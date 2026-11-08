@@ -6,7 +6,6 @@ import Link from "next/link";
 
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
 import { useLanguage } from "@/context/LanguageContext";
-import { useAutoSlider } from "@/hooks/useAutoSlider";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
@@ -38,10 +37,10 @@ export default function FlashSaleSection() {
   const [saleEndTime, setSaleEndTime] = useState<Date | null>(null);
 
   const sliderRef = useRef<HTMLDivElement>(null);
+  const isHoveredRef = useRef(false);
 
-  const { start: autoStart, stop: autoStop } = useAutoSlider(sliderRef);
-
-  const scrollLeft = () => {
+  // Manual scroll function
+  const scroll = (direction: "left" | "right") => {
     const slider = sliderRef.current;
     if (!slider) return;
 
@@ -49,29 +48,39 @@ export default function FlashSaleSection() {
     const gap = 12;
     const scrollAmount = card
       ? (card.offsetWidth + gap) * 2
-      : slider.clientWidth;
+      : slider.clientWidth * 0.8;
 
     slider.scrollBy({
-      left: -scrollAmount,
+      left: direction === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
     });
   };
 
-  const scrollRight = () => {
-    const slider = sliderRef.current;
-    if (!slider) return;
+  // Auto slider setup (মাউস হোভার থাকলে থামবে, অন্যথায় প্রতি ৩.৫ সেকেন্ড পর স্লাইড হবে)
+  useEffect(() => {
+    if (products.length <= 1) return;
 
-    const card = slider.querySelector<HTMLElement>("[data-product-card]");
-    const gap = 12;
-    const scrollAmount = card
-      ? (card.offsetWidth + gap) * 2
-      : slider.clientWidth;
+    const interval = setInterval(() => {
+      const slider = sliderRef.current;
+      if (!slider || isHoveredRef.current) return;
 
-    slider.scrollBy({
-      left: scrollAmount,
-      behavior: "smooth",
-    });
-  };
+      const card = slider.querySelector<HTMLElement>("[data-product-card]");
+      const gap = 12;
+      const scrollAmount = card ? card.offsetWidth + gap : 260;
+
+      // একদম শেষে পৌঁছে গেলে শুরুতে ফিরে যাবে
+      const isAtEnd =
+        slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 10;
+
+      if (isAtEnd) {
+        slider.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        slider.scrollBy({ left: scrollAmount, behavior: "smooth" });
+      }
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [products]);
 
   // Fetch flash sale products
   useEffect(() => {
@@ -143,14 +152,11 @@ export default function FlashSaleSection() {
           if (!cancelled) {
             setProducts(mappedProducts);
 
-            // Use the earliest flash-sale end time
             const endTimes = result.data
               .map((item: any) => item.flashSaleAttribute?.endTime)
               .filter(Boolean)
               .map((value: string) => new Date(value))
-              .filter(
-                (date: Date) => !Number.isNaN(date.getTime())
-              );
+              .filter((date: Date) => !Number.isNaN(date.getTime()));
 
             if (endTimes.length > 0) {
               const earliestEndTime = endTimes.reduce(
@@ -191,7 +197,7 @@ export default function FlashSaleSection() {
     };
   }, []);
 
-  // Flash sale countdown
+  // Countdown timer logic
   useEffect(() => {
     if (!saleEndTime) {
       setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
@@ -224,143 +230,147 @@ export default function FlashSaleSection() {
 
   return (
     <section className="relative mx-auto my-5 w-full min-w-0 max-w-[1500px] rounded-2xl border border-slate-100 bg-slate-50 px-3 py-5 shadow-sm sm:my-6 sm:rounded-3xl sm:px-6 sm:py-7 lg:px-8">
-      {/* Header Container */}
-      <div className="mb-4 flex flex-col gap-3 sm:mb-5">
-        
-        {/* Top Row: Title, Live Badge & Timer */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Title & Icon */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
+      {/* HEADER SECTION: Clean Title + Live Badge + Timer Box */}
+      <div className="mb-4 flex flex-col gap-2.5 sm:mb-5">
+        <div className="flex items-center justify-between gap-2">
+          {/* Title & Live Badge */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-lg bg-rose-600 text-white shadow-sm sm:h-10 sm:w-10 sm:rounded-xl">
-              <Zap size={18} className="sm:h-5 sm:w-5" />
+              <Zap size={18} className="sm:size-5" />
             </div>
 
-            <h2 className="flex items-center gap-2 font-[var(--font-poppins)] text-lg font-bold text-[#12233F] sm:text-xl">
-              {t("flashSale")}
-              <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-600 sm:text-xs">
-                {t("liveNow")}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <h2 className="font-[var(--font-poppins)] text-base font-bold text-[#12233F] sm:text-xl">
+                {t("flashSale") || "Flash Sale"}
+              </h2>
+              <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600 sm:px-2 sm:text-xs">
+                {t("liveNow") || "Live Now"}
               </span>
-            </h2>
+            </div>
           </div>
 
-          {/* Countdown Timer Box (Top Right) */}
-          <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 sm:gap-2 sm:rounded-xl sm:px-3 sm:py-2">
-            <Clock size={14} className="shrink-0 text-rose-600 sm:h-4 sm:w-4" />
-            <span className="text-[10px] font-semibold text-slate-600 sm:text-xs">
-              {t("endingIn")}
+          {/* Ending In Timer Box */}
+          <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1 shadow-sm sm:gap-2 sm:rounded-xl sm:px-3 sm:py-1.5">
+            <Clock size={13} className="shrink-0 text-rose-600 sm:size-4" />
+            <span className="text-[10px] font-medium text-slate-600 sm:text-xs">
+              {t("endingIn") || "Ending in"}
             </span>
-            <div className="flex items-center gap-1 font-mono text-[10px] font-bold text-rose-600 sm:text-xs">
-              <span className="rounded bg-rose-50 px-1 py-0.5 sm:px-1.5 sm:py-1">
+            <div className="flex items-center gap-0.5 font-mono text-[10px] font-bold text-rose-600 sm:gap-1 sm:text-xs">
+              <span className="rounded bg-rose-50 px-1 py-0.5 sm:px-1.5">
                 {String(timeLeft.hours).padStart(2, "0")}
               </span>
               :
-              <span className="rounded bg-rose-50 px-1 py-0.5 sm:px-1.5 sm:py-1">
+              <span className="rounded bg-rose-50 px-1 py-0.5 sm:px-1.5">
                 {String(timeLeft.minutes).padStart(2, "0")}
               </span>
               :
-              <span className="rounded bg-rose-50 px-1 py-0.5 sm:px-1.5 sm:py-1">
+              <span className="rounded bg-rose-50 px-1 py-0.5 sm:px-1.5">
                 {String(timeLeft.seconds).padStart(2, "0")}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Second Row: Subtitle / Description & View All / Controls */}
-        <div className="flex items-center justify-between gap-2 border-t border-slate-200/60 pt-2.5">
-          <p className="text-xs text-slate-500 sm:text-sm">
-            {t("limitedDeals")}
-          </p>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-    
-<Link
-  href="/products?type=flash-sale"
-  className="hidden items-center gap-1 text-sm font-semibold text-[#12233F] transition hover:text-rose-600 sm:flex"
->
-  {t("viewAll")}
-  <ArrowRight size={16} />
-</Link>
-
-
-            {/* Slider controls: mobile/tablet only */}
-            <div className="flex items-center gap-2 lg:hidden">
-              <button
-                type="button"
-                onClick={scrollLeft}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 sm:h-9 sm:w-9"
-                aria-label={t("previousProducts")}
-              >
-                <ChevronLeft size={18} />
-              </button>
-
-              <button
-                type="button"
-                onClick={scrollRight}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 sm:h-9 sm:w-9"
-                aria-label={t("nextProducts")}
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          </div>
-        </div>
-
+        {/* Subtitle */}
+        <p className="text-xs text-slate-500 sm:text-sm">
+          {t("limitedDeals") || "Grab these limited deals before they run out!"}
+        </p>
       </div>
 
-      {/* PRODUCTS */}
+      {/* PRODUCTS SLIDER WITH FLOATING CONTROLS IN THE MIDDLE */}
       <div
-        ref={sliderRef}
-        className="
-          grid grid-flow-col auto-cols-[calc((100%-12px)/2)]
-          gap-3 overflow-x-auto pb-3
-          snap-x snap-mandatory overscroll-x-contain
-          [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
-          lg:grid-flow-row lg:grid-cols-5 lg:auto-cols-auto
-          lg:gap-5 lg:overflow-x-visible lg:pb-2
-        "
+        className="group relative"
+        onMouseEnter={() => {
+          isHoveredRef.current = true;
+        }}
+        onMouseLeave={() => {
+          isHoveredRef.current = false;
+        }}
       >
-        {loading ? (
-          <div className="col-span-full py-10 text-center text-sm text-slate-500">
-            {t("loadingFlashSale")}
-          </div>
-        ) : products.length === 0 ? (
-          <div className="col-span-full py-10 text-center text-sm text-slate-500">
-            {t("noFlashSale")}
-          </div>
-        ) : (
-          products.map((product) => (
-            <div
-              key={product.id}
-              data-product-card
-              className="min-w-0 snap-start"
-            >
-              <ProductCard
-                id={product.id}
-                slug={product.slug}
-                title={product.title}
-                image={product.image}
-                price={product.price}
-                rating={product.rating}
-                reviewsCount={product.reviewsCount}
-                moq={product.moq}
-                isFlashSale={true}
-                flashSalePrice={product.flashSalePrice}
-                flashSaleStock={product.flashSaleStock}
-                discountBadge={product.discountBadge}
-              />
-            </div>
-          ))
+        {/* Left Arrow Button (Slider এর মাঝখানে) */}
+        {products.length > 0 && !loading && (
+          <button
+            type="button"
+            onClick={() => scroll("left")}
+            className="absolute -left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white hover:text-rose-600 active:scale-95 sm:-left-4 sm:h-11 sm:w-11"
+            aria-label={t("previousProducts") || "Previous"}
+          >
+            <ChevronLeft size={20} />
+          </button>
         )}
+
+        {/* Right Arrow Button (Slider এর মাঝখানে) */}
+        {products.length > 0 && !loading && (
+          <button
+            type="button"
+            onClick={() => scroll("right")}
+            className="absolute -right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white hover:text-rose-600 active:scale-95 sm:-right-4 sm:h-11 sm:w-11"
+            aria-label={t("nextProducts") || "Next"}
+          >
+            <ChevronRight size={20} />
+          </button>
+        )}
+
+        {/* Product Cards Slider */}
+        <div
+          ref={sliderRef}
+          className="
+            grid grid-flow-col auto-cols-[calc((100%-12px)/2)]
+            gap-3 overflow-x-auto pb-3
+            snap-x snap-mandatory overscroll-x-contain
+            [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+            sm:auto-cols-[calc((100%-24px)/3)]
+            md:auto-cols-[calc((100%-36px)/4)]
+            lg:auto-cols-[calc((100%-48px)/5)]
+            lg:gap-4
+          "
+        >
+          {loading ? (
+            <div className="col-span-full py-12 text-center text-sm text-slate-500">
+              {t("loadingFlashSale") || "Loading flash sale..."}
+            </div>
+          ) : products.length === 0 ? (
+            <div className="col-span-full py-12 text-center text-sm text-slate-500">
+              {t("noFlashSale") || "No active flash sale products."}
+            </div>
+          ) : (
+            products.map((product) => (
+              <div
+                key={product.id}
+                data-product-card
+                className="min-w-0 snap-start"
+              >
+                <ProductCard
+                  id={product.id}
+                  slug={product.slug}
+                  title={product.title}
+                  image={product.image}
+                  price={product.price}
+                  rating={product.rating}
+                  reviewsCount={product.reviewsCount}
+                  moq={product.moq}
+                  isFlashSale={true}
+                  flashSalePrice={product.flashSalePrice}
+                  flashSaleStock={product.flashSaleStock}
+                  discountBadge={product.discountBadge}
+                />
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
-      {/* VIEW ALL: mobile */}
-      <div className="mt-4 flex justify-center sm:hidden">
+      {/* BOTTOM SECTION: VIEW ALL BUTTON */}
+      <div className="mt-5 flex justify-center">
         <Link
-          href="/flash-sale"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-[#12233F]"
+          href="/products?type=flash-sale"
+          className="group inline-flex items-center gap-2   px-5 py-2 text-xs font-semibold text-[#12233F] "
         >
-          {t("viewAllProducts")}
-          <ArrowRight size={14} />
+          {t("viewAll") || "View all Product"}
+          <ArrowRight
+            size={16}
+            className="transition-transform duration-200 group-hover:translate-x-1"
+          />
         </Link>
       </div>
     </section>
