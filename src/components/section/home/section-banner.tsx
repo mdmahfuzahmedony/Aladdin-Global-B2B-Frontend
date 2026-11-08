@@ -132,7 +132,7 @@ export default function SectionBanner({ placement }: SectionBannerProps) {
     <section className="w-full px-3 py-2 sm:px-5 sm:py-3 lg:px-6">
       <div className="mx-auto w-full max-w-[1500px]">
         {/* Banner */}
-        <div className="relative h-[115px] w-full overflow-hidden rounded-lg bg-slate-100 shadow-sm sm:h-[155px] sm:rounded-xl md:h-[175px] lg:h-[190px] xl:h-[205px]">
+        <div className="relative h-[100px] w-full overflow-hidden rounded-lg bg-slate-100 shadow-sm sm:h-[155px] sm:rounded-xl md:h-[175px] lg:h-[100px] xl:h-[100px]">
           {imageFailed ? (
             <div className="flex h-full w-full items-center justify-center bg-gray-100 px-4 text-center text-xs text-gray-500 sm:text-sm">
               {t("bannerImageLoadError")}
