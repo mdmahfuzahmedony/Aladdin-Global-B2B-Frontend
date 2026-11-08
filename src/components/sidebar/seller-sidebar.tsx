@@ -16,7 +16,7 @@ import {
 import { createClient } from "@/lib/supabase-client";
 import { useDashboardNavigation } from "@/components/dashboard/dashboard-navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 const NAV_ITEMS = [
   { label: "Overview", href: "/vendor/dashboard", icon: LayoutDashboard },

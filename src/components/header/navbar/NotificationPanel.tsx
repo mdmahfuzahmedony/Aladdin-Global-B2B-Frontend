@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Bell, CheckCheck, Clock3, Loader2, X } from "lucide-react";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 export type NotificationItem = {
   id: string;

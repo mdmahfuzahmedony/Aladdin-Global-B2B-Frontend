@@ -17,9 +17,7 @@ export async function GET(request: Request) {
   const next = requestUrl.searchParams.get("next") ?? "/";
 
   if (!code) {
-    return NextResponse.redirect(
-      `${requestUrl.origin}/sign-in?error=no-code`
-    );
+    return NextResponse.redirect(`${requestUrl.origin}/sign-in?error=no-code`);
   }
 
   const cookieStore = await cookies();
@@ -42,21 +40,18 @@ export async function GET(request: Request) {
   // Exchange Google code
   // ============================
 
-  const { data, error } =
-    await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
     console.error("AUTH CALLBACK ERROR:", error.message);
 
     return NextResponse.redirect(
-      `${requestUrl.origin}/sign-in?error=auth-code-error`
+      `${requestUrl.origin}/sign-in?error=auth-code-error`,
     );
   }
 
   if (!data.user || !data.session) {
-    return NextResponse.redirect(
-      `${requestUrl.origin}/sign-in?error=no-user`
-    );
+    return NextResponse.redirect(`${requestUrl.origin}/sign-in?error=no-user`);
   }
 
   // ============================
@@ -64,49 +59,44 @@ export async function GET(request: Request) {
   // ============================
 
   try {
-    const apiUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
-    const syncResponse = await fetch(
-      `${apiUrl}/api/users/sync-profile`,
-      {
-        method: "POST",
+    const syncResponse = await fetch(`${apiUrl}/api/users/sync-profile`, {
+      method: "POST",
 
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${data.session.access_token}`,
-        },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${data.session.access_token}`,
+      },
 
-        body: JSON.stringify({
-          email: data.user.email ?? null,
+      body: JSON.stringify({
+        email: data.user.email ?? null,
 
-          phone: data.user.phone ?? null,
+        phone: data.user.phone ?? null,
 
-          fullName:
-            data.user.user_metadata?.full_name ??
-            data.user.user_metadata?.name ??
-            "Unnamed User",
+        fullName:
+          data.user.user_metadata?.full_name ??
+          data.user.user_metadata?.name ??
+          "Unnamed User",
 
-          role: "CUSTOMER",
-        }),
-      }
-    );
+        role: "CUSTOMER",
+      }),
+    });
 
     if (!syncResponse.ok) {
-      const syncError =
-        await syncResponse.json().catch(() => null);
+      const syncError = await syncResponse.json().catch(() => null);
 
       console.error("PROFILE SYNC ERROR:", syncError);
 
       return NextResponse.redirect(
-        `${requestUrl.origin}/sign-in?error=profile-sync-error`
+        `${requestUrl.origin}/sign-in?error=profile-sync-error`,
       );
     }
   } catch (err) {
     console.error("PROFILE SYNC FETCH ERROR:", err);
 
     return NextResponse.redirect(
-      `${requestUrl.origin}/sign-in?error=profile-sync-error`
+      `${requestUrl.origin}/sign-in?error=profile-sync-error`,
     );
   }
 

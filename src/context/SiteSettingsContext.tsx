@@ -47,7 +47,7 @@ const SiteSettingsContext = createContext<SiteSettingsContextType>({
 const STORAGE_KEY = "aladin_site_settings";
 const EVENT_NAME = "aladin:settings_updated";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 export function SiteSettingsProvider({
   children,

@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Bell, ChevronDown, LogOut, UserCircle, Menu } from "lucide-react";
+import {
+  Search,
+  Bell,
+  ChevronDown,
+  LogOut,
+  UserCircle,
+  Menu,
+} from "lucide-react";
 import { createClient } from "../../../lib/supabase-client";
 import NotificationPanel from "./navbar/NotificationPanel";
 import { useDashboardNavigation } from "@/components/dashboard/dashboard-navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 export function AdminNavbar() {
   const supabase = createClient();

@@ -15,7 +15,7 @@ import {
 import { createClient } from "../../../lib/supabase-client";
 import { useDashboardNavigation } from "@/components/dashboard/dashboard-navigation";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 type VendorProfile = {
   storeName?: string | null;

@@ -628,7 +628,7 @@ export default function AddProductPage() {
       }
 
       const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
       const response = await fetch(`${API_URL}/api/products`, {
         method: "POST",

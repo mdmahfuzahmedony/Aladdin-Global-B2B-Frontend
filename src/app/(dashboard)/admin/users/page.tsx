@@ -97,7 +97,7 @@ export type UserData = {
    MAIN PAGE
 ========================================================= */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 export default function UsersPage() {
   /* =======================================================
@@ -191,7 +191,7 @@ export default function UsersPage() {
         --------------------------------------------------- */
 
         const apiUrl =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
         console.log("🔥 Users API:", `${apiUrl}/api/users/admin/all-users`);
 

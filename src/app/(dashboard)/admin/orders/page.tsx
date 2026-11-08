@@ -21,7 +21,7 @@ import OrderDetailsDrawer, {
 } from "./components/OrderDetailsDrawer";
 import { createClient } from "../../../../../lib/supabase-client";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 type OrderStatus =
   | "PENDING"

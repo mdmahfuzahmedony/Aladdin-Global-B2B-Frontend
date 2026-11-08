@@ -37,7 +37,7 @@ import ProductDelivery, {
 import ProductImageUploader from "@/app/(dashboard)/admin/products/add-product/components/product-field/ProductImageUploader";
 import { createClient } from "../../../lib/supabase-client";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 type VendorOption = {
   id: string;

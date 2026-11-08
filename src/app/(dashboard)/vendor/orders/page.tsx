@@ -105,7 +105,7 @@ type ApiResponse = {
   orders?: ApiOrder[];
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 const VENDOR_ORDERS_URL = `${API_BASE_URL}/api/vendor/orders`;
 const supabase = createClient();

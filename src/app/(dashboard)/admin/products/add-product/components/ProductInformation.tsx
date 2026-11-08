@@ -413,9 +413,12 @@ function findComponentForCategory(
 
   const isDairyEggsCategory =
     key === "dairy-and-eggs" ||
-    parentNames.some((name) => normalizeCategoryName(name) === "dairy-and-eggs");
+    parentNames.some(
+      (name) => normalizeCategoryName(name) === "dairy-and-eggs",
+    );
   if (isDairyEggsCategory) {
-    if (key === "dairy-and-eggs" || key === "dairy" || key === "eggs") return null;
+    if (key === "dairy-and-eggs" || key === "dairy" || key === "eggs")
+      return null;
 
     for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
       if (name === "dairy-and-eggs") break;
@@ -449,7 +452,9 @@ function findComponentForCategory(
 
   const isConfectioneriesCategory =
     key === "confectioneries" ||
-    parentNames.some((name) => normalizeCategoryName(name) === "confectioneries");
+    parentNames.some(
+      (name) => normalizeCategoryName(name) === "confectioneries",
+    );
   if (isConfectioneriesCategory) {
     if (key === "confectioneries") return null;
 
@@ -468,13 +473,18 @@ function findComponentForCategory(
     key === "cooking-and-essentials" ||
     parentNames.some((name) => {
       const parentKey = normalizeCategoryName(name);
-      return parentKey === "cooking-essentials" || parentKey === "cooking-and-essentials";
+      return (
+        parentKey === "cooking-essentials" ||
+        parentKey === "cooking-and-essentials"
+      );
     });
   if (isCookingEssentialsCategory) {
-    if (key === "cooking-essentials" || key === "cooking-and-essentials") return null;
+    if (key === "cooking-essentials" || key === "cooking-and-essentials")
+      return null;
 
     for (const name of [key, ...parentNames.map(normalizeCategoryName)]) {
-      if (name === "cooking-essentials" || name === "cooking-and-essentials") break;
+      if (name === "cooking-essentials" || name === "cooking-and-essentials")
+        break;
 
       const component = COOKING_ESSENTIAL_COMPONENTS[name];
       if (component) return component;
@@ -485,7 +495,9 @@ function findComponentForCategory(
 
   const isCannedFrozenCategory =
     key === "canned-and-frozen" ||
-    parentNames.some((name) => normalizeCategoryName(name) === "canned-and-frozen");
+    parentNames.some(
+      (name) => normalizeCategoryName(name) === "canned-and-frozen",
+    );
   if (isCannedFrozenCategory) {
     if (key === "canned-and-frozen") return null;
 
@@ -501,7 +513,9 @@ function findComponentForCategory(
 
   const isLaundryHouseholdCategory =
     key === "laundry-and-household" ||
-    parentNames.some((name) => normalizeCategoryName(name) === "laundry-and-household");
+    parentNames.some(
+      (name) => normalizeCategoryName(name) === "laundry-and-household",
+    );
   if (isLaundryHouseholdCategory) {
     if (key === "laundry-and-household") return null;
 
@@ -531,7 +545,9 @@ function findComponentForCategory(
 
   const isHomemadeRestaurantCategory =
     key === "homemade-and-restaurant" ||
-    parentNames.some((name) => normalizeCategoryName(name) === "homemade-and-restaurant");
+    parentNames.some(
+      (name) => normalizeCategoryName(name) === "homemade-and-restaurant",
+    );
   if (isHomemadeRestaurantCategory) {
     if (key === "homemade-and-restaurant") return null;
     if (key === "pasta") return Pasta;
@@ -874,11 +890,7 @@ function CategoryTreeItem({
             aria-expanded={isOpen}
             className="flex h-9 w-8 shrink-0 items-center justify-center rounded-md text-slate-400 hover:text-slate-700"
           >
-            {isOpen ? (
-              <ChevronDown size={15} />
-            ) : (
-              <ChevronRight size={15} />
-            )}
+            {isOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
           </button>
         ) : (
           <span className="w-8 shrink-0" />
@@ -890,9 +902,7 @@ function CategoryTreeItem({
           aria-pressed={isSelected}
           className={[
             "min-w-0 flex-1 truncate rounded-lg px-2 py-2.5 text-left transition",
-            level === 0
-              ? "text-sm font-semibold"
-              : "text-xs font-medium",
+            level === 0 ? "text-sm font-semibold" : "text-xs font-medium",
             isSelected
               ? "font-semibold text-amber-900"
               : level === 0
@@ -990,7 +1000,7 @@ export default function ProductInformation({
         }
 
         const API_BASE_URL =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
         const response = await fetch(`${API_BASE_URL}/api/categories`, {
           method: "GET",

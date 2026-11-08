@@ -17,12 +17,13 @@ type CategoryItem = {
   productCount: number;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 export default function CategorySlider() {
   const { t } = useLanguage();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { start: autoStart, stop: autoStop } = useAutoSlider(scrollContainerRef);
+  const { start: autoStart, stop: autoStop } =
+    useAutoSlider(scrollContainerRef);
 
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);

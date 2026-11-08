@@ -25,7 +25,7 @@ import AdminStatCard from "@/components/cards/AdminStatCard";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
 import { createClient } from "../../../../../lib/supabase-client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 const supabase = createClient();
 
 type ReportCategory =

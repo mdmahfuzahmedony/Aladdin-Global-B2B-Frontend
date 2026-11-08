@@ -25,7 +25,7 @@ interface SectionBannerProps {
 }
 
 const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001"
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001"
 ).replace(/\/+$/, "");
 
 export default function SectionBanner({ placement }: SectionBannerProps) {

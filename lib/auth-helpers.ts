@@ -20,7 +20,7 @@ async function syncProfile(payload: {
     return;
   }
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
   const res = await fetch(`${apiUrl}/api/users/sync-profile`, {
     method: "POST",
     headers: {

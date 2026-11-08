@@ -7,7 +7,7 @@ import { createClient } from "../../../../lib/supabase-client";
 import { getValidImageUrl } from "../../../../lib/image-util";
 import { useLanguage } from "@/context/LanguageContext";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 import {
   ShoppingBag,
   Trash2,
@@ -502,7 +502,9 @@ export default function CartPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6 lg:col-span-2">
               <div className="mb-2 flex items-center justify-between border-b border-gray-100 pb-4">
-                <h2 className="text-lg font-bold text-[#0F172A]">{t("cartItems")}</h2>
+                <h2 className="text-lg font-bold text-[#0F172A]">
+                  {t("cartItems")}
+                </h2>
 
                 <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-[#F59E0B]">
                   {items.length} {items.length === 1 ? t("item") : t("items")}

@@ -16,7 +16,7 @@ import { useLanguage } from "@/context/LanguageContext";
 // API
 // ======================================================
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 const CATEGORY_API = `${API_URL}/api/categories/main-with-count`;
 
@@ -552,9 +552,7 @@ export function AllCategoriesMenu({
           {t("categoriesUnavailable")}
         </p>
 
-        <p className="text-xs text-slate-500">
-          {t("categoryApiHelp")}
-        </p>
+        <p className="text-xs text-slate-500">{t("categoryApiHelp")}</p>
       </div>
     );
   }

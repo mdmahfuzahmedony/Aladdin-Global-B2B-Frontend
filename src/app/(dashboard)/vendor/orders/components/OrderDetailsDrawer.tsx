@@ -301,7 +301,7 @@ export default function OrderDetailsDrawer({
       }
 
       const apiBaseUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
       const response = await fetch(
         `${apiBaseUrl}/api/courier/vendor-orders/${encodeURIComponent(
@@ -362,7 +362,7 @@ export default function OrderDetailsDrawer({
       }
 
       const apiBaseUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
       const response = await fetch(
         `${apiBaseUrl}/api/courier/vendor-orders/${encodeURIComponent(
