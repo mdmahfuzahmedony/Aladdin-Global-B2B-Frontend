@@ -235,15 +235,15 @@ export default function FeaturedProducts() {
         {/* BOTTOM: VIEW ALL BUTTON */}
         <div className="mt-6 flex justify-center">
           <Link
-            href="/products?placement=featured"
-            className="group inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-semibold text-[#12233F] shadow-sm transition hover:border-[#D6A419] hover:bg-slate-50 hover:text-[#D6A419] sm:text-sm"
-          >
-            {t("viewAll") || "View all"}
-            <ArrowRight
-              size={16}
-              className="transition-transform duration-200 group-hover:translate-x-1"
-            />
-          </Link>
+  href="/products?placement=featured"
+  className="group inline-flex items-center gap-2 rounded-xl border border-[#D6A419] bg-[#D6A419] px-5 py-2 text-xs font-semibold text-white shadow-sm transition hover:border-[#c3940f] hover:bg-[#c3940f] sm:text-sm"
+>
+  {t("viewAll") || "View all"}
+  <ArrowRight
+    size={16}
+    className="transition-transform duration-200 group-hover:translate-x-1"
+  />
+</Link>
         </div>
 
       </div>

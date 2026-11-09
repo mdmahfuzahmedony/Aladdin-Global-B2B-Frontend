@@ -1,7 +1,9 @@
+
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+
 import {
   AlertCircle,
   ArrowRight,
@@ -9,6 +11,7 @@ import {
   Folder,
   Loader2,
 } from "lucide-react";
+
 import CategoryIcon from "@/components/category/CategoryIcon";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -16,7 +19,8 @@ import { useLanguage } from "@/context/LanguageContext";
 // API
 // ======================================================
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 const CATEGORY_API = `${API_URL}/api/categories/main-with-count`;
 
@@ -58,17 +62,17 @@ type MegaMenuProps = {
 
 // ======================================================
 // SORT CATEGORIES
-// sortOrder একই হলে API-এর আগের ক্রম বজায় থাকবে
 // ======================================================
 
-function sortByOrder<T extends { sortOrder?: number | null }>(items: T[]): T[] {
+function sortByOrder<T extends { sortOrder?: number | null }>(
+  items: T[]
+): T[] {
   return items
     .map((item, index) => ({ item, index }))
     .sort((a, b) => {
       const orderA = a.item.sortOrder;
       const orderB = b.item.sortOrder;
 
-      // sortOrder না থাকলে API-এর মূল ক্রম অগ্রাধিকার পাবে
       if (orderA == null && orderB == null) {
         return a.index - b.index;
       }
@@ -154,14 +158,14 @@ function buildCategoryTree(categories: ApiCategory[]): CategoryNode[] {
 
   const hasNestedChildren = categories.some(
     (category) =>
-      Array.isArray(category.children) && category.children.length > 0,
+      Array.isArray(category.children) && category.children.length > 0
   );
 
   // API already provides a nested category tree
   if (hasNestedChildren) {
-    return sortByOrder(categories.filter((category) => !category.parentId)).map(
-      mapNestedCategory,
-    );
+    return sortByOrder(
+      categories.filter((category) => !category.parentId)
+    ).map(mapNestedCategory);
   }
 
   // API provides a flat category list
@@ -236,9 +240,38 @@ export function AllCategoriesMenu({
   const [activePath, setActivePath] = useState<CategoryNode[]>([]);
 
   // Mobile expanded categories
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(
+    () => new Set()
+  );
+
+  // More / Show Less state for each individual category
+  const [showAllChildrenIds, setShowAllChildrenIds] = useState<Set<string>>(
+    () => new Set()
+  );
 
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ====================================================
+  // SHOW MORE / SHOW LESS
+  // ====================================================
+
+  const toggleShowAllChildren = (categoryId: string) => {
+    setShowAllChildrenIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+
+      return next;
+    });
+  };
+
+  // ====================================================
+  // CLOSE TIMER
+  // ====================================================
 
   const cancelCloseTimer = useCallback(() => {
     if (closeTimerRef.current) {
@@ -292,15 +325,12 @@ export function AllCategoriesMenu({
         const apiCategories = extractCategories(payload);
         const tree = buildCategoryTree(apiCategories);
 
-        // গুরুত্বপূর্ণ:
-        // এখানে নাম অনুযায়ী tree.sort() করা হবে না।
-        // API/database-এর sortOrder-ই category order নির্ধারণ করবে।
-
         if (!mounted) return;
 
         setCategories(tree);
         setActivePath(tree.length > 0 ? [tree[0]] : []);
         setExpandedIds(new Set());
+        setShowAllChildrenIds(new Set());
       } catch (err) {
         console.error("MegaMenu error:", err);
 
@@ -335,7 +365,7 @@ export function AllCategoriesMenu({
 
       return parent?.children ?? [];
     },
-    [categories, activePath],
+    [categories, activePath]
   );
 
   // ====================================================
@@ -358,7 +388,7 @@ export function AllCategoriesMenu({
 
       setActivePath((current) => current.slice(0, depth));
     },
-    [cancelCloseTimer],
+    [cancelCloseTimer]
   );
 
   // ====================================================
@@ -401,9 +431,13 @@ export function AllCategoriesMenu({
   // DESKTOP CATEGORY ITEM
   // ====================================================
 
-  const renderDesktopCategoryItem = (category: CategoryNode, depth: number) => {
+  const renderDesktopCategoryItem = (
+    category: CategoryNode,
+    depth: number
+  ) => {
     const hasChildren = category.children.length > 0;
-    const active = depth === 0 && activePath[0]?.id === category.id;
+    const active =
+      depth === 0 && activePath[0]?.id === category.id;
 
     return (
       <a
@@ -429,7 +463,10 @@ export function AllCategoriesMenu({
               className="shrink-0 text-[#d6a419]"
             />
           )}
-          <span className="truncate text-sm font-medium">{category.name}</span>
+
+          <span className="truncate text-sm font-medium">
+            {category.name}
+          </span>
         </span>
 
         {hasChildren && (
@@ -451,10 +488,15 @@ export function AllCategoriesMenu({
 
   const renderMobileCategory = (
     category: CategoryNode,
-    depth = 0,
+    depth = 0
   ): React.ReactNode => {
     const hasChildren = category.children.length > 0;
     const expanded = expandedIds.has(category.id);
+    const showAll = showAllChildrenIds.has(category.id);
+
+    const visibleChildren = showAll
+      ? category.children
+      : category.children.slice(0, 3);
 
     return (
       <React.Fragment key={category.id}>
@@ -476,6 +518,7 @@ export function AllCategoriesMenu({
                 className="shrink-0 text-[#d6a419]"
               />
             )}
+
             <span className="truncate text-sm font-medium text-slate-700">
               {category.name}
             </span>
@@ -495,8 +538,18 @@ export function AllCategoriesMenu({
 
         {hasChildren && expanded && (
           <div className="w-full">
-            {category.children.map((child) =>
-              renderMobileCategory(child, depth + 1),
+            {visibleChildren.map((child) =>
+              renderMobileCategory(child, depth + 1)
+            )}
+
+            {category.children.length > 3 && (
+              <button
+                type="button"
+                onClick={() => toggleShowAllChildren(category.id)}
+                className="ml-8 my-2 text-xs font-semibold text-[#12233F] hover:text-[#D6A419]"
+              >
+                {showAll ? "Show Less" : "+ More"}
+              </button>
             )}
           </div>
         )}
@@ -552,7 +605,9 @@ export function AllCategoriesMenu({
           {t("categoriesUnavailable")}
         </p>
 
-        <p className="text-xs text-slate-500">{t("categoryApiHelp")}</p>
+        <p className="text-xs text-slate-500">
+          {t("categoryApiHelp")}
+        </p>
       </div>
     );
   }
@@ -565,7 +620,9 @@ export function AllCategoriesMenu({
     return (
       <div className="flex min-h-full flex-col overflow-x-hidden bg-white">
         <div className="min-w-0 flex-1 px-3 pb-5">
-          {categories.map((category) => renderMobileCategory(category))}
+          {categories.map((category) =>
+            renderMobileCategory(category)
+          )}
         </div>
       </div>
     );
@@ -583,29 +640,60 @@ export function AllCategoriesMenu({
     >
       <div className="flex max-h-[520px] min-h-[320px] w-fit min-w-0 max-w-[90vw] overflow-hidden">
         <div className="flex w-fit min-w-0 overflow-x-hidden">
-          {Array.from({ length: activePath.length + 1 }, (_, depth) => {
-            const columnCategories = getColumnCategories(depth);
+          {Array.from(
+            { length: activePath.length + 1 },
+            (_, depth) => {
+              const columnCategories = getColumnCategories(depth);
 
-            if (columnCategories.length === 0) {
-              return null;
-            }
+              if (columnCategories.length === 0) {
+                return null;
+              }
 
-            return (
-              <div
-                key={`category-column-${depth}`}
-                className={[
-                  "w-[240px] min-w-0 shrink-0 overflow-y-auto p-2",
-                  depth > 0 ? "border-l border-slate-100" : "bg-white",
-                ].join(" ")}
-              >
-                <div className="space-y-1">
-                  {columnCategories.map((category) =>
-                    renderDesktopCategoryItem(category, depth),
-                  )}
+              const parent =
+                depth > 0 ? activePath[depth - 1] : null;
+
+              const showAll = parent
+                ? showAllChildrenIds.has(parent.id)
+                : true;
+
+              const visibleCategories =
+                depth === 0 || showAll
+                  ? columnCategories
+                  : columnCategories.slice(0, 3);
+
+              return (
+                <div
+                  key={`category-column-${depth}`}
+                  className={[
+                    "w-[240px] min-w-0 shrink-0 overflow-y-auto p-2",
+                    depth > 0
+                      ? "border-l border-slate-100"
+                      : "bg-white",
+                  ].join(" ")}
+                >
+                  <div className="space-y-1">
+                    {visibleCategories.map((category) =>
+                      renderDesktopCategoryItem(category, depth)
+                    )}
+
+                    {depth > 0 &&
+                      parent &&
+                      columnCategories.length > 3 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            toggleShowAllChildren(parent.id)
+                          }
+                          className="w-full rounded-lg px-2 py-2 text-left text-xs font-semibold text-[#12233F] transition hover:bg-[#fffbf2] hover:text-[#D6A419]"
+                        >
+                          {showAll ? "Show Less" : "+ More"}
+                        </button>
+                      )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            }
+          )}
         </div>
       </div>
 
@@ -615,7 +703,10 @@ export function AllCategoriesMenu({
           onClick={onClose}
           className="flex min-w-0 items-center gap-2 text-sm font-semibold text-[#12233F] transition hover:text-[#D6A419]"
         >
-          <span className="truncate">{t("browseAllCategories")}</span>
+          <span className="truncate">
+            {t("browseAllCategories")}
+          </span>
+
           <ArrowRight size={15} className="shrink-0" />
         </Link>
 

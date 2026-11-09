@@ -1,13 +1,21 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Zap, Clock, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import {
+  Zap,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+} from "lucide-react";
 import Link from "next/link";
 
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
 import { useLanguage } from "@/context/LanguageContext";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 type FlashProduct = {
   id: string;
@@ -23,29 +31,39 @@ type FlashProduct = {
   flashSaleStock: number;
 };
 
+type TimeLeft = {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
+
+const INITIAL_TIME: TimeLeft = {
+  days: 0,
+  hours: 0,
+  minutes: 0,
+  seconds: 0,
+};
+
 export default function FlashSaleSection() {
   const { t } = useLanguage();
+
   const [products, setProducts] = useState<FlashProduct[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
-
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>(INITIAL_TIME);
   const [saleEndTime, setSaleEndTime] = useState<Date | null>(null);
 
   const sliderRef = useRef<HTMLDivElement>(null);
   const isHoveredRef = useRef(false);
 
-  // Manual scroll function
+  // Manual slider scroll
   const scroll = (direction: "left" | "right") => {
     const slider = sliderRef.current;
     if (!slider) return;
 
     const card = slider.querySelector<HTMLElement>("[data-product-card]");
     const gap = 12;
+
     const scrollAmount = card
       ? (card.offsetWidth + gap) * 2
       : slider.clientWidth * 0.8;
@@ -56,26 +74,31 @@ export default function FlashSaleSection() {
     });
   };
 
-  // Auto slider setup (মাউস হোভার থাকলে থামবে, অন্যথায় প্রতি ৩.৫ সেকেন্ড পর স্লাইড হবে)
+  // Auto slider
   useEffect(() => {
     if (products.length <= 1) return;
 
     const interval = setInterval(() => {
       const slider = sliderRef.current;
+
       if (!slider || isHoveredRef.current) return;
 
       const card = slider.querySelector<HTMLElement>("[data-product-card]");
-      const gap = 12;
-      const scrollAmount = card ? card.offsetWidth + gap : 260;
+      const scrollAmount = card ? card.offsetWidth + 12 : 260;
 
-      // একদম শেষে পৌঁছে গেলে শুরুতে ফিরে যাবে
       const isAtEnd =
         slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 10;
 
       if (isAtEnd) {
-        slider.scrollTo({ left: 0, behavior: "smooth" });
+        slider.scrollTo({
+          left: 0,
+          behavior: "smooth",
+        });
       } else {
-        slider.scrollBy({ left: scrollAmount, behavior: "smooth" });
+        slider.scrollBy({
+          left: scrollAmount,
+          behavior: "smooth",
+        });
       }
     }, 3500);
 
@@ -152,14 +175,21 @@ export default function FlashSaleSection() {
           if (!cancelled) {
             setProducts(mappedProducts);
 
-            const endTimes = result.data
+            // Find the nearest future endTime
+            const now = Date.now();
+
+            const futureEndTimes = result.data
               .map((item: any) => item.flashSaleAttribute?.endTime)
               .filter(Boolean)
               .map((value: string) => new Date(value))
-              .filter((date: Date) => !Number.isNaN(date.getTime()));
+              .filter(
+                (date: Date) =>
+                  !Number.isNaN(date.getTime()) &&
+                  date.getTime() > now
+              );
 
-            if (endTimes.length > 0) {
-              const earliestEndTime = endTimes.reduce(
+            if (futureEndTimes.length > 0) {
+              const earliestEndTime = futureEndTimes.reduce(
                 (earliest: Date, current: Date) =>
                   current.getTime() < earliest.getTime()
                     ? current
@@ -179,6 +209,7 @@ export default function FlashSaleSection() {
         }
       } catch (error) {
         console.error("Failed to fetch flash sale products:", error);
+
         if (!cancelled) {
           setProducts([]);
           setSaleEndTime(null);
@@ -197,10 +228,10 @@ export default function FlashSaleSection() {
     };
   }, []);
 
-  // Countdown timer logic
+  // Working countdown timer
   useEffect(() => {
     if (!saleEndTime) {
-      setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+      setTimeLeft(INITIAL_TIME);
       return;
     }
 
@@ -208,14 +239,15 @@ export default function FlashSaleSection() {
       const difference = saleEndTime.getTime() - Date.now();
 
       if (difference <= 0) {
-        setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+        setTimeLeft(INITIAL_TIME);
         return;
       }
 
       const totalSeconds = Math.floor(difference / 1000);
 
       setTimeLeft({
-        hours: Math.floor(totalSeconds / 3600),
+        days: Math.floor(totalSeconds / 86400),
+        hours: Math.floor((totalSeconds % 86400) / 3600),
         minutes: Math.floor((totalSeconds % 3600) / 60),
         seconds: totalSeconds % 60,
       });
@@ -228,56 +260,70 @@ export default function FlashSaleSection() {
     return () => clearInterval(timer);
   }, [saleEndTime]);
 
+  const timerItems = [
+    { label: "Days", value: timeLeft.days },
+    { label: "Hours", value: timeLeft.hours },
+    { label: "Minutes", value: timeLeft.minutes },
+    { label: "Seconds", value: timeLeft.seconds },
+  ];
+
   return (
     <section className="relative mx-auto my-5 w-full min-w-0 max-w-[1500px] rounded-2xl border border-slate-100 bg-slate-50 px-3 py-5 shadow-sm sm:my-6 sm:rounded-3xl sm:px-6 sm:py-7 lg:px-8">
-      {/* HEADER SECTION: Clean Title + Live Badge + Timer Box */}
-      <div className="mb-4 flex flex-col gap-2.5 sm:mb-5">
-        <div className="flex items-center justify-between gap-2">
-          {/* Title & Live Badge */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-lg bg-rose-600 text-white shadow-sm sm:h-10 sm:w-10 sm:rounded-xl">
-              <Zap size={18} className="sm:size-5" />
-            </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <h2 className="font-[var(--font-poppins)] text-base font-bold text-[#12233F] sm:text-xl">
-                {t("flashSale") || "Flash Sale"}
-              </h2>
-              <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600 sm:px-2 sm:text-xs">
-                {t("liveNow") || "Live Now"}
-              </span>
-            </div>
+      {/* HEADER: THREE SECTIONS */}
+      <div className="mb-5 grid grid-cols-3 items-center gap-2 sm:mb-6">
+
+        {/* LEFT: FLASH SALE TITLE */}
+        <div className="flex min-w-0 items-center justify-start gap-2 sm:gap-3">
+          <div className="flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-lg bg-rose-600 text-white shadow-sm sm:h-10 sm:w-10 sm:rounded-xl">
+            <Zap size={18} className="sm:size-5" />
           </div>
 
-          {/* Ending In Timer Box */}
-          <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1 shadow-sm sm:gap-2 sm:rounded-xl sm:px-3 sm:py-1.5">
-            <Clock size={13} className="shrink-0 text-rose-600 sm:size-4" />
-            <span className="text-[10px] font-medium text-slate-600 sm:text-xs">
-              {t("endingIn") || "Ending in"}
-            </span>
-            <div className="flex items-center gap-0.5 font-mono text-[10px] font-bold text-rose-600 sm:gap-1 sm:text-xs">
-              <span className="rounded bg-rose-50 px-1 py-0.5 sm:px-1.5">
-                {String(timeLeft.hours).padStart(2, "0")}
-              </span>
-              :
-              <span className="rounded bg-rose-50 px-1 py-0.5 sm:px-1.5">
-                {String(timeLeft.minutes).padStart(2, "0")}
-              </span>
-              :
-              <span className="rounded bg-rose-50 px-1 py-0.5 sm:px-1.5">
-                {String(timeLeft.seconds).padStart(2, "0")}
-              </span>
-            </div>
+          <div className="min-w-0">
+            <h2 className="font-[var(--font-poppins)] text-sm font-bold text-[#12233F] sm:text-xl">
+              {t("flashSale") || "Flash Sale"}
+            </h2>
+
+            <p className="mt-0.5 hidden text-xs text-slate-500 sm:block sm:text-sm">
+              {t("limitedDeals") ||
+                "Grab these limited deals before they run out!"}
+            </p>
           </div>
         </div>
 
-        {/* Subtitle */}
-        <p className="text-xs text-slate-500 sm:text-sm">
-          {t("limitedDeals") || "Grab these limited deals before they run out!"}
-        </p>
+        {/* CENTER: COUNTDOWN TIMER */}
+        <div className="flex min-w-0 flex-col items-center justify-center">
+          <div className="mb-1.5 flex items-center justify-center gap-1 sm:mb-2 sm:gap-1.5">
+            <Clock size={13} className="shrink-0 text-rose-600 sm:size-4" />
+
+            <span className="text-[10px] font-semibold text-slate-600 sm:text-sm">
+              {t("endingIn") || "Ending In"}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-center gap-1 sm:gap-2">
+            {timerItems.map((item) => (
+              <div
+                key={item.label}
+                className="flex min-w-[38px] flex-col items-center rounded-lg border border-slate-200 bg-white px-1.5 py-1 shadow-sm sm:min-w-[52px] sm:rounded-xl sm:px-2.5 sm:py-2"
+              >
+                <span className="font-mono text-sm font-bold tabular-nums text-rose-600 sm:text-xl">
+                  {String(item.value).padStart(2, "0")}
+                </span>
+
+                <span className="text-[8px] font-medium text-slate-500 sm:text-[10px]">
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* RIGHT: INTENTIONALLY EMPTY */}
+        <div aria-hidden="true" />
       </div>
 
-      {/* PRODUCTS SLIDER WITH FLOATING CONTROLS IN THE MIDDLE */}
+      {/* PRODUCTS SLIDER */}
       <div
         className="group relative"
         onMouseEnter={() => {
@@ -287,7 +333,7 @@ export default function FlashSaleSection() {
           isHoveredRef.current = false;
         }}
       >
-        {/* Left Arrow Button (Slider এর মাঝখানে) */}
+        {/* LEFT ARROW */}
         {products.length > 0 && !loading && (
           <button
             type="button"
@@ -299,7 +345,7 @@ export default function FlashSaleSection() {
           </button>
         )}
 
-        {/* Right Arrow Button (Slider এর মাঝখানে) */}
+        {/* RIGHT ARROW */}
         {products.length > 0 && !loading && (
           <button
             type="button"
@@ -311,7 +357,7 @@ export default function FlashSaleSection() {
           </button>
         )}
 
-        {/* Product Cards Slider */}
+        {/* PRODUCT CARDS */}
         <div
           ref={sliderRef}
           className="
@@ -360,13 +406,14 @@ export default function FlashSaleSection() {
         </div>
       </div>
 
-      {/* BOTTOM SECTION: VIEW ALL BUTTON */}
+      {/* VIEW ALL BUTTON */}
       <div className="mt-5 flex justify-center">
         <Link
           href="/products?type=flash-sale"
-          className="group inline-flex items-center gap-2   px-5 py-2 text-xs font-semibold text-[#12233F] "
+          className="group inline-flex items-center gap-2 rounded-full bg-[#D6A419] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#c3940f] hover:shadow-md"
         >
           {t("viewAll") || "View all Product"}
+
           <ArrowRight
             size={16}
             className="transition-transform duration-200 group-hover:translate-x-1"
