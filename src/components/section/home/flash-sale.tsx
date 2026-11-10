@@ -56,16 +56,19 @@ export default function FlashSaleSection() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const isHoveredRef = useRef(false);
 
-  // Manual slider scroll
+  // Manual scroll: একবারে ২টি কার্ড
   const scroll = (direction: "left" | "right") => {
     const slider = sliderRef.current;
     if (!slider) return;
 
-    const card = slider.querySelector<HTMLElement>("[data-product-card]");
+    const card = slider.querySelector<HTMLElement>(
+      "[data-product-card]"
+    );
+
     const gap = 12;
 
     const scrollAmount = card
-      ? card.offsetWidth + gap
+      ? (card.offsetWidth + gap) * 2
       : slider.clientWidth * 0.8;
 
     slider.scrollBy({
@@ -83,11 +86,17 @@ export default function FlashSaleSection() {
 
       if (!slider || isHoveredRef.current) return;
 
-      const card = slider.querySelector<HTMLElement>("[data-product-card]");
-      const scrollAmount = card ? card.offsetWidth + 12 : 260;
+      const card = slider.querySelector<HTMLElement>(
+        "[data-product-card]"
+      );
+
+      const scrollAmount = card
+        ? card.offsetWidth + 12
+        : 260;
 
       const isAtEnd =
-        slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 10;
+        slider.scrollLeft + slider.clientWidth >=
+        slider.scrollWidth - 10;
 
       if (isAtEnd) {
         slider.scrollTo({
@@ -138,13 +147,17 @@ export default function FlashSaleSection() {
               const discountValue =
                 originalPrice > 0 && flashPrice > 0
                   ? Math.round(
-                      ((originalPrice - flashPrice) / originalPrice) * 100
+                      ((originalPrice - flashPrice) /
+                        originalPrice) *
+                        100
                     )
                   : 0;
 
               const imageUrl =
                 item.attributes?.colors?.[0]?.images?.[0] ||
-                (Array.isArray(item.images) ? item.images[0] : null) ||
+                (Array.isArray(item.images)
+                  ? item.images[0]
+                  : null) ||
                 item.image ||
                 "📦";
 
@@ -178,7 +191,10 @@ export default function FlashSaleSection() {
             const now = Date.now();
 
             const futureEndTimes = result.data
-              .map((item: any) => item.flashSaleAttribute?.endTime)
+              .map(
+                (item: any) =>
+                  item.flashSaleAttribute?.endTime
+              )
               .filter(Boolean)
               .map((value: string) => new Date(value))
               .filter(
@@ -207,7 +223,10 @@ export default function FlashSaleSection() {
           }
         }
       } catch (error) {
-        console.error("Failed to fetch flash sale products:", error);
+        console.error(
+          "Failed to fetch flash sale products:",
+          error
+        );
 
         if (!cancelled) {
           setProducts([]);
@@ -267,7 +286,7 @@ export default function FlashSaleSection() {
   ];
 
   return (
-    <section className="relative mx-auto my-5 w-full min-w-0 max-w-[1500px] overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 px-3 py-5 shadow-sm sm:my-6 sm:rounded-3xl sm:px-6 sm:py-7 lg:px-8">
+    <section className="relative mx-auto my-5 w-full min-w-0 max-w-[1500px] rounded-2xl border border-slate-100 bg-slate-50 px-3 py-5 shadow-sm sm:my-6 sm:rounded-3xl sm:px-6 sm:py-7 lg:px-8">
 
       {/* HEADER */}
       <div
@@ -334,13 +353,13 @@ export default function FlashSaleSection() {
           </div>
         </div>
 
-        {/* DESKTOP CENTER SPACER */}
+        {/* DESKTOP SPACER */}
         <div className="hidden lg:block" />
       </div>
 
-      {/* PRODUCTS SLIDER */}
+      {/* PRODUCTS SLIDER WRAPPER */}
       <div
-        className="group relative mt-3 min-w-0 px-0 sm:mt-4"
+        className="group relative mt-3 min-w-0 px-4 sm:mt-4 sm:px-5"
         onMouseEnter={() => {
           isHoveredRef.current = true;
         }}
@@ -356,18 +375,18 @@ export default function FlashSaleSection() {
               type="button"
               onClick={() => scroll("left")}
               className="
-                absolute left-0 top-1/2 z-10
-                flex h-10 w-5 -translate-y-1/2
+                absolute -left-4 sm:-left-5 top-1/2 z-30
+                flex h-9 w-6 -translate-y-1/2
                 items-center justify-center rounded-md
                 border border-slate-200 bg-white/95
                 text-slate-700 shadow-md backdrop-blur-sm
                 transition-all hover:bg-rose-50 hover:text-rose-600
-                disabled:cursor-not-allowed disabled:opacity-40
-                sm:h-12 sm:w-7
+                active:scale-95
+                sm:h-12 sm:w-8
               "
               aria-label={t("previousProducts") || "Previous"}
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={20} />
             </button>
           )}
 
@@ -377,18 +396,18 @@ export default function FlashSaleSection() {
               type="button"
               onClick={() => scroll("right")}
               className="
-                absolute right-0 top-1/2 z-10
-                flex h-10 w-5 -translate-y-1/2
+                absolute -right-4 sm:-right-5 top-1/2 z-30
+                flex h-9 w-6 -translate-y-1/2
                 items-center justify-center rounded-md
                 border border-slate-200 bg-white/95
                 text-slate-700 shadow-md backdrop-blur-sm
                 transition-all hover:bg-rose-50 hover:text-rose-600
-                disabled:cursor-not-allowed disabled:opacity-40
-                sm:h-12 sm:w-7
+                active:scale-95
+                sm:h-12 sm:w-8
               "
               aria-label={t("nextProducts") || "Next"}
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={20} />
             </button>
           )}
 
@@ -447,7 +466,13 @@ export default function FlashSaleSection() {
       <div className="mt-5 flex justify-center">
         <Link
           href="/products?type=flash-sale"
-          className="group inline-flex items-center gap-2 rounded-full bg-[#D6A419] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#c3940f] hover:shadow-md"
+          className="
+            group inline-flex items-center gap-2
+            rounded-full bg-[#D6A419] px-5 py-2.5
+            text-xs font-semibold text-white shadow-sm
+            transition-all duration-200
+            hover:bg-[#c3940f] hover:shadow-md
+          "
         >
           {t("viewAll") || "View all Product"}
 
@@ -457,6 +482,7 @@ export default function FlashSaleSection() {
           />
         </Link>
       </div>
+
     </section>
   );
 }
