@@ -65,7 +65,7 @@ export default function FlashSaleSection() {
     const gap = 12;
 
     const scrollAmount = card
-      ? (card.offsetWidth + gap) * 2
+      ? card.offsetWidth + gap
       : slider.clientWidth * 0.8;
 
     slider.scrollBy({
@@ -175,7 +175,6 @@ export default function FlashSaleSection() {
           if (!cancelled) {
             setProducts(mappedProducts);
 
-            // Find the nearest future endTime
             const now = Date.now();
 
             const futureEndTimes = result.data
@@ -228,7 +227,7 @@ export default function FlashSaleSection() {
     };
   }, []);
 
-  // Working countdown timer
+  // Countdown timer
   useEffect(() => {
     if (!saleEndTime) {
       setTimeLeft(INITIAL_TIME);
@@ -268,11 +267,17 @@ export default function FlashSaleSection() {
   ];
 
   return (
-    <section className="relative mx-auto my-5 w-full min-w-0 max-w-[1500px] rounded-2xl border border-slate-100 bg-slate-50 px-3 py-5 shadow-sm sm:my-6 sm:rounded-3xl sm:px-6 sm:py-7 lg:px-8">
+    <section className="relative mx-auto my-5 w-full min-w-0 max-w-[1500px] overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 px-3 py-5 shadow-sm sm:my-6 sm:rounded-3xl sm:px-6 sm:py-7 lg:px-8">
 
-      {/* HEADER: THREE SECTIONS */}
-      <div className="mb-5 grid grid-cols-3 items-center gap-2 sm:mb-6">
-
+      {/* HEADER */}
+      <div
+        className="
+          mb-7 grid grid-cols-[minmax(0,1fr)_auto]
+          items-center gap-2
+          sm:mb-8
+          lg:grid-cols-3
+        "
+      >
         {/* LEFT: FLASH SALE TITLE */}
         <div className="flex min-w-0 items-center justify-start gap-2 sm:gap-3">
           <div className="flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-lg bg-rose-600 text-white shadow-sm sm:h-10 sm:w-10 sm:rounded-xl">
@@ -280,7 +285,7 @@ export default function FlashSaleSection() {
           </div>
 
           <div className="min-w-0">
-            <h2 className="font-[var(--font-poppins)] text-sm font-bold text-[#12233F] sm:text-xl">
+            <h2 className="whitespace-nowrap font-[var(--font-poppins)] text-xs font-bold text-[#12233F] sm:text-xl">
               {t("flashSale") || "Flash Sale"}
             </h2>
 
@@ -291,27 +296,37 @@ export default function FlashSaleSection() {
           </div>
         </div>
 
-        {/* CENTER: COUNTDOWN TIMER */}
-        <div className="flex min-w-0 flex-col items-center justify-center">
-          <div className="mb-1.5 flex items-center justify-center gap-1 sm:mb-2 sm:gap-1.5">
-            <Clock size={13} className="shrink-0 text-rose-600 sm:size-4" />
+        {/* COUNTDOWN */}
+        <div
+          className="
+            flex min-w-0 items-center justify-end gap-1
+            lg:col-start-2 lg:justify-self-center lg:gap-2
+          "
+        >
+          <div className="flex shrink-0 items-center gap-1 whitespace-nowrap">
+            <Clock size={13} className="text-rose-600 sm:size-4" />
 
-            <span className="text-[10px] font-semibold text-slate-600 sm:text-sm">
-              {t("endingIn") || "Ending In"}
+            <span className="text-[9px] font-semibold text-slate-600 sm:text-sm">
+              {t("endingIn") || "Ending In"}:
             </span>
           </div>
 
-          <div className="flex items-center justify-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {timerItems.map((item) => (
               <div
                 key={item.label}
-                className="flex min-w-[38px] flex-col items-center rounded-lg border border-slate-200 bg-white px-1.5 py-1 shadow-sm sm:min-w-[52px] sm:rounded-xl sm:px-2.5 sm:py-2"
+                className="
+                  flex w-[34px] shrink-0 flex-col items-center
+                  rounded-md border border-slate-200
+                  bg-white px-0.5 py-1 shadow-sm
+                  sm:w-[52px] sm:rounded-xl sm:px-2.5 sm:py-2
+                "
               >
-                <span className="font-mono text-sm font-bold tabular-nums text-rose-600 sm:text-xl">
+                <span className="font-mono text-xs font-bold tabular-nums text-rose-600 sm:text-xl">
                   {String(item.value).padStart(2, "0")}
                 </span>
 
-                <span className="text-[8px] font-medium text-slate-500 sm:text-[10px]">
+                <span className="whitespace-nowrap text-[7px] font-medium text-slate-500 sm:text-[10px]">
                   {item.label}
                 </span>
               </div>
@@ -319,13 +334,13 @@ export default function FlashSaleSection() {
           </div>
         </div>
 
-        {/* RIGHT: INTENTIONALLY EMPTY */}
-        <div aria-hidden="true" />
+        {/* DESKTOP CENTER SPACER */}
+        <div className="hidden lg:block" />
       </div>
 
       {/* PRODUCTS SLIDER */}
       <div
-        className="group relative"
+        className="group relative mt-3 min-w-0 px-0 sm:mt-4"
         onMouseEnter={() => {
           isHoveredRef.current = true;
         }}
@@ -333,76 +348,98 @@ export default function FlashSaleSection() {
           isHoveredRef.current = false;
         }}
       >
-        {/* LEFT ARROW */}
-        {products.length > 0 && !loading && (
-          <button
-            type="button"
-            onClick={() => scroll("left")}
-            className="absolute -left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white hover:text-rose-600 active:scale-95 sm:-left-4 sm:h-11 sm:w-11"
-            aria-label={t("previousProducts") || "Previous"}
-          >
-            <ChevronLeft size={20} />
-          </button>
-        )}
+        <div className="relative min-w-0">
 
-        {/* RIGHT ARROW */}
-        {products.length > 0 && !loading && (
-          <button
-            type="button"
-            onClick={() => scroll("right")}
-            className="absolute -right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white hover:text-rose-600 active:scale-95 sm:-right-4 sm:h-11 sm:w-11"
-            aria-label={t("nextProducts") || "Next"}
-          >
-            <ChevronRight size={20} />
-          </button>
-        )}
-
-        {/* PRODUCT CARDS */}
-        <div
-          ref={sliderRef}
-          className="
-            grid grid-flow-col auto-cols-[calc((100%-12px)/2)]
-            gap-3 overflow-x-auto pb-3
-            snap-x snap-mandatory overscroll-x-contain
-            [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
-            sm:auto-cols-[calc((100%-24px)/3)]
-            md:auto-cols-[calc((100%-36px)/4)]
-            lg:auto-cols-[calc((100%-48px)/5)]
-            lg:gap-4
-          "
-        >
-          {loading ? (
-            <div className="col-span-full py-12 text-center text-sm text-slate-500">
-              {t("loadingFlashSale") || "Loading flash sale..."}
-            </div>
-          ) : products.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-sm text-slate-500">
-              {t("noFlashSale") || "No active flash sale products."}
-            </div>
-          ) : (
-            products.map((product) => (
-              <div
-                key={product.id}
-                data-product-card
-                className="min-w-0 snap-start"
-              >
-                <ProductCard
-                  id={product.id}
-                  slug={product.slug}
-                  title={product.title}
-                  image={product.image}
-                  price={product.price}
-                  rating={product.rating}
-                  reviewsCount={product.reviewsCount}
-                  moq={product.moq}
-                  isFlashSale={true}
-                  flashSalePrice={product.flashSalePrice}
-                  flashSaleStock={product.flashSaleStock}
-                  discountBadge={product.discountBadge}
-                />
-              </div>
-            ))
+          {/* LEFT ARROW */}
+          {products.length > 1 && !loading && (
+            <button
+              type="button"
+              onClick={() => scroll("left")}
+              className="
+                absolute left-0 top-1/2 z-10
+                flex h-10 w-5 -translate-y-1/2
+                items-center justify-center rounded-md
+                border border-slate-200 bg-white/95
+                text-slate-700 shadow-md backdrop-blur-sm
+                transition-all hover:bg-rose-50 hover:text-rose-600
+                disabled:cursor-not-allowed disabled:opacity-40
+                sm:h-12 sm:w-7
+              "
+              aria-label={t("previousProducts") || "Previous"}
+            >
+              <ChevronLeft size={18} />
+            </button>
           )}
+
+          {/* RIGHT ARROW */}
+          {products.length > 1 && !loading && (
+            <button
+              type="button"
+              onClick={() => scroll("right")}
+              className="
+                absolute right-0 top-1/2 z-10
+                flex h-10 w-5 -translate-y-1/2
+                items-center justify-center rounded-md
+                border border-slate-200 bg-white/95
+                text-slate-700 shadow-md backdrop-blur-sm
+                transition-all hover:bg-rose-50 hover:text-rose-600
+                disabled:cursor-not-allowed disabled:opacity-40
+                sm:h-12 sm:w-7
+              "
+              aria-label={t("nextProducts") || "Next"}
+            >
+              <ChevronRight size={18} />
+            </button>
+          )}
+
+          {/* PRODUCT CARDS */}
+          <div
+            ref={sliderRef}
+            className="
+              grid min-w-0 grid-flow-col
+              auto-cols-[calc((100%-12px)/2)]
+              gap-3 overflow-x-auto px-0 pb-3
+              snap-x snap-mandatory overscroll-x-contain
+              [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+              sm:auto-cols-[calc((100%-24px)/3)]
+              md:auto-cols-[calc((100%-36px)/4)]
+              lg:auto-cols-[calc((100%-48px)/5)]
+              lg:gap-4
+            "
+          >
+            {loading ? (
+              <div className="col-span-full py-12 text-center text-sm text-slate-500">
+                {t("loadingFlashSale") || "Loading flash sale..."}
+              </div>
+            ) : products.length === 0 ? (
+              <div className="col-span-full py-12 text-center text-sm text-slate-500">
+                {t("noFlashSale") || "No active flash sale products."}
+              </div>
+            ) : (
+              products.map((product) => (
+                <div
+                  key={product.id}
+                  data-product-card
+                  className="min-w-0 snap-start"
+                >
+                  <ProductCard
+                    id={product.id}
+                    slug={product.slug}
+                    title={product.title}
+                    image={product.image}
+                    price={product.price}
+                    rating={product.rating}
+                    reviewsCount={product.reviewsCount}
+                    moq={product.moq}
+                    isFlashSale={true}
+                    flashSalePrice={product.flashSalePrice}
+                    flashSaleStock={product.flashSaleStock}
+                    discountBadge={product.discountBadge}
+                  />
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 

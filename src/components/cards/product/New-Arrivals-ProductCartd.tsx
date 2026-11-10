@@ -1,10 +1,16 @@
+
 "use client";
+
 import { toast } from "react-toastify";
-
-
 import { useState } from "react";
 import Link from "next/link";
-import { Heart, Star, ShoppingCart, GitCompareArrows } from "lucide-react";
+import {
+  Heart,
+  Star,
+  ShoppingCart,
+  GitCompareArrows,
+} from "lucide-react";
+
 import { useCompare } from "@/context/CompareContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { createClient } from "../../../../lib/supabase-client";
@@ -41,23 +47,50 @@ export default function ProductCard({
   isFlashSale = false,
 }: ProductCardProps) {
   const { t } = useLanguage();
+
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
+
   const { isInCompare, toggleCompare } = useCompare();
+
   const inCompare = isInCompare(id);
+
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+
+  const supabase = createClient();
+
+  // Normalize slug for URL navigation.
+  const normalizedSlug = String(slug ?? "").trim();
+
+  // Encode slug to safely handle spaces and special characters.
+  const productSlug = encodeURIComponent(normalizedSlug);
+
+  const productUrl = `/products/${productSlug}`;
 
   const displayPrice =
     isFlashSale && flashSalePrice && flashSalePrice > 0
       ? flashSalePrice
       : price;
 
-  const handleToggleCompare = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const getAccessToken = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    return session?.access_token ?? null;
+  };
+
+  // Compare
+  const handleToggleCompare = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
     event.preventDefault();
     event.stopPropagation();
 
     toggleCompare({
       id,
-      slug,
+      slug: normalizedSlug,
       title,
       image,
       price: displayPrice,
@@ -68,21 +101,9 @@ export default function ProductCard({
     });
   };
 
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
-
-  const supabase = createClient();
-
-  const getAccessToken = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    return session?.access_token ?? null;
-  };
-
+  // Add to Cart
   const handleAddToCart = async (
-    event: React.MouseEvent<HTMLButtonElement>,
+    event: React.MouseEvent<HTMLButtonElement>
   ) => {
     event.preventDefault();
     event.stopPropagation();
@@ -115,7 +136,7 @@ export default function ProductCard({
 
       if (!response.ok) {
         throw new Error(
-          data?.message || "কার্টে পণ্য যোগ করতে সমস্যা হয়েছে",
+          data?.message || "কার্টে পণ্য যোগ করতে সমস্যা হয়েছে"
         );
       }
 
@@ -123,14 +144,17 @@ export default function ProductCard({
     } catch (error: unknown) {
       console.error("Add To Cart Error:", error);
 
-      toast.error(error instanceof Error ? error.message : "সমস্যা হয়েছে");
+      toast.error(
+        error instanceof Error ? error.message : "সমস্যা হয়েছে"
+      );
     } finally {
       setIsAddingToCart(false);
     }
   };
 
+  // Add to Wishlist
   const handleAddToWishlist = async (
-    event: React.MouseEvent<HTMLButtonElement>,
+    event: React.MouseEvent<HTMLButtonElement>
   ) => {
     event.preventDefault();
     event.stopPropagation();
@@ -162,7 +186,7 @@ export default function ProductCard({
 
       if (!response.ok) {
         throw new Error(
-          data?.message || "Wishlist-এ যোগ করতে সমস্যা হয়েছে",
+          data?.message || "Wishlist-এ যোগ করতে সমস্যা হয়েছে"
         );
       }
 
@@ -170,17 +194,19 @@ export default function ProductCard({
     } catch (error: unknown) {
       console.error("Add To Wishlist Error:", error);
 
-      toast.error(error instanceof Error ? error.message : "সমস্যা হয়েছে");
+      toast.error(
+        error instanceof Error ? error.message : "সমস্যা হয়েছে"
+      );
     } finally {
       setIsAddingToWishlist(false);
     }
   };
 
-
-
   return (
     <div className="group relative flex h-full min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-2 transition hover:border-amber-400 hover:shadow-md sm:rounded-2xl sm:p-3">
+
       {/* BADGE & WISHLIST */}
+
       <div className="mb-1.5 flex min-h-7 items-center justify-between gap-1">
         <div className="min-w-0">
           {isFlashSale && discountBadge ? (
@@ -198,8 +224,12 @@ export default function ProductCard({
           <button
             type="button"
             onClick={handleToggleCompare}
-            aria-label={inCompare ? t("removeFromCompare") : t("addToCompare")}
-            title={inCompare ? t("removeFromCompare") : t("addToCompare")}
+            aria-label={
+              inCompare ? t("removeFromCompare") : t("addToCompare")
+            }
+            title={
+              inCompare ? t("removeFromCompare") : t("addToCompare")
+            }
             className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition ${
               inCompare
                 ? "bg-amber-100 text-amber-700 shadow-xs"
@@ -222,7 +252,8 @@ export default function ProductCard({
       </div>
 
       {/* PRODUCT IMAGE & DETAILS */}
-      <Link href={`/products/${slug}`} className="block min-w-0">
+
+      <Link href={productUrl} className="block min-w-0">
         <div className="mb-2 flex h-20 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-50 sm:h-28 lg:h-32">
           {typeof image === "string" &&
           (image.startsWith("http") || image.startsWith("/")) ? (
@@ -244,13 +275,18 @@ export default function ProductCard({
         </h3>
 
         {/* RATING */}
+
         <div className="mt-1 flex min-w-0 items-center gap-0.5 text-amber-400">
           {[...Array(5)].map((_, index) => (
             <Star
               key={index}
               size={11}
               className="shrink-0"
-              fill={index < Math.round(rating) ? "currentColor" : "none"}
+              fill={
+                index < Math.round(rating)
+                  ? "currentColor"
+                  : "none"
+              }
             />
           ))}
 
@@ -261,6 +297,7 @@ export default function ProductCard({
       </Link>
 
       {/* PRICE & MOQ */}
+
       <div className="mt-2 border-t border-slate-100 pt-2 sm:mt-3 sm:pt-3">
         {isFlashSale && (
           <div className="mb-0.5 text-[9px] text-slate-400 line-through">
@@ -277,7 +314,9 @@ export default function ProductCard({
         </div>
 
         <div className="mt-0.5 flex min-w-0 items-center justify-between gap-1 text-[9px] sm:text-[10px]">
-          <span className="truncate text-slate-500">{t("moq")}: {moq}</span>
+          <span className="truncate text-slate-500">
+            {t("moq")}: {moq}
+          </span>
 
           {isFlashSale && (
             <span className="shrink-0 font-semibold text-rose-600">
@@ -287,6 +326,7 @@ export default function ProductCard({
         </div>
 
         {/* ADD TO CART */}
+
         <button
           type="button"
           onClick={handleAddToCart}
