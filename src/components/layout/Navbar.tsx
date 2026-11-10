@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -13,7 +14,6 @@ import {
   Tags,
   X,
   ArrowLeftRight,
-  Globe,
   Store,
   Menu,
 } from "lucide-react";
@@ -24,6 +24,7 @@ import CartSidebar from "../sidebar/CartSidebar";
 import { LanguageDropdown } from "../header/navbar/language-dropdown";
 import { AccountDropdown } from "./../header/navbar/account-dropdown";
 import { AllCategoriesMenu } from "../header/navbar/AllCategoriesMenu";
+
 import { useSiteSettings } from "../../context/SiteSettingsContext";
 import { useCompare } from "../../context/CompareContext";
 import { useLanguage } from "../../context/LanguageContext";
@@ -62,7 +63,9 @@ export default function MainNavbar() {
   const [categoryMenuMounted, setCategoryMenuMounted] = useState(false);
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
 
-  const categoryCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const categoryCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [authReady, setAuthReady] = useState(false);
@@ -73,16 +76,16 @@ export default function MainNavbar() {
 
   const [supabase] = useState(() => createClient());
 
-  // HYDRATION FIX
+  // HYDRATION
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
   const siteName = isHydrated
     ? settings.siteName || "Aladdin Global Marketplace"
-    : "Aladin Global";
+    : "Aladdin Global Marketplace";
 
-  const logoUrl = isHydrated ? settings.logoUrl : "";
+  const logoUrl = isHydrated ? settings.logoUrl || "" : "";
 
   const visibleCompareCount = isHydrated ? compareCount : 0;
 
@@ -182,6 +185,7 @@ export default function MainNavbar() {
         setCartItems([]);
         setCartOpen(false);
         setAccountOpen(false);
+        setAuthReady(true);
         return;
       }
 
@@ -416,7 +420,7 @@ export default function MainNavbar() {
 
       {/* DESKTOP HEADER */}
       <header className="sticky top-0 z-50 hidden border-b border-white/10 bg-[#24476B] xl:block">
-        {/* SECTION 1: LOGO, SEARCH AND ACTIONS */}
+        {/* SECTION 1 */}
         <div className="mx-auto flex min-h-[82px] max-w-[1500px] items-center gap-6 px-6 py-3">
           {/* LOGO */}
           <Link href="/" className="flex shrink-0 items-center gap-2">
@@ -542,12 +546,12 @@ export default function MainNavbar() {
 
             {/* LANGUAGE */}
             <div className="text-white">
-              <LanguageDropdown icon={<Globe size={20} />} />
+              <LanguageDropdown />
             </div>
           </div>
         </div>
 
-        {/* SECTION 2: NAVIGATION */}
+        {/* SECTION 2 */}
         <div className="border-t border-white/10">
           <nav className="mx-auto flex h-[55px] max-w-[1500px] items-center gap-8 px-6 py-2 text-sm font-semibold text-white">
             {/* ALL CATEGORIES */}
@@ -606,7 +610,6 @@ export default function MainNavbar() {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#24476B] px-3 py-5 text-white xl:hidden sm:px-5">
         {/* MOBILE TOP ROW */}
         <div className="flex items-center justify-between gap-2">
-          {/* HAMBURGER */}
           <button
             type="button"
             onClick={handleOpenMobileCategories}
@@ -693,7 +696,7 @@ export default function MainNavbar() {
 
             {/* LANGUAGE */}
             <div className="flex shrink-0 items-center text-white">
-              <LanguageDropdown icon={<Globe size={18} />} />
+              <LanguageDropdown />
             </div>
           </div>
         </div>
