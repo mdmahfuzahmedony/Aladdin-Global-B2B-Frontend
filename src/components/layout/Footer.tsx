@@ -9,7 +9,7 @@ export function Footer() {
   return (
     <footer className="border-t border-slate-200 bg-white text-slate-700">
       {/* Main Container - Reduced vertical padding for compact look */}
-      <div className="mx-auto w-full max-w-[1500px] px-4 py-8 sm:px-6 sm:py-10 lg:px-0 xl:px-0">
+      <div className="mx-auto w-full max-w-[1500px] px-2 sm:px-3 py-8 sm:py-10">
         
         {/* Main Footer Grid - Adjusted gap for less spacing */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-8 lg:grid-cols-[1.3fr_1fr_1fr_1.1fr] lg:gap-6 xl:gap-8">

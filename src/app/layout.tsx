@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Inter, Poppins } from "next/font/google";
@@ -6,8 +7,10 @@ import "./globals.css";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 import { SiteSettingsProvider } from "../context/SiteSettingsContext";
 import { CompareProvider } from "../context/CompareContext";
+import { WishlistProvider } from "../context/WishlistContext";
 import { LanguageProvider } from "../context/LanguageContext";
 
 const inter = Inter({
@@ -33,18 +36,24 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
+
   const savedLanguage = cookieStore.get("aladin_language")?.value;
   const initialLanguage = savedLanguage === "bn" ? "bn" : "en";
 
   return (
-    <html lang={initialLanguage === "bn" ? "bn" : "en"}>
+    <html
+      lang={initialLanguage}
+      suppressHydrationWarning
+    >
       <body
         className={`${inter.variable} ${poppins.variable} font-sans antialiased`}
       >
         <SiteSettingsProvider>
           <LanguageProvider initialLanguage={initialLanguage}>
             <CompareProvider>
-              {children}
+              <WishlistProvider>
+                {children}
+              </WishlistProvider>
 
               <ToastContainer
                 position="top-right"

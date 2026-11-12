@@ -259,7 +259,7 @@ export default function MainNavbar() {
     return () => window.clearInterval(interval);
   }, [topBanners.length]);
 
-  // CLOSE ACCOUNT ON OUTSIDE CLICK
+  // CLOSE ACCOUNT & CATEGORIES ON OUTSIDE CLICK
   useEffect(() => {
     const handleOutsideClick = (event: globalThis.MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -269,6 +269,10 @@ export default function MainNavbar() {
         !target.closest("[data-account-dropdown]")
       ) {
         setAccountOpen(false);
+      }
+
+      if (!target.closest("[data-category-area]")) {
+        setCategoryOpen(false);
       }
     };
 
@@ -318,12 +322,7 @@ export default function MainNavbar() {
     setCartOpen(false);
   };
 
-  const handleOpenCategories = () => {
-    setCategoryMenuMounted(true);
-    setCategoryOpen(true);
-    setAccountOpen(false);
-    setCartOpen(false);
-  };
+  const lastCategoryInteraction = useRef<number>(0);
 
   const handleCategoryMouseEnter = () => {
     if (categoryCloseTimer.current) {
@@ -341,9 +340,21 @@ export default function MainNavbar() {
     }
 
     categoryCloseTimer.current = setTimeout(() => {
+      // If user recently clicked inside the menu (like Show Less or More), don't close
+      if (Date.now() - lastCategoryInteraction.current < 1200) {
+        return;
+      }
+
       setCategoryOpen(false);
       categoryCloseTimer.current = null;
-    }, 140);
+    }, 280);
+  };
+
+  const handleToggleCategories = () => {
+    setCategoryMenuMounted(true);
+    setCategoryOpen((previous) => !previous);
+    setAccountOpen(false);
+    setCartOpen(false);
   };
 
   const handleOpenMobileCategories = () => {
@@ -421,7 +432,7 @@ export default function MainNavbar() {
       {/* DESKTOP HEADER */}
       <header className="sticky top-0 z-50 hidden border-b border-white/10 bg-[#24476B] xl:block">
         {/* SECTION 1 */}
-        <div className="mx-auto flex min-h-[82px] max-w-[1500px] items-center gap-6 px-6 py-3">
+        <div className="mx-auto flex min-h-[82px] max-w-[1500px] items-center gap-6 px-2 sm:px-3 py-3">
           {/* LOGO */}
           <Link href="/" className="flex shrink-0 items-center gap-2">
             {logoUrl ? (
@@ -553,39 +564,54 @@ export default function MainNavbar() {
 
         {/* SECTION 2 */}
         <div className="border-t border-white/10">
-          <nav className="mx-auto flex h-[55px] max-w-[1500px] items-center gap-8 px-6 py-2 text-sm font-semibold text-white">
+          <nav className="mx-auto flex h-[55px] max-w-[1500px] items-center gap-8 px-2 sm:px-3 py-2 text-sm font-semibold text-white">
             {/* ALL CATEGORIES */}
             <div
               className="relative flex h-full shrink-0 items-center"
+              data-category-area
               onMouseLeave={handleCategoryMouseLeave}
             >
               <button
                 type="button"
-                onClick={handleOpenCategories}
+                onClick={handleToggleCategories}
                 onMouseEnter={handleCategoryMouseEnter}
                 aria-expanded={categoryOpen}
                 className="flex h-full items-center gap-2 bg-[#D6A419] px-5 text-[#12233F] transition hover:bg-[#e2b62f]"
               >
                 <Tags size={17} />
                 {t("allCategories")}
-                <ChevronDown size={15} />
+                <ChevronDown
+                  size={15}
+                  className={`transition-transform duration-200 ${
+                    categoryOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
 
               {categoryMenuMounted && (
-                <div className="absolute left-0 top-full z-[90] w-fit max-w-[90vw]">
-                  <div
-                    className="overflow-hidden rounded-b-lg border border-slate-200 bg-white text-slate-800 shadow-xl transition-[opacity,transform] duration-150 ease-out"
-                    style={{
-                      opacity: categoryOpen ? 1 : 0,
-                      transform: categoryOpen
-                        ? "translateY(0)"
-                        : "translateY(-4px)",
-                      visibility: categoryOpen ? "visible" : "hidden",
-                    }}
-                    aria-hidden={!categoryOpen}
-                  >
+                <div
+                  className={`absolute left-0 top-full z-[90] w-fit max-w-[90vw] transition-[opacity,transform] duration-150 ease-out ${
+                    categoryOpen
+                      ? "pointer-events-auto opacity-100 translate-y-0 visible"
+                      : "pointer-events-none opacity-0 -translate-y-1 invisible"
+                  }`}
+                  onMouseEnter={() => {
+                    if (categoryOpen) {
+                      handleCategoryMouseEnter();
+                    }
+                  }}
+                  onMouseLeave={handleCategoryMouseLeave}
+                  onClick={() => {
+                    lastCategoryInteraction.current = Date.now();
+                  }}
+                  aria-hidden={!categoryOpen}
+                >
+                  <div className="overflow-hidden rounded-b-lg border border-slate-200 bg-white text-slate-800 shadow-xl">
                     <AllCategoriesMenu
                       onClose={() => setCategoryOpen(false)}
+                      onInteract={() => {
+                        lastCategoryInteraction.current = Date.now();
+                      }}
                     />
                   </div>
                 </div>
@@ -607,140 +633,142 @@ export default function MainNavbar() {
       </header>
 
       {/* MOBILE HEADER */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#24476B] px-3 py-5 text-white xl:hidden sm:px-5">
-        {/* MOBILE TOP ROW */}
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={handleOpenMobileCategories}
-            aria-label={t("openCategories")}
-            aria-expanded={mobileCategoriesOpen}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
-          >
-            <Menu size={23} />
-          </button>
-
-          {/* LOGO */}
-          <Link
-            href="/"
-            className="flex min-w-0 flex-1 items-center gap-1.5"
-          >
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt={siteName || "Logo"}
-                className="h-8 w-auto max-w-[130px] rounded-md object-contain"
-              />
-            ) : (
-              <>
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#12233F] text-[#D6A419]">
-                  <Store size={21} />
-                </div>
-
-                <div>
-                  <span className="block text-[16px] font-extrabold leading-tight text-white sm:text-[17px]">
-                    {siteName.split(" ")[0]}
-                  </span>
-
-                  <span className="block text-[9px] font-bold uppercase tracking-[1.5px] text-[#D6A419]">
-                    {siteName.split(" ").slice(1).join(" ") || "Global"}
-                  </span>
-                </div>
-              </>
-            )}
-          </Link>
-
-          <div className="flex shrink-0 flex-row-reverse items-center gap-0.5">
-            {/* CART */}
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#24476B] py-3.5 text-white xl:hidden">
+        <div className="mx-auto max-w-[1500px] px-2 sm:px-3">
+          {/* MOBILE TOP ROW */}
+          <div className="flex items-center justify-between gap-2">
             <button
               type="button"
-              onClick={handleOpenCart}
-              aria-label={t("openCart")}
-              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
-            >
-              <ShoppingCart size={21} />
-
-              {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D6A419] px-1 text-[9px] font-bold text-[#12233F]">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-
-            {/* ACCOUNT */}
-            <button
-              type="button"
-              data-account-area
-              onClick={handleAccountToggle}
-              aria-label={t("openAccount")}
-              aria-expanded={accountOpen}
+              onClick={handleOpenMobileCategories}
+              aria-label={t("openCategories")}
+              aria-expanded={mobileCategoriesOpen}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
             >
-              <User size={21} />
+              <Menu size={23} />
             </button>
 
-            {/* COMPARE */}
+            {/* LOGO */}
             <Link
-              href="/compare"
-              aria-label={t("compare")}
-              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
+              href="/"
+              className="flex min-w-0 flex-1 items-center gap-1.5"
             >
-              <ArrowLeftRight size={20} />
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={siteName || "Logo"}
+                  className="h-8 w-auto max-w-[130px] rounded-md object-contain"
+                />
+              ) : (
+                <>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#12233F] text-[#D6A419]">
+                    <Store size={21} />
+                  </div>
 
-              {visibleCompareCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D6A419] px-1 text-[9px] font-bold text-[#12233F]">
-                  {visibleCompareCount}
-                </span>
+                  <div>
+                    <span className="block text-[16px] font-extrabold leading-tight text-white sm:text-[17px]">
+                      {siteName.split(" ")[0]}
+                    </span>
+
+                    <span className="block text-[9px] font-bold uppercase tracking-[1.5px] text-[#D6A419]">
+                      {siteName.split(" ").slice(1).join(" ") || "Global"}
+                    </span>
+                  </div>
+                </>
               )}
             </Link>
 
-            {/* LANGUAGE */}
-            <div className="flex shrink-0 items-center text-white">
-              <LanguageDropdown />
+            <div className="flex shrink-0 flex-row-reverse items-center gap-0.5">
+              {/* CART */}
+              <button
+                type="button"
+                onClick={handleOpenCart}
+                aria-label={t("openCart")}
+                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
+              >
+                <ShoppingCart size={21} />
+
+                {cartCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D6A419] px-1 text-[9px] font-bold text-[#12233F]">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+
+              {/* ACCOUNT */}
+              <button
+                type="button"
+                data-account-area
+                onClick={handleAccountToggle}
+                aria-label={t("openAccount")}
+                aria-expanded={accountOpen}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
+              >
+                <User size={21} />
+              </button>
+
+              {/* COMPARE */}
+              <Link
+                href="/compare"
+                aria-label={t("compare")}
+                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
+              >
+                <ArrowLeftRight size={20} />
+
+                {visibleCompareCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D6A419] px-1 text-[9px] font-bold text-[#12233F]">
+                    {visibleCompareCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* LANGUAGE */}
+              <div className="flex shrink-0 items-center text-white">
+                <LanguageDropdown />
+              </div>
             </div>
           </div>
+
+          {/* MOBILE SEARCH */}
+          <form
+            onSubmit={handleSearch}
+            className="mt-4 flex h-10 w-full overflow-hidden rounded-lg border border-white/20 bg-white focus-within:border-[#D6A419]"
+          >
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={t("searchProductsPlaceholder")}
+              className="min-w-0 flex-1 bg-transparent px-3 text-xs text-slate-700 outline-none sm:text-sm"
+            />
+
+            <button
+              type="submit"
+              aria-label={t("searchProducts")}
+              className="flex w-10 shrink-0 items-center justify-center bg-[#D6A419] text-[#12233F] transition hover:bg-[#c69a12]"
+            >
+              <Search size={18} />
+            </button>
+          </form>
+
+          {/* MOBILE NAVIGATION */}
+          <nav className="mt-4 flex items-center justify-start gap-5 border-t border-white/10 px-2 pt-4 pb-2 text-xs font-semibold text-white sm:text-sm">
+            <Link
+              href="/"
+              className="flex shrink-0 items-center gap-1.5 transition hover:text-[#D6A419]"
+            >
+              <Home size={15} />
+              {t("home")}
+            </Link>
+
+            <Link
+              href="/products"
+              className="flex shrink-0 items-center gap-1.5 transition hover:text-[#D6A419]"
+            >
+              <Package size={15} />
+              {t("products")}
+            </Link>
+          </nav>
         </div>
-
-        {/* MOBILE SEARCH */}
-        <form
-          onSubmit={handleSearch}
-          className="mt-4 flex h-10 w-full overflow-hidden rounded-lg border border-white/20 bg-white focus-within:border-[#D6A419]"
-        >
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={t("searchProductsPlaceholder")}
-            className="min-w-0 flex-1 bg-transparent px-3 text-xs text-slate-700 outline-none sm:text-sm"
-          />
-
-          <button
-            type="submit"
-            aria-label={t("searchProducts")}
-            className="flex w-10 shrink-0 items-center justify-center bg-[#D6A419] text-[#12233F] transition hover:bg-[#c69a12]"
-          >
-            <Search size={18} />
-          </button>
-        </form>
-
-        {/* MOBILE NAVIGATION */}
-        <nav className="mt-4 flex items-center justify-start gap-5 border-t border-white/10 px-2 pt-4 pb-2 text-xs font-semibold text-white sm:text-sm">
-          <Link
-            href="/"
-            className="flex shrink-0 items-center gap-1.5 transition hover:text-[#D6A419]"
-          >
-            <Home size={15} />
-            {t("home")}
-          </Link>
-
-          <Link
-            href="/products"
-            className="flex shrink-0 items-center gap-1.5 transition hover:text-[#D6A419]"
-          >
-            <Package size={15} />
-            {t("products")}
-          </Link>
-        </nav>
       </header>
 
       {/* MOBILE CATEGORY DRAWER */}

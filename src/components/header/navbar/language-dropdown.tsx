@@ -1,17 +1,19 @@
+
 "use client";
 
-
 import { useEffect, useRef, useState } from "react";
-import { Globe2 } from "lucide-react";
+import { Globe } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export function LanguageDropdown() {
   const [open, setOpen] = useState(false);
   const [currency, setCurrency] = useState("BDT (৳)");
+
   const { language, setLanguage, t } = useLanguage();
 
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -39,23 +41,23 @@ export function LanguageDropdown() {
         aria-label={t("languageAndCurrency")}
         aria-expanded={open}
       >
-        <Globe2
+        <Globe
           size={22}
           strokeWidth={1.8}
           className="!text-white transition-colors group-hover:!text-[#D6A419]"
         />
 
-        {/* Desktop: language label */}
+        {/* Desktop Language Label */}
         <span className="mt-1 hidden whitespace-nowrap text-[11px] font-semibold !text-white transition-colors group-hover:!text-[#D6A419] xl:inline">
           {language === "en" ? "English" : "বাংলা"}
         </span>
-
       </button>
 
       {/* LANGUAGE & CURRENCY MENU */}
       {open && (
         <div className="absolute right-0 top-full mt-2 w-[260px] rounded-2xl border border-slate-200 bg-white p-4 text-[#12233F] shadow-2xl">
-          {/* LANGUAGE */}
+
+          {/* LANGUAGE SECTION */}
           <div>
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
               {t("language")}
@@ -94,7 +96,7 @@ export function LanguageDropdown() {
             </div>
           </div>
 
-          {/* CURRENCY */}
+          {/* CURRENCY SECTION */}
           <div className="mt-4">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
               {t("currency")}
@@ -132,6 +134,7 @@ export function LanguageDropdown() {
               </button>
             </div>
           </div>
+
         </div>
       )}
     </div>

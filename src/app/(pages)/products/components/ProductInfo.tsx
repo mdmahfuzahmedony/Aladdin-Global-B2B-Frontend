@@ -667,6 +667,18 @@ export default function ProductInfo({ product }: Props) {
 
       {/* 4. PRICING SECTION */}
       <div className="rounded-2xl border border-amber-200/70 bg-gradient-to-r from-amber-50/60 via-orange-50/30 to-amber-50/10 p-4">
+        {product.isFlashSale && (
+          <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-600 to-amber-600 px-3 py-1 text-xs font-bold text-white shadow-xs">
+            <Zap size={14} className="fill-white" />
+            <span>FLASH SALE DEAL</span>
+            {product.discountBadge && (
+              <span className="ml-1 rounded bg-white/20 px-1.5 py-0.2 text-[10px] font-extrabold uppercase">
+                {product.discountBadge}
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-wrap items-baseline gap-3">
           <span className="text-3xl font-extrabold text-[#12233f]">
             ৳{currentPrice.toLocaleString()}
@@ -690,6 +702,30 @@ export default function ProductInfo({ product }: Props) {
             </span>
           )}
         </div>
+
+        {/* Affiliate Commission Callout */}
+        {product.affiliateCommissionValue !== undefined &&
+          product.affiliateCommissionValue !== null &&
+          product.affiliateCommissionValue > 0 && (
+            <div className="mt-3 flex items-center justify-between flex-wrap gap-2 rounded-xl border border-amber-300/80 bg-white/95 px-3.5 py-2 text-xs shadow-xs">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#12233f] text-amber-400 font-black text-xs">
+                  ৳
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-700">Affiliate Commission: </span>
+                  <span className="font-extrabold text-emerald-600">
+                    {product.affiliateCommissionType === "PERCENTAGE"
+                      ? `${product.affiliateCommissionValue}% (৳${Math.round((currentPrice * product.affiliateCommissionValue) / 100)} per sale)`
+                      : `৳${product.affiliateCommissionValue} per sale`}
+                  </span>
+                </div>
+              </div>
+              <span className="rounded-md bg-amber-100/70 px-2 py-0.5 text-[11px] font-bold text-amber-800">
+                Earn by Promoting
+              </span>
+            </div>
+          )}
       </div>
 
       {/* 5. COLOR & SIZE VARIANTS */}

@@ -82,6 +82,13 @@ export type ProductDetails = {
   price: number;
   oldPrice?: number;
   discount?: number;
+  isFlashSale?: boolean;
+  flashSalePrice?: number;
+  flashSaleStock?: number;
+  flashSaleEndDate?: string | Date | null;
+  discountBadge?: string | null;
+  affiliateCommissionType?: "PERCENTAGE" | "FIXED" | null;
+  affiliateCommissionValue?: number | null;
 
   rating: number;
   reviewCount: number;

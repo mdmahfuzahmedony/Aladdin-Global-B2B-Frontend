@@ -23,11 +23,13 @@ type FlashProduct = {
   title: string;
   image: string;
   price: number;
+  regularPrice?: number;
   flashSalePrice: number;
   discountBadge: string;
   rating: number;
   reviewsCount: number;
   moq: string;
+  stockQuantity?: number;
   flashSaleStock: number;
 };
 
@@ -56,7 +58,7 @@ export default function FlashSaleSection() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const isHoveredRef = useRef(false);
 
-  // Manual scroll: একবারে ২টি কার্ড
+  // Manual scroll function: scrolls 2-3 cards smoothly
   const scroll = (direction: "left" | "right") => {
     const slider = sliderRef.current;
     if (!slider) return;
@@ -65,11 +67,12 @@ export default function FlashSaleSection() {
       "[data-product-card]"
     );
 
-    const gap = 12;
+    const gap = 16;
+    const cardsToScroll = typeof window !== "undefined" && window.innerWidth >= 1024 ? 3 : 2;
 
     const scrollAmount = card
-      ? (card.offsetWidth + gap) * 2
-      : slider.clientWidth * 0.8;
+      ? (card.offsetWidth + gap) * cardsToScroll
+      : slider.clientWidth * 0.75;
 
     slider.scrollBy({
       left: direction === "left" ? -scrollAmount : scrollAmount,
@@ -161,25 +164,41 @@ export default function FlashSaleSection() {
                 item.image ||
                 "📦";
 
+              const publishedReviews = Array.isArray(item.reviews)
+                ? item.reviews.filter((r: any) => r.status === "PUBLISHED")
+                : [];
+              const reviewsCount = publishedReviews.length;
+              const rating =
+                reviewsCount > 0
+                  ? publishedReviews.reduce(
+                      (sum: number, r: any) => sum + Number(r.rating || 0),
+                      0
+                    ) / reviewsCount
+                  : 0;
+
               return {
                 id: String(item.id),
                 slug: item.slug ?? String(item.id),
                 title: item.title ?? "Untitled product",
                 image: imageUrl,
                 price: originalPrice,
+                regularPrice: originalPrice,
                 flashSalePrice: flashPrice,
                 discountBadge:
                   item.flashSaleAttribute?.discountBadge ||
                   `${discountValue}% OFF`,
-                rating: 0,
-                reviewsCount: 0,
+                rating,
+                reviewsCount,
                 moq:
                   item.attributes?.moq !== undefined &&
                   item.attributes?.moq !== null
                     ? String(item.attributes.moq)
                     : "1 pcs",
+                stockQuantity: Number(item.stockQuantity ?? 0),
                 flashSaleStock: Number(
-                  item.flashSaleAttribute?.stockRemaining ?? 0
+                  item.flashSaleAttribute?.flashSaleStock ??
+                  item.flashSaleAttribute?.stockRemaining ??
+                  0
                 ),
               };
             }
@@ -286,146 +305,135 @@ export default function FlashSaleSection() {
   ];
 
   return (
-    <section className="relative mx-auto my-5 w-full min-w-0 max-w-[1500px] rounded-2xl border border-slate-100 bg-slate-50 px-3 py-5 shadow-sm sm:my-6 sm:rounded-3xl sm:px-6 sm:py-7 lg:px-8">
+    <section className="w-full py-8">
+      <div className="mx-auto w-full max-w-[1500px] px-2 sm:px-3">
 
-      {/* HEADER */}
-      <div
-        className="
-          mb-7 grid grid-cols-[minmax(0,1fr)_auto]
-          items-center gap-2
-          sm:mb-8
-          lg:grid-cols-3
-        "
-      >
-        {/* LEFT: FLASH SALE TITLE */}
-        <div className="flex min-w-0 items-center justify-start gap-2 sm:gap-3">
-          <div className="flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-lg bg-rose-600 text-white shadow-sm sm:h-10 sm:w-10 sm:rounded-xl">
-            <Zap size={18} className="sm:size-5" />
+        {/* HEADER */}
+        <div className="mb-5 grid grid-cols-1 items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
+          {/* LEFT: FLASH SALE TITLE */}
+          <div className="flex min-w-0 items-center justify-start gap-2 sm:gap-3">
+            <div className="flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-lg bg-rose-600 text-white shadow-sm sm:h-10 sm:w-10 sm:rounded-xl">
+              <Zap size={18} className="sm:size-5" />
+            </div>
+
+            <div className="min-w-0">
+              <h2 className="whitespace-nowrap text-xl font-bold text-slate-900 sm:text-2xl">
+                {t("flashSale") || "Flash Sale"}
+              </h2>
+
+              <p className="mt-1 text-xs text-slate-500 sm:text-sm">
+                {t("limitedDeals") ||
+                  "Grab these limited deals before they run out!"}
+              </p>
+            </div>
           </div>
 
-          <div className="min-w-0">
-            <h2 className="whitespace-nowrap font-[var(--font-poppins)] text-xs font-bold text-[#12233F] sm:text-xl">
-              {t("flashSale") || "Flash Sale"}
-            </h2>
+          {/* CENTER: COUNTDOWN */}
+          <div className="flex items-center justify-center gap-2 justify-self-center">
+            <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+              <Clock size={15} className="text-rose-600 sm:size-4" />
 
-            <p className="mt-0.5 hidden text-xs text-slate-500 sm:block sm:text-sm">
-              {t("limitedDeals") ||
-                "Grab these limited deals before they run out!"}
-            </p>
+              <span className="text-xs font-semibold text-slate-600 sm:text-sm">
+                {t("endingIn") || "Ending In"}:
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {timerItems.map((item) => (
+                <div
+                  key={item.label}
+                  className="
+                    flex w-[38px] shrink-0 flex-col items-center
+                    rounded-lg border border-slate-200
+                    bg-white px-1 py-1 shadow-xs
+                    sm:w-[52px] sm:rounded-xl sm:px-2.5 sm:py-2
+                  "
+                >
+                  <span className="font-mono text-xs font-bold tabular-nums text-rose-600 sm:text-xl">
+                    {String(item.value).padStart(2, "0")}
+                  </span>
+
+                  <span className="whitespace-nowrap text-[8px] font-medium text-slate-500 sm:text-[10px]">
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* RIGHT BALANCER */}
+          <div className="hidden md:block" />
         </div>
 
-        {/* COUNTDOWN */}
+        {/* PRODUCTS SLIDER WRAPPER */}
         <div
-          className="
-            flex min-w-0 items-center justify-end gap-1
-            lg:col-start-2 lg:justify-self-center lg:gap-2
-          "
+          className="group relative mt-3 min-w-0 px-0 sm:mt-4"
+          onMouseEnter={() => {
+            isHoveredRef.current = true;
+          }}
+          onMouseLeave={() => {
+            isHoveredRef.current = false;
+          }}
         >
-          <div className="flex shrink-0 items-center gap-1 whitespace-nowrap">
-            <Clock size={13} className="text-rose-600 sm:size-4" />
+          <div className="relative min-w-0">
 
-            <span className="text-[9px] font-semibold text-slate-600 sm:text-sm">
-              {t("endingIn") || "Ending In"}:
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1 sm:gap-2">
-            {timerItems.map((item) => (
-              <div
-                key={item.label}
+            {/* LEFT ARROW */}
+            {products.length > 1 && !loading && (
+              <button
+                type="button"
+                onClick={() => scroll("left")}
                 className="
-                  flex w-[34px] shrink-0 flex-col items-center
-                  rounded-md border border-slate-200
-                  bg-white px-0.5 py-1 shadow-sm
-                  sm:w-[52px] sm:rounded-xl sm:px-2.5 sm:py-2
+                  absolute -left-3 sm:-left-5 top-1/2 z-30
+                  flex h-9 w-6 -translate-y-1/2
+                  items-center justify-center rounded-md
+                  border border-slate-200 bg-white/95
+                  text-slate-700 shadow-md backdrop-blur-sm
+                  transition-all hover:bg-amber-50 hover:text-[#D6A419] hover:border-[#D6A419]/50
+                  active:scale-95
+                  sm:h-12 sm:w-8
                 "
+                aria-label={t("previousProducts") || "Previous"}
               >
-                <span className="font-mono text-xs font-bold tabular-nums text-rose-600 sm:text-xl">
-                  {String(item.value).padStart(2, "0")}
-                </span>
+                <ChevronLeft size={20} />
+              </button>
+            )}
 
-                <span className="whitespace-nowrap text-[7px] font-medium text-slate-500 sm:text-[10px]">
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+            {/* RIGHT ARROW */}
+            {products.length > 1 && !loading && (
+              <button
+                type="button"
+                onClick={() => scroll("right")}
+                className="
+                  absolute -right-3 sm:-right-5 top-1/2 z-30
+                  flex h-9 w-6 -translate-y-1/2
+                  items-center justify-center rounded-md
+                  border border-slate-200 bg-white/95
+                  text-slate-700 shadow-md backdrop-blur-sm
+                  transition-all hover:bg-amber-50 hover:text-[#D6A419] hover:border-[#D6A419]/50
+                  active:scale-95
+                  sm:h-12 sm:w-8
+                "
+                aria-label={t("nextProducts") || "Next"}
+              >
+                <ChevronRight size={20} />
+              </button>
+            )}
 
-        {/* DESKTOP SPACER */}
-        <div className="hidden lg:block" />
-      </div>
-
-      {/* PRODUCTS SLIDER WRAPPER */}
-      <div
-        className="group relative mt-3 min-w-0 px-4 sm:mt-4 sm:px-5"
-        onMouseEnter={() => {
-          isHoveredRef.current = true;
-        }}
-        onMouseLeave={() => {
-          isHoveredRef.current = false;
-        }}
-      >
-        <div className="relative min-w-0">
-
-          {/* LEFT ARROW */}
-          {products.length > 1 && !loading && (
-            <button
-              type="button"
-              onClick={() => scroll("left")}
+            {/* PRODUCT CARDS */}
+            <div
+              ref={sliderRef}
               className="
-                absolute -left-4 sm:-left-5 top-1/2 z-30
-                flex h-9 w-6 -translate-y-1/2
-                items-center justify-center rounded-md
-                border border-slate-200 bg-white/95
-                text-slate-700 shadow-md backdrop-blur-sm
-                transition-all hover:bg-rose-50 hover:text-rose-600
-                active:scale-95
-                sm:h-12 sm:w-8
+                grid min-w-0 grid-flow-col
+                auto-cols-[calc((100%-12px)/2)]
+                gap-3 overflow-x-auto px-0 pb-3
+                snap-x snap-mandatory overscroll-x-contain
+                [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+                sm:auto-cols-[calc((100%-24px)/3)]
+                md:auto-cols-[calc((100%-36px)/4)]
+                lg:auto-cols-[calc((100%-80px)/6)]
+                lg:gap-4
               "
-              aria-label={t("previousProducts") || "Previous"}
             >
-              <ChevronLeft size={20} />
-            </button>
-          )}
-
-          {/* RIGHT ARROW */}
-          {products.length > 1 && !loading && (
-            <button
-              type="button"
-              onClick={() => scroll("right")}
-              className="
-                absolute -right-4 sm:-right-5 top-1/2 z-30
-                flex h-9 w-6 -translate-y-1/2
-                items-center justify-center rounded-md
-                border border-slate-200 bg-white/95
-                text-slate-700 shadow-md backdrop-blur-sm
-                transition-all hover:bg-rose-50 hover:text-rose-600
-                active:scale-95
-                sm:h-12 sm:w-8
-              "
-              aria-label={t("nextProducts") || "Next"}
-            >
-              <ChevronRight size={20} />
-            </button>
-          )}
-
-          {/* PRODUCT CARDS */}
-          <div
-            ref={sliderRef}
-            className="
-              grid min-w-0 grid-flow-col
-              auto-cols-[calc((100%-12px)/2)]
-              gap-3 overflow-x-auto px-0 pb-3
-              snap-x snap-mandatory overscroll-x-contain
-              [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
-              sm:auto-cols-[calc((100%-24px)/3)]
-              md:auto-cols-[calc((100%-36px)/4)]
-              lg:auto-cols-[calc((100%-48px)/5)]
-              lg:gap-4
-            "
-          >
             {loading ? (
               <div className="col-span-full py-12 text-center text-sm text-slate-500">
                 {t("loadingFlashSale") || "Loading flash sale..."}
@@ -447,9 +455,11 @@ export default function FlashSaleSection() {
                     title={product.title}
                     image={product.image}
                     price={product.price}
+                    regularPrice={product.regularPrice}
                     rating={product.rating}
                     reviewsCount={product.reviewsCount}
                     moq={product.moq}
+                    stockQuantity={product.stockQuantity}
                     isFlashSale={true}
                     flashSalePrice={product.flashSalePrice}
                     flashSaleStock={product.flashSaleStock}
@@ -462,27 +472,20 @@ export default function FlashSaleSection() {
         </div>
       </div>
 
-      {/* VIEW ALL BUTTON */}
-      <div className="mt-5 flex justify-center">
-        <Link
-          href="/products?type=flash-sale"
-          className="
-            group inline-flex items-center gap-2
-            rounded-full bg-[#D6A419] px-5 py-2.5
-            text-xs font-semibold text-white shadow-sm
-            transition-all duration-200
-            hover:bg-[#c3940f] hover:shadow-md
-          "
-        >
-          {t("viewAll") || "View all Product"}
-
-          <ArrowRight
-            size={16}
-            className="transition-transform duration-200 group-hover:translate-x-1"
-          />
-        </Link>
+        {/* VIEW ALL BUTTON */}
+        <div className="mt-6 flex justify-center">
+          <Link
+            href="/products?type=flash-sale"
+            className="group inline-flex items-center gap-2 rounded-xl border border-[#D6A419] bg-[#D6A419] px-5 py-2 text-xs font-semibold text-white shadow-sm transition hover:border-[#c3940f] hover:bg-[#c3940f] sm:text-sm"
+          >
+            {t("viewAll") || "View all"}
+            <ArrowRight
+              size={16}
+              className="transition-transform duration-200 group-hover:translate-x-1"
+            />
+          </Link>
+        </div>
       </div>
-
     </section>
   );
 }

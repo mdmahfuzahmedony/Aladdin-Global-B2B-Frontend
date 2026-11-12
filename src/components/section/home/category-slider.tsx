@@ -130,7 +130,7 @@ export default function CategorySlider() {
 
   return (
     <section className="w-full min-w-0 bg-[#f5f6fa] py-5 sm:py-8">
-      <div className="mx-auto w-full min-w-0 max-w-[1500px] px-3 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full min-w-0 max-w-[1500px] px-2 sm:px-3">
 
         {/* HEADER */}
         <div className="mb-3 flex items-center justify-between gap-2 sm:mb-5">

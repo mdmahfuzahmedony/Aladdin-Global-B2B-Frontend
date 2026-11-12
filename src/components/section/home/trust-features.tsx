@@ -227,7 +227,7 @@ export default function TrustFeatures() {
 
   return (
     <section className="overflow-hidden bg-[#f5f6fa] py-6 sm:py-8">
-      <div className="mx-auto max-w-[1500px] px-3 sm:px-4">
+      <div className="mx-auto max-w-[1500px] px-2 sm:px-3">
         {/* Mobile: একসঙ্গে ২টি কার্ড */}
         <div className="overflow-hidden sm:hidden">
           <div

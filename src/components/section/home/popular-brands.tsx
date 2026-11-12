@@ -94,7 +94,7 @@ export default function PopularBrands() {
 
   return (
     <section className="w-full min-w-0 py-6 sm:py-8">
-      <div className="mx-auto w-full min-w-0 max-w-[1500px] px-3 sm:px-6 lg:px-0">
+      <div className="mx-auto w-full min-w-0 max-w-[1500px] px-2 sm:px-3">
         
         {/* HEADER */}
         <div className="mb-5">

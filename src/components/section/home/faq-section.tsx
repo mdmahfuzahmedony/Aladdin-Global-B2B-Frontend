@@ -57,7 +57,7 @@ export default function FAQSection() {
 
   return (
     <section className="w-full bg-white py-6 sm:py-8 lg:py-10">
-      <div className="mx-auto w-full max-w-[1500px] px-4 sm:px-6 lg:px-0">
+      <div className="mx-auto w-full max-w-[1500px] px-2 sm:px-3">
         {/* HEADER */}
         <div className="mb-4 flex items-center gap-2.5 sm:mb-5 sm:gap-3">
           

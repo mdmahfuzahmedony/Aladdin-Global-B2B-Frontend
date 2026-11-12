@@ -13,11 +13,18 @@ type Product = {
   title: string;
   image: string;
   price: number;
+  regularPrice?: number;
   rating: number;
   reviewsCount: number;
   moq: string;
+  stockQuantity?: number;
+  shortDescription?: string;
   isNew?: boolean;
+  badgeText?: string | null;
   discountBadge?: string | null;
+  flashSalePrice?: number;
+  flashSaleStock?: number;
+  isFlashSale?: boolean;
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
@@ -30,16 +37,18 @@ export default function FeaturedProducts() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const isHoveredRef = useRef(false);
 
-  // Manual scroll function
+  // Manual scroll function: scrolls 2-3 cards smoothly
   const scroll = (direction: "left" | "right") => {
     const slider = sliderRef.current;
     if (!slider) return;
 
     const card = slider.querySelector<HTMLElement>("[data-product-card]");
-    const gap = 12;
+    const gap = 16;
+    const cardsToScroll = typeof window !== "undefined" && window.innerWidth >= 1024 ? 3 : 2;
+
     const scrollAmount = card
-      ? (card.offsetWidth + gap) * 2
-      : slider.clientWidth * 0.8;
+      ? (card.offsetWidth + gap) * cardsToScroll
+      : slider.clientWidth * 0.75;
 
     slider.scrollBy({
       left: direction === "left" ? -scrollAmount : scrollAmount,
@@ -93,6 +102,31 @@ export default function FeaturedProducts() {
         }
 
         const mappedProducts: Product[] = result.data.map((item: any) => {
+          const publishedReviews = Array.isArray(item.reviews)
+            ? item.reviews.filter((r: any) => r.status === "PUBLISHED")
+            : [];
+          const reviewsCount = publishedReviews.length;
+          const rating =
+            reviewsCount > 0
+              ? publishedReviews.reduce(
+                  (sum: number, r: any) => sum + Number(r.rating || 0),
+                  0
+                ) / reviewsCount
+              : Number(item.topRatedAttribute?.averageRating ?? 0);
+
+          const regularPrice = Number(item.pricing?.customerRegularPrice ?? 0);
+          const salePrice = Number(item.pricing?.customerSalePrice ?? 0);
+          const flashSalePrice = Number(item.flashSaleAttribute?.flashSalePrice ?? 0);
+          const isFlashSale =
+            item.flashSaleAttribute !== null &&
+            item.flashSaleAttribute !== undefined &&
+            flashSalePrice > 0;
+          const price = isFlashSale
+            ? flashSalePrice
+            : salePrice > 0
+              ? salePrice
+              : regularPrice;
+
           const imageUrl =
             item.attributes?.colors?.[0]?.images?.[0] ||
             (Array.isArray(item.images) ? item.images[0] : null) ||
@@ -105,13 +139,12 @@ export default function FeaturedProducts() {
             slug: item.slug ?? String(item.id),
             title: item.title ?? "Untitled product",
             image: imageUrl,
-            price: Number(
-              item.pricing?.customerSalePrice ??
-                item.pricing?.customerRegularPrice ??
-                0
-            ),
-            rating: 0,
-            reviewsCount: 0,
+            price,
+            regularPrice,
+            rating,
+            reviewsCount,
+            stockQuantity: Number(item.stockQuantity ?? 0),
+            shortDescription: item.shortDescription ?? "",
             moq:
               item.attributes?.moq !== undefined &&
               item.attributes?.moq !== null
@@ -119,8 +152,12 @@ export default function FeaturedProducts() {
                 : item.moq
                 ? String(item.moq)
                 : "N/A",
+            badgeText: item.featuredAttribute?.featuredBadgeText || "FEATURED",
             discountBadge:
               item.featuredAttribute?.featuredBadgeText || "FEATURED",
+            flashSalePrice: flashSalePrice || undefined,
+            flashSaleStock: item.flashSaleAttribute?.flashSaleStock ?? undefined,
+            isFlashSale,
           };
         });
 
@@ -149,7 +186,7 @@ export default function FeaturedProducts() {
 
   return (
     <section className="w-full py-8">
-      <div className="mx-auto max-w-[1500px] px-3 sm:px-6 lg:px-0">
+      <div className="mx-auto max-w-[1500px] px-2 sm:px-3">
         
         {/* HEADER */}
         <div className="mb-5">
@@ -172,63 +209,83 @@ export default function FeaturedProducts() {
             isHoveredRef.current = false;
           }}
         >
-          {/* বামপাশের অ্যারো বাটন (কার্ডের মাঝামাঝি দুই পাশে) */}
-          {products.length > 0 && !loading && (
-            <button
-              type="button"
-              onClick={() => scroll("left")}
-              className="absolute -left-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white hover:text-[#D6A419] active:scale-95 sm:-left-4 sm:h-11 sm:w-11"
-              aria-label={t("previousProducts") || "Previous"}
-            >
-              <ChevronLeft size={20} />
-            </button>
-          )}
-
-          {/* ডানপাশের অ্যারো বাটন (কার্ডের মাঝামাঝি দুই পাশে) */}
-          {products.length > 0 && !loading && (
-            <button
-              type="button"
-              onClick={() => scroll("right")}
-              className="absolute -right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white hover:text-[#D6A419] active:scale-95 sm:-right-4 sm:h-11 sm:w-11"
-              aria-label={t("nextProducts") || "Next"}
-            >
-              <ChevronRight size={20} />
-            </button>
-          )}
-
-          {/* কার্ড কন্টেইনার */}
-          <div
-            ref={sliderRef}
-            className="
-              grid grid-flow-col auto-cols-[calc((100%-12px)/2)]
-              gap-3 overflow-x-auto pb-3
-              snap-x snap-mandatory overscroll-x-contain
-              [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
-              sm:auto-cols-[calc((100%-24px)/3)]
-              md:auto-cols-[calc((100%-36px)/4)]
-              lg:auto-cols-[calc((100%-48px)/5)]
-              lg:gap-4
-            "
-          >
-            {loading ? (
-              <div className="col-span-full py-12 text-center text-sm text-slate-500">
-                {t("loadingFeatured")}
-              </div>
-            ) : products.length === 0 ? (
-              <div className="col-span-full py-12 text-center text-sm text-slate-500">
-                {t("noFeatured")}
-              </div>
-            ) : (
-              products.map((product) => (
-                <div
-                  key={product.id}
-                  data-product-card
-                  className="min-w-0 snap-start"
-                >
-                  <ProductCard {...product} />
-                </div>
-              ))
+          <div className="relative min-w-0">
+            {/* LEFT ARROW */}
+            {products.length > 1 && !loading && (
+              <button
+                type="button"
+                onClick={() => scroll("left")}
+                className="
+                  absolute -left-3 sm:-left-5 top-1/2 z-30
+                  flex h-9 w-6 -translate-y-1/2
+                  items-center justify-center rounded-md
+                  border border-slate-200 bg-white/95
+                  text-slate-700 shadow-md backdrop-blur-sm
+                  transition-all hover:bg-amber-50 hover:text-[#D6A419] hover:border-[#D6A419]/50
+                  active:scale-95
+                  sm:h-12 sm:w-8
+                "
+                aria-label={t("previousProducts") || "Previous"}
+              >
+                <ChevronLeft size={20} />
+              </button>
             )}
+
+            {/* RIGHT ARROW */}
+            {products.length > 1 && !loading && (
+              <button
+                type="button"
+                onClick={() => scroll("right")}
+                className="
+                  absolute -right-3 sm:-right-5 top-1/2 z-30
+                  flex h-9 w-6 -translate-y-1/2
+                  items-center justify-center rounded-md
+                  border border-slate-200 bg-white/95
+                  text-slate-700 shadow-md backdrop-blur-sm
+                  transition-all hover:bg-amber-50 hover:text-[#D6A419] hover:border-[#D6A419]/50
+                  active:scale-95
+                  sm:h-12 sm:w-8
+                "
+                aria-label={t("nextProducts") || "Next"}
+              >
+                <ChevronRight size={20} />
+              </button>
+            )}
+
+            {/* কার্ড কন্টেইনার */}
+            <div
+              ref={sliderRef}
+              className="
+                grid grid-flow-col auto-cols-[calc((100%-12px)/2)]
+                gap-3 overflow-x-auto pb-3
+                snap-x snap-mandatory overscroll-x-contain
+                [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+                sm:auto-cols-[calc((100%-24px)/3)]
+                md:auto-cols-[calc((100%-36px)/4)]
+                lg:auto-cols-[calc((100%-80px)/6)]
+                lg:gap-4
+              "
+            >
+              {loading ? (
+                <div className="col-span-full py-12 text-center text-sm text-slate-500">
+                  {t("loadingFeatured")}
+                </div>
+              ) : products.length === 0 ? (
+                <div className="col-span-full py-12 text-center text-sm text-slate-500">
+                  {t("noFeatured")}
+                </div>
+              ) : (
+                products.map((product) => (
+                  <div
+                    key={product.id}
+                    data-product-card
+                    className="min-w-0 snap-start"
+                  >
+                    <ProductCard {...product} />
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 

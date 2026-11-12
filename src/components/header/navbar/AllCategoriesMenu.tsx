@@ -58,6 +58,7 @@ type CategoryNode = {
 type MegaMenuProps = {
   onClose: () => void;
   mode?: "desktop" | "mobile";
+  onInteract?: () => void;
 };
 
 // ======================================================
@@ -228,6 +229,7 @@ function getCategoryHref(category: CategoryNode) {
 export function AllCategoriesMenu({
   onClose,
   mode = "desktop",
+  onInteract,
 }: MegaMenuProps) {
   const isMobile = mode === "mobile";
   const { t } = useLanguage();
@@ -256,6 +258,8 @@ export function AllCategoriesMenu({
   // ====================================================
 
   const toggleShowAllChildren = (categoryId: string) => {
+    cancelCloseTimer();
+    onInteract?.();
     setShowAllChildrenIds((current) => {
       const next = new Set(current);
 
@@ -633,12 +637,8 @@ export function AllCategoriesMenu({
   // ====================================================
 
   return (
-    <div
-      className="relative w-fit min-w-0 max-w-[90vw] overflow-hidden bg-white"
-      onMouseEnter={cancelCloseTimer}
-      onMouseLeave={scheduleClose}
-    >
-      <div className="flex max-h-[520px] min-h-[320px] w-fit min-w-0 max-w-[90vw] overflow-hidden">
+    <div className="relative w-fit min-w-0 max-w-[90vw] overflow-hidden bg-white">
+      <div className="flex max-h-[520px] min-h-[380px] w-fit min-w-0 max-w-[90vw] overflow-hidden">
         <div className="flex w-fit min-w-0 overflow-x-hidden">
           {Array.from(
             { length: activePath.length + 1 },
@@ -665,7 +665,7 @@ export function AllCategoriesMenu({
                 <div
                   key={`category-column-${depth}`}
                   className={[
-                    "w-[240px] min-w-0 shrink-0 overflow-y-auto p-2",
+                    "w-[240px] min-w-0 min-h-[380px] shrink-0 overflow-y-auto p-2",
                     depth > 0
                       ? "border-l border-slate-100"
                       : "bg-white",
@@ -684,6 +684,10 @@ export function AllCategoriesMenu({
                           onClick={() =>
                             toggleShowAllChildren(parent.id)
                           }
+                          onMouseEnter={() => {
+                            cancelCloseTimer();
+                            setActivePath((current) => current.slice(0, depth));
+                          }}
                           className="w-full rounded-lg px-2 py-2 text-left text-xs font-semibold text-[#12233F] transition hover:bg-[#fffbf2] hover:text-[#D6A419]"
                         >
                           {showAll ? "Show Less" : "+ More"}

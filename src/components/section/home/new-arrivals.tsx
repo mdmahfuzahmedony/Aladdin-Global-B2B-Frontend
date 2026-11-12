@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -13,10 +14,18 @@ type Product = {
   title: string;
   image: string;
   price: number;
+  regularPrice?: number;
   rating: number;
   reviewsCount: number;
   moq: string;
+  stockQuantity?: number;
+  shortDescription?: string;
   isNew?: boolean;
+  badgeText?: string | null;
+  discountBadge?: string | null;
+  flashSalePrice?: number;
+  flashSaleStock?: number;
+  isFlashSale?: boolean;
 };
 
 const API_URL =
@@ -31,17 +40,18 @@ export default function NewArrivalsPage() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const isHoveredRef = useRef(false);
 
-  // Manual scroll: একবারে ২টি কার্ড
+  // Manual scroll function: scrolls 2-3 cards smoothly
   const scroll = (direction: "left" | "right") => {
     const slider = sliderRef.current;
     if (!slider) return;
 
     const card = slider.querySelector<HTMLElement>("[data-product-card]");
-    const gap = 12;
+    const gap = 16;
+    const cardsToScroll = typeof window !== "undefined" && window.innerWidth >= 1024 ? 3 : 2;
 
     const scrollAmount = card
-      ? (card.offsetWidth + gap) * 2
-      : slider.clientWidth * 0.8;
+      ? (card.offsetWidth + gap) * cardsToScroll
+      : slider.clientWidth * 0.75;
 
     slider.scrollBy({
       left: direction === "left" ? -scrollAmount : scrollAmount,
@@ -101,31 +111,88 @@ export default function NewArrivalsPage() {
           throw new Error("New arrivals data পাওয়া যায়নি।");
         }
 
-        const mappedProducts: Product[] = result.data.map(
-          (item: any) => ({
+        const mappedProducts: Product[] = result.data.map((item: any) => {
+          // Published reviews only
+          const publishedReviews = Array.isArray(item.reviews)
+            ? item.reviews.filter(
+                (review: any) => review.status === "PUBLISHED"
+              )
+            : [];
+
+          const reviewsCount = publishedReviews.length;
+
+          const rating =
+            reviewsCount > 0
+              ? publishedReviews.reduce(
+                  (total: number, review: any) =>
+                    total + Number(review.rating || 0),
+                  0
+                ) / reviewsCount
+              : 0;
+
+          // Pricing
+          const regularPrice = Number(
+            item.pricing?.customerRegularPrice ?? 0
+          );
+
+          const salePrice = Number(
+            item.pricing?.customerSalePrice ?? 0
+          );
+
+          const flashSalePrice = Number(
+            item.flashSaleAttribute?.flashSalePrice ?? 0
+          );
+
+          const isFlashSale =
+            item.flashSaleAttribute !== null &&
+            item.flashSaleAttribute !== undefined &&
+            flashSalePrice > 0;
+
+          const price =
+            isFlashSale
+              ? flashSalePrice
+              : salePrice > 0
+                ? salePrice
+                : regularPrice;
+
+          return {
             id: String(item.id),
-            slug: item.slug ?? "",
+            slug: item.slug || String(item.id),
             title: item.title ?? "Untitled product",
+
             image:
               item.attributes?.colors?.[0]?.images?.[0] ||
               (Array.isArray(item.images) ? item.images[0] : null) ||
               item.image ||
               "📦",
-            price: Number(
-              item.pricing?.customerSalePrice ??
-                item.pricing?.customerRegularPrice ??
-                0
-            ),
-            rating: 0,
-            reviewsCount: 0,
+
+            price,
+            regularPrice,
+            rating,
+            reviewsCount,
+            stockQuantity: Number(item.stockQuantity ?? 0),
+            shortDescription: item.shortDescription ?? "",
+
             moq:
               item.attributes?.moq !== undefined &&
               item.attributes?.moq !== null
                 ? String(item.attributes.moq)
                 : "N/A",
+
             isNew: true,
-          })
-        );
+            badgeText: item.newArrivalAttribute?.badgeText || "NEW",
+
+            discountBadge:
+              item.flashSaleAttribute?.discountBadge ?? null,
+
+            flashSalePrice: flashSalePrice || undefined,
+
+            flashSaleStock:
+              item.flashSaleAttribute?.flashSaleStock ?? undefined,
+
+            isFlashSale,
+          };
+        });
 
         if (!cancelled) {
           setProducts(mappedProducts);
@@ -152,7 +219,7 @@ export default function NewArrivalsPage() {
 
   return (
     <section className="w-full py-8">
-      <div className="mx-auto max-w-[1500px] px-4 sm:px-8 lg:px-6">
+      <div className="mx-auto max-w-[1500px] px-2 sm:px-3">
 
         {/* HEADER */}
         <div className="mb-5 flex items-center justify-between gap-2">
@@ -179,18 +246,18 @@ export default function NewArrivalsPage() {
         >
           <div className="relative min-w-0">
 
-            {/* LEFT ARROW (কার্ডের একদম বাম পাশে বাইরে) */}
+            {/* LEFT ARROW */}
             {products.length > 1 && !loading && (
               <button
                 type="button"
                 onClick={() => scroll("left")}
                 className="
-                  absolute -left-4 sm:-left-5 top-1/2 z-20
+                  absolute -left-3 sm:-left-5 top-1/2 z-30
                   flex h-9 w-6 -translate-y-1/2
                   items-center justify-center rounded-md
                   border border-slate-200 bg-white/95
                   text-slate-700 shadow-md backdrop-blur-sm
-                  transition-all hover:bg-rose-50 hover:text-rose-600
+                  transition-all hover:bg-amber-50 hover:text-[#D6A419] hover:border-[#D6A419]/50
                   active:scale-95
                   sm:h-12 sm:w-8
                 "
@@ -200,18 +267,18 @@ export default function NewArrivalsPage() {
               </button>
             )}
 
-            {/* RIGHT ARROW (কার্ডের একদম ডান পাশে লাল মার্ক করা জায়গায়) */}
+            {/* RIGHT ARROW */}
             {products.length > 1 && !loading && (
               <button
                 type="button"
                 onClick={() => scroll("right")}
                 className="
-                  absolute -right-4 sm:-right-5 top-1/2 z-20
+                  absolute -right-3 sm:-right-5 top-1/2 z-30
                   flex h-9 w-6 -translate-y-1/2
                   items-center justify-center rounded-md
                   border border-slate-200 bg-white/95
                   text-slate-700 shadow-md backdrop-blur-sm
-                  transition-all hover:bg-rose-50 hover:text-rose-600
+                  transition-all hover:bg-amber-50 hover:text-[#D6A419] hover:border-[#D6A419]/50
                   active:scale-95
                   sm:h-12 sm:w-8
                 "
@@ -226,13 +293,21 @@ export default function NewArrivalsPage() {
               ref={sliderRef}
               className="
                 grid min-w-0 grid-flow-col
+
                 auto-cols-[calc((100%-12px)/2)]
-                gap-3 overflow-x-auto px-0 pb-3
+                gap-3
+
+                overflow-x-auto px-0 pb-3
                 snap-x snap-mandatory overscroll-x-contain
-                [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+
+                [scrollbar-width:none]
+                [&::-webkit-scrollbar]:hidden
+
                 sm:auto-cols-[calc((100%-24px)/3)]
+
                 md:auto-cols-[calc((100%-36px)/4)]
-                lg:auto-cols-[calc((100%-48px)/5)]
+
+                lg:auto-cols-[calc((100%-80px)/6)]
                 lg:gap-4
               "
             >

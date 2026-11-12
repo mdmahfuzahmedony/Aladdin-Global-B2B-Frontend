@@ -212,7 +212,9 @@ export default function ProductDetailsPage({ params }: Props) {
           });
         }
 
-        // PRICING
+        // PRICING & FLASH SALE
+        const flashSalePrice = Number(item.flashSaleAttribute?.flashSalePrice ?? 0);
+        const isFlashSale = Boolean(item.flashSaleAttribute && flashSalePrice > 0);
 
         const regularPrice = Number(item.pricing?.customerRegularPrice ?? 0);
 
@@ -222,17 +224,22 @@ export default function ProductDetailsPage({ params }: Props) {
             ? Number(item.pricing.customerSalePrice)
             : undefined;
 
-        const currentPrice = salePrice ?? regularPrice;
+        // Current effective price: flash sale takes priority, then sale price, then regular price
+        const currentPrice = isFlashSale ? flashSalePrice : (salePrice ?? regularPrice);
+
+        // Effective regular/original price for strikethrough comparison
+        const effectiveRegularPrice =
+          regularPrice > currentPrice
+            ? regularPrice
+            : salePrice && salePrice > currentPrice
+              ? salePrice
+              : 0;
 
         let discount: number | undefined;
 
-        if (
-          salePrice !== undefined &&
-          regularPrice > 0 &&
-          salePrice < regularPrice
-        ) {
+        if (effectiveRegularPrice > currentPrice && effectiveRegularPrice > 0) {
           discount = Math.round(
-            ((regularPrice - salePrice) / regularPrice) * 100,
+            ((effectiveRegularPrice - currentPrice) / effectiveRegularPrice) * 100,
           );
         }
 
@@ -295,6 +302,20 @@ export default function ProductDetailsPage({ params }: Props) {
             value: String(item.stockQuantity ?? 0),
           },
         );
+
+        if (
+          item.pricing?.affiliateCommissionValue !== null &&
+          item.pricing?.affiliateCommissionValue !== undefined &&
+          Number(item.pricing.affiliateCommissionValue) > 0
+        ) {
+          specifications.push({
+            label: "Affiliate Commission",
+            value:
+              item.pricing.affiliateCommissionType === "PERCENTAGE"
+                ? `${item.pricing.affiliateCommissionValue}%`
+                : `৳${item.pricing.affiliateCommissionValue}`,
+          });
+        }
 
         if (
           item.attributes &&
@@ -526,11 +547,28 @@ export default function ProductDetailsPage({ params }: Props) {
           price: currentPrice,
 
           oldPrice:
-            salePrice !== undefined && salePrice < regularPrice
-              ? regularPrice
+            effectiveRegularPrice > currentPrice
+              ? effectiveRegularPrice
               : undefined,
 
           discount,
+          isFlashSale,
+          flashSalePrice: isFlashSale ? flashSalePrice : undefined,
+          flashSaleStock: isFlashSale
+            ? Number(item.flashSaleAttribute?.flashSaleStock ?? 0)
+            : undefined,
+          flashSaleEndDate: isFlashSale
+            ? item.flashSaleAttribute?.endTime
+            : undefined,
+          discountBadge: item.flashSaleAttribute?.discountBadge ?? null,
+
+          affiliateCommissionType:
+            (item.pricing?.affiliateCommissionType as "PERCENTAGE" | "FIXED" | null) ?? null,
+          affiliateCommissionValue:
+            item.pricing?.affiliateCommissionValue !== null &&
+            item.pricing?.affiliateCommissionValue !== undefined
+              ? Number(item.pricing.affiliateCommissionValue)
+              : null,
           rating,
           reviewCount,
 

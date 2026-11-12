@@ -13,10 +13,18 @@ type Product = {
   title: string;
   image: string;
   price: number;
+  regularPrice?: number;
   rating: number;
   reviewsCount: number;
   moq: string;
+  stockQuantity?: number;
+  shortDescription?: string;
   isNew?: boolean;
+  badgeText?: string | null;
+  discountBadge?: string | null;
+  flashSalePrice?: number;
+  flashSaleStock?: number;
+  isFlashSale?: boolean;
 };
 
 export default function JustForYouSection() {
@@ -24,7 +32,7 @@ export default function JustForYouSection() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [visibleCount, setVisibleCount] = useState(10); // Prothome 10-ti product dekhabe
+  const [visibleCount, setVisibleCount] = useState(12); // Initial 2 rows of 6 cards (12 products)
 
   useEffect(() => {
     let cancelled = false;
@@ -51,9 +59,30 @@ export default function JustForYouSection() {
         const apiProducts = Array.isArray(result.data) ? result.data : [];
 
         const mappedProducts: Product[] = apiProducts.map((item: any) => {
+          const publishedReviews = Array.isArray(item.reviews)
+            ? item.reviews.filter((r: any) => r.status === "PUBLISHED")
+            : [];
+          const reviewsCount = publishedReviews.length;
+          const rating =
+            reviewsCount > 0
+              ? publishedReviews.reduce(
+                  (sum: number, r: any) => sum + Number(r.rating || 0),
+                  0
+                ) / reviewsCount
+              : Number(item.topRatedAttribute?.averageRating ?? 0);
+
           const regularPrice = Number(item.pricing?.customerRegularPrice ?? 0);
           const salePrice = Number(item.pricing?.customerSalePrice ?? 0);
-          const price = salePrice > 0 ? salePrice : regularPrice;
+          const flashSalePrice = Number(item.flashSaleAttribute?.flashSalePrice ?? 0);
+          const isFlashSale =
+            item.flashSaleAttribute !== null &&
+            item.flashSaleAttribute !== undefined &&
+            flashSalePrice > 0;
+          const price = isFlashSale
+            ? flashSalePrice
+            : salePrice > 0
+              ? salePrice
+              : regularPrice;
 
           const imageUrl =
             item.attributes?.colors?.[0]?.images?.[0] ||
@@ -69,13 +98,22 @@ export default function JustForYouSection() {
             title: item.title ?? "Untitled product",
             image: imageUrl,
             price,
-            rating: Number(item.topRatedAttribute?.averageRating ?? 0),
-            reviewsCount: 0,
+            regularPrice,
+            rating,
+            reviewsCount,
+            stockQuantity: Number(item.stockQuantity ?? 0),
+            shortDescription: item.shortDescription ?? "",
             moq:
               item.attributes?.moq !== undefined &&
               item.attributes?.moq !== null
                 ? String(item.attributes.moq)
                 : "1 pcs",
+            isNew: Boolean(item.newArrivalAttribute),
+            badgeText: item.newArrivalAttribute ? "NEW" : null,
+            discountBadge: item.flashSaleAttribute?.discountBadge ?? null,
+            flashSalePrice: flashSalePrice || undefined,
+            flashSaleStock: item.flashSaleAttribute?.flashSaleStock ?? undefined,
+            isFlashSale,
           };
         });
 
@@ -109,12 +147,12 @@ export default function JustForYouSection() {
   const hasMore = visibleCount < products.length;
 
   const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + 5); // Load More-e chap dile aro 5-ti product add hobe
+    setVisibleCount((prev) => prev + 6); // Load More adds 1 row of 6 products
   };
 
   return (
     <section className="w-full py-8">
-      <div className="mx-auto max-w-[1500px] px-3 sm:px-6 lg:px-0">
+      <div className="mx-auto max-w-[1500px] px-2 sm:px-3">
         {/* ================= HEADER ================= */}
         <div className="mb-5">
           <h2 className="text-xl font-bold text-slate-900">{t("justForYou")}</h2>
@@ -125,8 +163,8 @@ export default function JustForYouSection() {
 
         {/* ================= LOADING ================= */}
         {loading && (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-5">
-            {Array.from({ length: 5 }).map((_, index) => (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-4">
+            {Array.from({ length: 6 }).map((_, index) => (
               <JustForYouSkeleton key={index} />
             ))}
           </div>
@@ -151,7 +189,7 @@ export default function JustForYouSection() {
         {/* ================= PRODUCTS ================= */}
         {!loading && !error && visibleProducts.length > 0 && (
           <>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-4">
               {visibleProducts.map((product) => (
                 <div key={product.id} className="min-w-0">
                   <ProductCard {...product} />
