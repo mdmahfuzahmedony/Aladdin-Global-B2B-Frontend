@@ -308,12 +308,12 @@ export default function FlashSaleSection() {
     <section className="w-full py-8">
       <div className="mx-auto w-full max-w-[1500px] px-2 sm:px-3">
 
-        {/* HEADER */}
-        <div className="mb-5 grid grid-cols-1 items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
+        {/* HEADER: ALWAYS 1 SINGLE LINE ON MOBILE AND LAPTOP */}
+        <div className="mb-4 sm:mb-5 flex items-center justify-between gap-2 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-4 flex-nowrap">
           {/* LEFT: FLASH SALE TITLE */}
-          <div className="flex min-w-0 items-center justify-start gap-2 sm:gap-3">
-            <div className="flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-lg bg-rose-600 text-white shadow-sm sm:h-10 sm:w-10 sm:rounded-xl">
-              <Zap size={18} className="sm:size-5" />
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
+            <div className="flex h-7 w-7 shrink-0 animate-pulse items-center justify-center rounded-lg bg-rose-600 text-white shadow-sm sm:h-10 sm:w-10 sm:rounded-xl">
+              <Zap size={16} className="sm:size-5" />
             </div>
 
             <div className="min-w-0">
@@ -321,39 +321,38 @@ export default function FlashSaleSection() {
                 {t("flashSale") || "Flash Sale"}
               </h2>
 
-              <p className="mt-1 text-xs text-slate-500 sm:text-sm">
+              <p className="hidden md:block mt-0.5 text-xs text-slate-500 sm:text-sm">
                 {t("limitedDeals") ||
                   "Grab these limited deals before they run out!"}
               </p>
             </div>
           </div>
 
-          {/* CENTER: COUNTDOWN */}
-          <div className="flex items-center justify-center gap-2 justify-self-center">
-            <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
-              <Clock size={15} className="text-rose-600 sm:size-4" />
+          {/* CENTER / RIGHT: COUNTDOWN (NEVER BREAKS INTO 2 LINES) */}
+          <div className="flex shrink-0 items-center justify-end md:justify-center gap-1 sm:gap-2 justify-self-center">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 whitespace-nowrap">
+              <Clock size={13} className="text-rose-600 sm:size-4" />
 
-              <span className="text-xs font-semibold text-slate-600 sm:text-sm">
+              <span className="text-[10px] font-semibold text-slate-600 sm:text-sm">
                 {t("endingIn") || "Ending In"}:
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1 sm:gap-1.5">
               {timerItems.map((item) => (
                 <div
                   key={item.label}
                   className="
-                    flex w-[38px] shrink-0 flex-col items-center
-                    rounded-lg border border-slate-200
-                    bg-white px-1 py-1 shadow-xs
-                    sm:w-[52px] sm:rounded-xl sm:px-2.5 sm:py-2
+                    flex w-[28px] xs:w-[32px] sm:w-[48px] shrink-0 flex-col items-center justify-center
+                    rounded-md sm:rounded-xl border border-slate-200
+                    bg-white py-0.5 sm:px-1.5 sm:py-1.5 shadow-2xs sm:shadow-xs
                   "
                 >
-                  <span className="font-mono text-xs font-bold tabular-nums text-rose-600 sm:text-xl">
+                  <span className="font-mono text-[10px] xs:text-xs sm:text-lg font-bold tabular-nums text-rose-600">
                     {String(item.value).padStart(2, "0")}
                   </span>
 
-                  <span className="whitespace-nowrap text-[8px] font-medium text-slate-500 sm:text-[10px]">
+                  <span className="whitespace-nowrap text-[7px] sm:text-[9px] font-medium text-slate-400">
                     {item.label}
                   </span>
                 </div>
@@ -361,7 +360,7 @@ export default function FlashSaleSection() {
             </div>
           </div>
 
-          {/* RIGHT BALANCER */}
+          {/* RIGHT BALANCER (FOR LAPTOP CENTER ALIGNMENT) */}
           <div className="hidden md:block" />
         </div>
 

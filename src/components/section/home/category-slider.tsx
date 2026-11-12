@@ -135,7 +135,7 @@ export default function CategorySlider() {
         {/* HEADER */}
         <div className="mb-3 flex items-center justify-between gap-2 sm:mb-5">
           <div className="min-w-0">
-            <h2 className="font-[var(--font-poppins)] text-base font-bold leading-tight text-[#12233F] sm:text-xl">
+            <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
               {t("shopByCategory")}
             </h2>
 

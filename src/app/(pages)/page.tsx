@@ -39,7 +39,7 @@ export default function HomePage() {
       <PopularBrands />
      
 
-      <FAQSection />
+      {/* <FAQSection /> */}
     </main>
   );
 }

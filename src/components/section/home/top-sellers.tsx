@@ -95,7 +95,7 @@ export default function BestSellersSection() {
               
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#12233F]">
+              <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
                 Best Sellers
               </h2>
               <p className="text-xs text-slate-500">

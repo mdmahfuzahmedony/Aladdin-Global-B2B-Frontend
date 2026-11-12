@@ -155,7 +155,7 @@ export default function JustForYouSection() {
       <div className="mx-auto max-w-[1500px] px-2 sm:px-3">
         {/* ================= HEADER ================= */}
         <div className="mb-5">
-          <h2 className="text-xl font-bold text-slate-900">{t("justForYou")}</h2>
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">{t("justForYou")}</h2>
           <p className="mt-1 text-xs text-slate-500 sm:text-sm">
             {t("basedOnInterests")}
           </p>
