@@ -107,9 +107,9 @@ export default function PopularBrands() {
           </p>
         </div>
 
-        {/* BRANDS SLIDER WITH FLOATING CONTROLS IN THE MIDDLE */}
+        {/* BRANDS SLIDER */}
         <div
-          className="group relative"
+          className="group relative flex min-w-0 items-center px-3 sm:px-4"
           onMouseEnter={() => {
             isHoveredRef.current = true;
           }}
@@ -117,27 +117,25 @@ export default function PopularBrands() {
             isHoveredRef.current = false;
           }}
         >
-          {/* বামপাশের অ্যারো বাটন (কার্ডের মাঝামাঝি দুই পাশে) */}
+          {/* বামপাশের অ্যারো বাটন */}
           {brands.length > 0 && !loading && (
             <button
               type="button"
               onClick={() => scroll("left")}
-              className="absolute -left-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white hover:text-[#D6A419] active:scale-95 sm:-left-4 sm:h-11 sm:w-11"
+              className="
+                absolute left-0 top-1/2 z-20
+                flex h-7 w-6 -translate-y-1/2
+                items-center justify-center rounded-md
+                border border-slate-200 bg-white
+                text-slate-600 shadow-md
+                transition hover:bg-slate-50
+                active:scale-95
+                sm:h-9 sm:w-8
+                lg:-left-1
+              "
               aria-label={t("scrollBrandsLeft") || "Previous Brands"}
             >
-              <ChevronLeft size={20} />
-            </button>
-          )}
-
-          {/* ডানপাশের অ্যারো বাটন (কার্ডের মাঝামাঝি দুই পাশে) */}
-          {brands.length > 0 && !loading && (
-            <button
-              type="button"
-              onClick={() => scroll("right")}
-              className="absolute -right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white hover:text-[#D6A419] active:scale-95 sm:-right-4 sm:h-11 sm:w-11"
-              aria-label={t("scrollBrandsRight") || "Next Brands"}
-            >
-              <ChevronRight size={20} />
+              <ChevronLeft size={18} />
             </button>
           )}
 
@@ -146,7 +144,7 @@ export default function PopularBrands() {
             ref={scrollContainerRef}
             className="
               flex w-full min-w-0
-              gap-2 sm:gap-4 lg:gap-6
+              gap-1.5 sm:gap-3 lg:gap-4
               overflow-x-auto overflow-y-hidden
               scroll-smooth
               pb-2 pt-1
@@ -158,11 +156,16 @@ export default function PopularBrands() {
             "
           >
             {loading ? (
-              <div className="flex w-full gap-2 sm:gap-4 lg:gap-6">
+              <div className="flex w-full gap-1.5 sm:gap-3">
                 {[1, 2, 3, 4, 5, 6].map((item) => (
                   <div
                     key={item}
-                    className="h-20 w-[calc((100%-24px)/4)] shrink-0 animate-pulse rounded-xl bg-slate-100 sm:h-28 sm:w-[150px]"
+                    className="
+                      h-[100px] w-[calc((100%-18px)/4)]
+                      shrink-0 animate-pulse rounded-full bg-slate-100
+                      sm:h-[150px] sm:w-[110px]
+                      lg:w-[125px]
+                    "
                   />
                 ))}
               </div>
@@ -175,13 +178,35 @@ export default function PopularBrands() {
                 <div
                   key={brand.id}
                   data-brand-card
-                  className="w-[calc((100%-24px)/4)] shrink-0 snap-start sm:w-[150px] md:w-[160px] lg:w-[170px]"
+                  className="w-[calc((100%-18px)/4)] shrink-0 snap-start sm:w-[110px] lg:w-[125px]"
                 >
                   <BrandCard brand={brand} />
                 </div>
               ))
             )}
           </div>
+
+          {/* ডানপাশের অ্যারো বাটন */}
+          {brands.length > 0 && !loading && (
+            <button
+              type="button"
+              onClick={() => scroll("right")}
+              className="
+                absolute right-0 top-1/2 z-20
+                flex h-7 w-6 -translate-y-1/2
+                items-center justify-center rounded-md
+                border border-slate-200 bg-white
+                text-slate-600 shadow-md
+                transition hover:bg-slate-50
+                active:scale-95
+                sm:h-9 sm:w-8
+                lg:-right-1
+              "
+              aria-label={t("scrollBrandsRight") || "Next Brands"}
+            >
+              <ChevronRight size={18} />
+            </button>
+          )}
         </div>
 
         {/* BOTTOM: VIEW ALL BUTTON */}
