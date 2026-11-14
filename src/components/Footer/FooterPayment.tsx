@@ -1,8 +1,5 @@
-const paymentMethods = [
-  "Cash on Delivery",
-  // "bKash",
-  // "Nagad",
-];
+
+import { Truck } from "lucide-react";
 
 export function FooterPayment() {
   return (
@@ -11,15 +8,19 @@ export function FooterPayment() {
         Payment Options:
       </h4>
 
-      <div className="flex flex-wrap items-center gap-1.5">
-        {paymentMethods.map((method) => (
-          <span
-            key={method}
-            className="rounded border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-2xs"
-          >
-            {method}
-          </span>
-        ))}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+          <Truck size={22} className="text-[#12233F]" />
+
+          <div>
+            <p className="text-xs font-bold text-black">
+              Cash on Delivery
+            </p>
+            <p className="text-[10px] text-slate-500">
+              Pay when you receive
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

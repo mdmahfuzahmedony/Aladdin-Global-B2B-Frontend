@@ -697,8 +697,9 @@ export default function ProductEditForm({
                 unitsSold: hasValue(topSeller.unitsSold)
                   ? Number(topSeller.unitsSold)
                   : 0,
-                salesBadge: String(topSeller.salesBadge ?? "").trim() || null,
-                isExpressEligible: topSeller.isExpressEligible,
+                salesBadge:
+                  String(topSeller.salesBadge ?? "").trim() || "Top Seller",
+                isExpressEligible: Boolean(topSeller.isExpressEligible),
               }
             : null,
           topRated: isPlacementSelected("TOP_RATED")

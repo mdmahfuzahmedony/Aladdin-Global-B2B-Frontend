@@ -602,17 +602,12 @@ export default function AddProductPage() {
     // -----------------------------------------------------
 
     if (isPlacementSelected("TOP_SELLER")) {
-      if (!hasValue(topSeller.unitsSold)) {
-        newErrors.push("Top Seller units sold is required.");
-      } else if (
-        !Number.isFinite(Number(topSeller.unitsSold)) ||
-        Number(topSeller.unitsSold) < 0
+      if (
+        hasValue(topSeller.unitsSold) &&
+        (!Number.isFinite(Number(topSeller.unitsSold)) ||
+          Number(topSeller.unitsSold) < 0)
       ) {
         newErrors.push("Top Seller units sold cannot be negative.");
-      }
-
-      if (!hasValue(topSeller.salesBadge)) {
-        newErrors.push("Top Seller sales badge is required.");
       }
     }
 
@@ -621,21 +616,21 @@ export default function AddProductPage() {
     // -----------------------------------------------------
 
     if (isPlacementSelected("TOP_RATED")) {
-      if (!hasValue(topRated.averageRating)) {
-        newErrors.push("Top Rated average rating is required.");
-      } else if (
-        Number(topRated.averageRating) < 0 ||
-        Number(topRated.averageRating) > 5
+      if (
+        hasValue(topRated.averageRating) &&
+        (!Number.isFinite(Number(topRated.averageRating)) ||
+          Number(topRated.averageRating) < 0 ||
+          Number(topRated.averageRating) > 5)
       ) {
         newErrors.push("Top Rated average rating must be between 0 and 5.");
       }
 
-      if (!hasValue(topRated.totalReviews)) {
-        newErrors.push("Top Rated total reviews is required.");
-      }
-
-      if (!hasValue(topRated.reviewSnippet)) {
-        newErrors.push("Top Rated review snippet is required.");
+      if (
+        hasValue(topRated.totalReviews) &&
+        (!Number.isFinite(Number(topRated.totalReviews)) ||
+          Number(topRated.totalReviews) < 0)
+      ) {
+        newErrors.push("Top Rated total reviews cannot be negative.");
       }
     }
 
@@ -803,8 +798,9 @@ export default function AddProductPage() {
               unitsSold: hasValue(topSeller.unitsSold)
                 ? Number(topSeller.unitsSold)
                 : 0,
-              salesBadge: String(topSeller.salesBadge ?? "").trim() || null,
-              isExpressEligible: topSeller.isExpressEligible,
+              salesBadge:
+                String(topSeller.salesBadge ?? "").trim() || "Top Seller",
+              isExpressEligible: Boolean(topSeller.isExpressEligible),
             }
           : null,
 

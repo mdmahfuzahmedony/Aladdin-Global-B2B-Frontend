@@ -26,7 +26,7 @@ export default function TopSellerForm({
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700">
-            Sales Badge
+            Sales Badge (Optional)
           </label>
 
           <input
@@ -38,12 +38,32 @@ export default function TopSellerForm({
                 salesBadge: e.target.value,
               })
             }
-            placeholder="Hot Seller"
+            placeholder="e.g. Hot Seller, Best Choice"
             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-slate-900"
           />
         </div>
 
-        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Units Sold (Optional)
+          </label>
+
+          <input
+            type="number"
+            min="0"
+            value={value.unitsSold}
+            onChange={(e) =>
+              onChange({
+                ...value,
+                unitsSold: e.target.value,
+              })
+            }
+            placeholder="0"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-slate-900"
+          />
+        </div>
+
+        <label className="md:col-span-2 flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
           <input
             type="checkbox"
             checked={value.isExpressEligible}
