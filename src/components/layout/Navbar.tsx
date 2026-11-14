@@ -424,13 +424,15 @@ export default function MainNavbar() {
 
   return (
     <>
-      {/* TOP PROMO BANNER */}
-      <div className="w-full max-w-none px-0 pt-0 pb-2 sm:px-2 lg:px-0 lg:pb-0">
-        {bannerContent}
-      </div>
+      {/* FIXED / STICKY HEADER & TOP BANNER WRAPPER */}
+      <div className="sticky top-0 z-50 w-full shadow-xs">
+        {/* TOP PROMO BANNER */}
+        <div className="w-full max-w-none px-0 py-0">
+          {bannerContent}
+        </div>
 
-      {/* DESKTOP HEADER */}
-      <header className="sticky top-0 z-50 hidden border-b border-white/10 bg-[#24476B] xl:block">
+        {/* DESKTOP HEADER */}
+        <header className="hidden border-b border-white/10 bg-[#24476B] xl:block">
         {/* SECTION 1 */}
         <div className="mx-auto flex min-h-[82px] max-w-[1500px] items-center gap-6 px-2 sm:px-3 py-3">
           {/* LOGO */}
@@ -633,7 +635,7 @@ export default function MainNavbar() {
       </header>
 
       {/* MOBILE HEADER */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#24476B] py-3.5 text-white xl:hidden">
+      <header className="border-b border-white/10 bg-[#24476B] py-3.5 text-white xl:hidden">
         <div className="mx-auto max-w-[1500px] px-2 sm:px-3">
           {/* MOBILE TOP ROW */}
           <div className="flex items-center justify-between gap-2">
@@ -770,8 +772,9 @@ export default function MainNavbar() {
           </nav>
         </div>
       </header>
+    </div>
 
-      {/* MOBILE CATEGORY DRAWER */}
+    {/* MOBILE CATEGORY DRAWER */}
       {mobileCategoriesOpen && (
         <div className="fixed inset-0 z-[100] xl:hidden">
           <button
