@@ -204,9 +204,22 @@ export default function ProductTabs({ product }: Props) {
               Product Description
             </h3>
 
-            <div className="prose prose-sm max-w-none text-slate-600 leading-relaxed whitespace-pre-line text-xs sm:text-sm">
-              {product.description || "No description available for this product."}
-            </div>
+            {product.description ? (
+              /<[a-z][\s\S]*>/i.test(product.description) ? (
+                <div
+                  className="product-description-content text-slate-700 text-xs sm:text-sm leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                />
+              ) : (
+                <div className="product-description-content text-slate-700 text-xs sm:text-sm leading-relaxed whitespace-pre-line">
+                  {product.description}
+                </div>
+              )
+            ) : (
+              <p className="text-xs sm:text-sm text-slate-400 italic">
+                No description available for this product.
+              </p>
+            )}
           </div>
         )}
 
@@ -531,6 +544,119 @@ export default function ProductTabs({ product }: Props) {
           </div>
         )}
       </div>
+
+      <style jsx global>{`
+        .product-description-content h1 {
+          font-size: 1.35rem;
+          font-weight: 700;
+          color: #0f172a;
+          margin-top: 1.25rem;
+          margin-bottom: 0.5rem;
+          line-height: 1.3;
+        }
+        .product-description-content h2 {
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: #0f172a;
+          margin-top: 1.25rem;
+          margin-bottom: 0.5rem;
+          line-height: 1.35;
+        }
+        .product-description-content h3 {
+          font-size: 1.05rem;
+          font-weight: 700;
+          color: #0f172a;
+          margin-top: 1rem;
+          margin-bottom: 0.35rem;
+          line-height: 1.4;
+        }
+        .product-description-content h4 {
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: #0f172a;
+          margin-top: 0.75rem;
+          margin-bottom: 0.25rem;
+        }
+        .product-description-content p {
+          margin-top: 0.25rem;
+          margin-bottom: 0.65rem;
+          line-height: 1.7;
+          color: #334155;
+        }
+        .product-description-content ul {
+          list-style-type: disc !important;
+          padding-left: 1.5rem !important;
+          margin-top: 0.5rem !important;
+          margin-bottom: 1rem !important;
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+        .product-description-content ol {
+          list-style-type: decimal !important;
+          padding-left: 1.5rem !important;
+          margin-top: 0.5rem !important;
+          margin-bottom: 1rem !important;
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+        .product-description-content li {
+          line-height: 1.6;
+          color: #334155;
+        }
+        .product-description-content li p {
+          margin: 0 !important;
+          display: inline;
+        }
+        .product-description-content strong {
+          font-weight: 700;
+          color: #0f172a;
+        }
+        .product-description-content em {
+          font-style: italic;
+        }
+        .product-description-content blockquote {
+          border-left: 3px solid #f59e0b;
+          padding: 0.5rem 1rem;
+          margin: 1rem 0;
+          font-style: italic;
+          color: #475569;
+          background: #fffbeb;
+          border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .product-description-content a {
+          color: #2563eb;
+          text-decoration: underline;
+          font-weight: 500;
+        }
+        .product-description-content hr {
+          border: 0;
+          border-top: 1px solid #e2e8f0;
+          margin: 1.25rem 0;
+        }
+        .product-description-content img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 0.5rem;
+          margin: 1rem 0;
+        }
+        .product-description-content table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 1rem 0;
+        }
+        .product-description-content th,
+        .product-description-content td {
+          border: 1px solid #e2e8f0;
+          padding: 0.5rem 0.75rem;
+          text-align: left;
+        }
+        .product-description-content th {
+          background-color: #f8fafc;
+          font-weight: 700;
+        }
+      `}</style>
     </section>
   );
 }

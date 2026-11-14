@@ -13,7 +13,7 @@ import {
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
 import { useLanguage } from "@/context/LanguageContext";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 const PRODUCTS_PER_PAGE = 16;
 

@@ -587,11 +587,18 @@ export default function ProductDetailsSidebar({
             </h4>
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-600">
-                {product.description ||
-                  product.shortDescription ||
-                  "এই প্রোডাক্টের বিবরণ দেওয়া নেই।"}
-              </p>
+              {product.description && /<[a-z][\s\S]*>/i.test(product.description) ? (
+                <div
+                  className="prose prose-sm max-w-none text-sm leading-6 text-slate-600 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_strong]:font-bold [&_strong]:text-slate-900"
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                />
+              ) : (
+                <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-600">
+                  {product.description ||
+                    product.shortDescription ||
+                    "এই প্রোডাক্টের বিবরণ দেওয়া নেই।"}
+                </p>
+              )}
             </div>
           </section>
 

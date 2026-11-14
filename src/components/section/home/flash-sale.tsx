@@ -15,7 +15,7 @@ import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
 import { useLanguage } from "@/context/LanguageContext";
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 type FlashProduct = {
   id: string;
@@ -58,7 +58,7 @@ export default function FlashSaleSection() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const isHoveredRef = useRef(false);
 
-  // Manual scroll function: scrolls 2-3 cards smoothly
+  // Manual scroll function: scrolls 2-3 cards smoothly, wraps around if at edges
   const scroll = (direction: "left" | "right") => {
     const slider = sliderRef.current;
     if (!slider) return;
@@ -74,10 +74,19 @@ export default function FlashSaleSection() {
       ? (card.offsetWidth + gap) * cardsToScroll
       : slider.clientWidth * 0.75;
 
-    slider.scrollBy({
-      left: direction === "left" ? -scrollAmount : scrollAmount,
-      behavior: "smooth",
-    });
+    const isAtEnd =
+      slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 10;
+
+    if (direction === "right" && isAtEnd) {
+      slider.scrollTo({ left: 0, behavior: "smooth" });
+    } else if (direction === "left" && slider.scrollLeft <= 5) {
+      slider.scrollTo({ left: slider.scrollWidth, behavior: "smooth" });
+    } else {
+      slider.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
   };
 
   // Auto slider
@@ -377,7 +386,7 @@ export default function FlashSaleSection() {
           <div className="relative min-w-0">
 
             {/* LEFT ARROW */}
-            {products.length > 1 && !loading && (
+            {products.length > 0 && !loading && (
               <button
                 type="button"
                 onClick={() => scroll("left")}
@@ -398,7 +407,7 @@ export default function FlashSaleSection() {
             )}
 
             {/* RIGHT ARROW */}
-            {products.length > 1 && !loading && (
+            {products.length > 0 && !loading && (
               <button
                 type="button"
                 onClick={() => scroll("right")}
@@ -426,6 +435,7 @@ export default function FlashSaleSection() {
                 auto-cols-[calc((100%-12px)/2)]
                 gap-3 overflow-x-auto px-0 pb-3
                 snap-x snap-mandatory overscroll-x-contain
+                scroll-smooth touch-pan-x
                 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
                 sm:auto-cols-[calc((100%-24px)/3)]
                 md:auto-cols-[calc((100%-36px)/4)]

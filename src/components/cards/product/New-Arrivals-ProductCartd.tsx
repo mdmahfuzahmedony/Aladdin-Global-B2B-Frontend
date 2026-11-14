@@ -67,14 +67,21 @@ export default function ProductCard({
   const inWishlist = isInWishlist(id);
 
   const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
   const supabase = createClient();
 
   // Ensure slug is never empty - fallback to id if slug is missing
   const rawIdentifier = (slug && String(slug).trim()) || (id && String(id).trim()) || "";
-  const productSlug = encodeURIComponent(rawIdentifier);
-  const productUrl = productSlug ? `/products/${productSlug}` : "#";
+  let cleanSlug = rawIdentifier;
+  try {
+    while (cleanSlug.includes("%")) {
+      const decoded = decodeURIComponent(cleanSlug);
+      if (decoded === cleanSlug) break;
+      cleanSlug = decoded;
+    }
+  } catch {}
+  const productUrl = cleanSlug ? `/products/${cleanSlug}` : "#";
 
   const displayPrice =
     isFlashSale && flashSalePrice && flashSalePrice > 0

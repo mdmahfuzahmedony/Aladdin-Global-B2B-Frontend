@@ -10,7 +10,7 @@ import BrandCard, {
 import { useLanguage } from "@/context/LanguageContext";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 export default function PopularBrands() {
   const { t } = useLanguage();

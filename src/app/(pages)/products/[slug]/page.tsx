@@ -40,7 +40,15 @@ type CustomerLocationResponse = {
 const supabase = createClient();
 
 export default function ProductDetailsPage({ params }: Props) {
-  const { slug } = React.use(params);
+  const rawParams = React.use(params);
+  let slug = String(rawParams.slug ?? "").trim();
+  try {
+    while (slug.includes("%")) {
+      const decoded = decodeURIComponent(slug);
+      if (decoded === slug) break;
+      slug = decoded;
+    }
+  } catch {}
 
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [loading, setLoading] = useState(true);

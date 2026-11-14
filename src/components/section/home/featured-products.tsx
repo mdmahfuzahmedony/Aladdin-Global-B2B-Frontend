@@ -27,7 +27,7 @@ type Product = {
   isFlashSale?: boolean;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 export default function FeaturedProducts() {
   const { t } = useLanguage();
@@ -37,7 +37,7 @@ export default function FeaturedProducts() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const isHoveredRef = useRef(false);
 
-  // Manual scroll function: scrolls 2-3 cards smoothly
+  // Manual scroll function: scrolls 2-3 cards smoothly, wraps around if at edges
   const scroll = (direction: "left" | "right") => {
     const slider = sliderRef.current;
     if (!slider) return;
@@ -50,10 +50,19 @@ export default function FeaturedProducts() {
       ? (card.offsetWidth + gap) * cardsToScroll
       : slider.clientWidth * 0.75;
 
-    slider.scrollBy({
-      left: direction === "left" ? -scrollAmount : scrollAmount,
-      behavior: "smooth",
-    });
+    const isAtEnd =
+      slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 10;
+
+    if (direction === "right" && isAtEnd) {
+      slider.scrollTo({ left: 0, behavior: "smooth" });
+    } else if (direction === "left" && slider.scrollLeft <= 5) {
+      slider.scrollTo({ left: slider.scrollWidth, behavior: "smooth" });
+    } else {
+      slider.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
   };
 
   // Auto slider setup (মাউস আনলে থামবে, প্রতি ৩.৫ সেকেন্ড পর পর স্লাইড হবে)
@@ -211,7 +220,7 @@ export default function FeaturedProducts() {
         >
           <div className="relative min-w-0">
             {/* LEFT ARROW */}
-            {products.length > 1 && !loading && (
+            {products.length > 0 && !loading && (
               <button
                 type="button"
                 onClick={() => scroll("left")}
@@ -232,7 +241,7 @@ export default function FeaturedProducts() {
             )}
 
             {/* RIGHT ARROW */}
-            {products.length > 1 && !loading && (
+            {products.length > 0 && !loading && (
               <button
                 type="button"
                 onClick={() => scroll("right")}
@@ -256,9 +265,10 @@ export default function FeaturedProducts() {
             <div
               ref={sliderRef}
               className="
-                grid grid-flow-col auto-cols-[calc((100%-12px)/2)]
-                gap-3 overflow-x-auto pb-3
+                grid min-w-0 grid-flow-col auto-cols-[calc((100%-12px)/2)]
+                gap-3 overflow-x-auto px-0 pb-3
                 snap-x snap-mandatory overscroll-x-contain
+                scroll-smooth touch-pan-x
                 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
                 sm:auto-cols-[calc((100%-24px)/3)]
                 md:auto-cols-[calc((100%-36px)/4)]
