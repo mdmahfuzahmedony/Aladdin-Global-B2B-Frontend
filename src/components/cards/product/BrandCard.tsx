@@ -72,19 +72,19 @@ export default function BrandCard({ brand }: { brand: BrandItem }) {
       </div>
 
       {/* Brand Name */}
-      <h3
-        className="
-          mt-1.5 line-clamp-2
-          text-[11px] font-bold leading-tight
-          text-[#12233F]
-          transition-colors
-          group-hover:text-[#d6a419]
-          sm:mt-2.5 sm:text-xs
-          lg:text-sm
-        "
-      >
-        {brand.name}
-      </h3>
+     <h3
+  className="
+    mt-1.5 line-clamp-2
+    text-[11px] font-bold leading-tight
+    text-black
+    transition-colors
+    group-hover:text-black
+    sm:mt-2.5 sm:text-xs
+    lg:text-sm
+  "
+>
+  {brand.name}
+</h3>
     </Link>
   );
 }
