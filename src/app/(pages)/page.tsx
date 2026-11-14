@@ -35,7 +35,7 @@ export default function HomePage() {
 
       <SectionBanner placement="TOP_RATED_PRODUCTS" />
       <TopRatedProducts />
- <JustForYouSection/>
+     <JustForYouSection/>
       <PopularBrands />
      
 
