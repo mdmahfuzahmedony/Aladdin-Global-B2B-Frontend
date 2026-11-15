@@ -314,10 +314,9 @@ export default function NewArrivalsPage() {
                 [&::-webkit-scrollbar]:hidden
 
                 sm:auto-cols-[calc((100%-24px)/3)]
-
-                md:auto-cols-[calc((100%-36px)/4)]
-                lg:auto-cols-[calc((100%-64px)/5)]
-                xl:auto-cols-[calc((100%-64px)/5)]
+                md:auto-cols-[calc((100%-48px)/4)]
+                lg:auto-cols-[calc((100%-80px)/6)]
+                xl:auto-cols-[calc((100%-80px)/6)]
                 lg:gap-4
               "
             >

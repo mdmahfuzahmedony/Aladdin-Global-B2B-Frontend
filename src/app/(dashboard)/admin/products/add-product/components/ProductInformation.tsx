@@ -431,6 +431,19 @@ function findComponentForCategory(
     return HomeLivingCategoryField;
   }
 
+  // Fashion
+  const isFashionCategory =
+    key === "fashion" ||
+    rawLower.includes("fashion") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return pKey === "fashion" || name.toLowerCase().includes("fashion");
+    });
+  if (isFashionCategory) {
+    const fashionComponent = getFashionFieldComponent(category.name, parentNames);
+    if (fashionComponent) return fashionComponent;
+  }
+
   const isDairyEggsCategory =
     key === "dairy-and-eggs" ||
     parentNames.some(
