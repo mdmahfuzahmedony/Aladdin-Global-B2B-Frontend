@@ -48,7 +48,7 @@ export interface CompareContextType {
 
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
 
-const MAX_COMPARE_ITEMS = 4;
+const MAX_COMPARE_ITEMS = 5;
 const STORAGE_KEY = "aladdin_compare_products_v1";
 
 export const CompareProvider: React.FC<{ children: React.ReactNode }> = ({

@@ -24,6 +24,7 @@ import CartSidebar from "../sidebar/CartSidebar";
 import { LanguageDropdown } from "../header/navbar/language-dropdown";
 import { AccountDropdown } from "./../header/navbar/account-dropdown";
 import { AllCategoriesMenu } from "../header/navbar/AllCategoriesMenu";
+import { NavbarSearch } from "../header/navbar/NavbarSearch";
 
 import { useSiteSettings } from "../../context/SiteSettingsContext";
 import { useCompare } from "../../context/CompareContext";
@@ -56,7 +57,6 @@ export default function MainNavbar() {
 
   const [isHydrated, setIsHydrated] = useState(false);
 
-  const [search, setSearch] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
@@ -283,15 +283,6 @@ export default function MainNavbar() {
     };
   }, []);
 
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const value = search.trim();
-    if (!value) return;
-
-    window.location.href = `/products?search=${encodeURIComponent(value)}`;
-  };
-
   const handleOpenCart = async () => {
     const token = await getAccessToken();
 
@@ -463,26 +454,7 @@ export default function MainNavbar() {
           </Link>
 
           {/* DESKTOP SEARCH */}
-          <form
-            onSubmit={handleSearch}
-            className="flex h-[44px] min-w-0 flex-1 overflow-hidden rounded-md border border-white/20 bg-white focus-within:border-[#D6A419] focus-within:ring-1 focus-within:ring-[#D6A419]"
-          >
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={t("searchPlaceholder")}
-              className="min-w-0 flex-1 bg-transparent px-4 text-sm text-slate-700 outline-none"
-            />
-
-            <button
-              type="submit"
-              aria-label={t("search")}
-              className="flex w-[55px] shrink-0 items-center justify-center bg-[#D6A419] text-[#12233F] transition hover:bg-[#c69a12]"
-            >
-              <Search size={20} />
-            </button>
-          </form>
+          <NavbarSearch variant="desktop" />
 
           <div className="flex shrink-0 flex-row-reverse items-center gap-4">
             {/* CART */}
@@ -731,26 +703,7 @@ export default function MainNavbar() {
           </div>
 
           {/* MOBILE SEARCH */}
-          <form
-            onSubmit={handleSearch}
-            className="mt-4 flex h-10 w-full overflow-hidden rounded-lg border border-white/20 bg-white focus-within:border-[#D6A419]"
-          >
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={t("searchProductsPlaceholder")}
-              className="min-w-0 flex-1 bg-transparent px-3 text-xs text-slate-700 outline-none sm:text-sm"
-            />
-
-            <button
-              type="submit"
-              aria-label={t("searchProducts")}
-              className="flex w-10 shrink-0 items-center justify-center bg-[#D6A419] text-[#12233F] transition hover:bg-[#c69a12]"
-            >
-              <Search size={18} />
-            </button>
-          </form>
+          <NavbarSearch variant="mobile" className="mt-4" />
 
           {/* MOBILE NAVIGATION */}
           <nav className="mt-4 flex items-center justify-start gap-5 border-t border-white/10 px-2 pt-4 pb-2 text-xs font-semibold text-white sm:text-sm">

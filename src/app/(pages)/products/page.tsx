@@ -12,10 +12,11 @@ import {
 } from "lucide-react";
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
 import { useLanguage } from "@/context/LanguageContext";
+import { productMatchesBilingualSearch } from "@/utils/bilingualSearch";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
-const PRODUCTS_PER_PAGE = 16;
+const PRODUCTS_PER_PAGE = 20;
 
 type Product = {
   id: string;
@@ -360,10 +361,8 @@ function ProductsContent() {
     }
 
     if (search.trim()) {
-      const query = search.trim().toLowerCase();
-
       list = list.filter((product) =>
-        product.title.toLowerCase().includes(query),
+        productMatchesBilingualSearch(product, search),
       );
     }
 
@@ -760,8 +759,8 @@ function ProductsContent() {
             )}
 
             {loading && (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 xl:gap-4">
-                {Array.from({ length: 8 }).map((_, index) => (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 xl:gap-4">
+                {Array.from({ length: 10 }).map((_, index) => (
                   <ProductSkeleton key={index} />
                 ))}
               </div>
@@ -785,7 +784,7 @@ function ProductsContent() {
 
             {!loading && !error && paginatedProducts.length > 0 && (
               <>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 xl:gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 xl:gap-4">
                   {paginatedProducts.map((product) => {
                     const image = getProductImage(product);
                     const isFlashSale = Boolean(product.flashSaleAttribute);

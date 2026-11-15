@@ -17,6 +17,7 @@ import {
   Loader2,
   ExternalLink,
   ShieldCheck,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useCompare, CompareProduct } from "@/context/CompareContext";
@@ -173,83 +174,94 @@ export default function ComparePage() {
   // EMPTY STATE
   if (items.length === 0) {
     return (
-      <div className="min-h-[75vh] bg-gradient-to-b from-slate-50 via-white to-slate-50 px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-amber-50 text-amber-600 shadow-inner">
-            <GitCompareArrows size={44} />
+      <main className="min-h-screen bg-[#f5f6fa] pb-16 pt-5">
+        <div className="mx-auto max-w-[1500px] px-3 py-5 sm:px-5 lg:px-8">
+          {/* Breadcrumb */}
+          <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+            <Link href="/" className="text-blue-600 hover:underline">
+              হোম
+            </Link>
+            <ChevronRight size={15} className="text-gray-400" />
+            <span className="font-medium text-gray-600">পণ্য তুলনা (Compare)</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-            তুলনার তালিকায় কোনো পণ্য নেই
-          </h1>
-          <p className="mt-3 text-sm text-slate-600 sm:text-base leading-relaxed">
-            পণ্য ব্রাউজ করার সময় ছবির উপরে থাকা Compare (তুলনা) আইকনে ক্লিক করে
-            একসাথে সর্বোচ্চ ৪টি পণ্যের দাম, স্পেসিফিকেশন এবং রেটিং পাশাপাশি
-            তুলনা করতে পারেন।
-          </p>
+          <div className="rounded-xl border border-gray-200 bg-white p-10 sm:p-14 text-center shadow-xs">
+            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 shadow-inner">
+              <GitCompareArrows size={38} />
+            </div>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/products"
-              className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-amber-600 hover:shadow-lg"
-            >
-              <ShoppingCart size={18} />
-              <span>পণ্য ব্রাউজ করুন</span>
-            </Link>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              <span>হোম পেজে যান</span>
-              <ArrowRight size={16} />
-            </Link>
+            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+              তুলনার তালিকায় কোনো পণ্য নেই
+            </h1>
+            <p className="mx-auto mt-2.5 max-w-lg text-sm text-slate-600 leading-relaxed">
+              পণ্য ব্রাউজ করার সময় ছবির উপরে থাকা Compare (তুলনা) আইকনে ক্লিক করে
+              একসাথে সর্বোচ্চ ৫টি পণ্যের দাম, স্পেসিফিকেশন এবং রেটিং পাশাপাশি
+              তুলনা করতে পারেন।
+            </p>
+
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#12233F] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1a355f]"
+              >
+                <ShoppingCart size={17} />
+                <span>পণ্য ব্রাউজ করুন</span>
+              </Link>
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                <span>হোম পেজে যান</span>
+                <ArrowRight size={15} />
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/60 pb-16 pt-6 sm:pt-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#f5f6fa] pb-16 pt-5">
+      <div className="mx-auto max-w-[1500px] px-3 py-5 sm:px-5 lg:px-8">
         {/* Breadcrumb */}
-        <div className="mb-4 flex items-center gap-2 text-xs font-medium text-slate-500">
-          <Link href="/" className="hover:text-amber-600">
+        <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+          <Link href="/" className="text-blue-600 hover:underline">
             হোম
           </Link>
-          <span>/</span>
-          <span className="text-slate-800">পণ্য তুলনা (Compare)</span>
+          <ChevronRight size={15} className="text-gray-400" />
+          <span className="font-medium text-gray-600">পণ্য তুলনা (Compare)</span>
         </div>
 
         {/* Header Bar */}
-        <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-5 flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 sm:p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
-              <GitCompareArrows size={26} />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+              <GitCompareArrows size={24} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">
+                <h1 className="text-lg font-bold text-slate-900 sm:text-xl">
                   পণ্য তুলনা করুন
                 </h1>
                 <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
-                  {items.length} / 4
+                  {items.length} / 5
                 </span>
               </div>
-              <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">
+              <p className="mt-0.5 text-xs text-slate-500">
                 এক নজরে একাধিক পণ্যের দাম, স্পেসিফিকেশন ও রেটিং যাচাই করুন
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {items.length < 4 && (
+          <div className="flex flex-wrap items-center gap-2.5">
+            {items.length < 5 && (
               <Link
                 href="/products"
                 className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-amber-300 bg-amber-50/70 px-4 py-2 text-xs font-semibold text-amber-800 transition hover:bg-amber-100"
               >
                 <Plus size={15} />
-                <span>আরও পণ্য যোগ করুন ({4 - items.length}টি বাকি)</span>
+                <span>আরও পণ্য যোগ করুন ({5 - items.length}টি বাকি)</span>
               </Link>
             )}
 
@@ -274,21 +286,21 @@ export default function ComparePage() {
         </div>
 
         {/* COMPARISON TABLE CONTAINER */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="sticky left-0 z-20 w-44 bg-slate-50/90 p-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500 backdrop-blur-xs sm:w-52">
+                <tr className="border-b border-gray-100 bg-slate-50/70">
+                  <th className="sticky left-0 z-20 w-44 bg-slate-50/95 p-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500 backdrop-blur-xs sm:w-52 border-r border-slate-200/80">
                     বৈশিষ্ট্য / Features
                   </th>
                   {items.map((item: CompareProduct) => (
                     <th
                       key={item.id}
-                      className="min-w-[260px] max-w-[320px] p-4 text-left align-top"
+                      className="min-w-[260px] max-w-[320px] p-4 text-left align-top border-r border-slate-100"
                     >
                       {/* Product Header Card */}
-                      <div className="relative flex flex-col justify-between rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs transition hover:border-amber-200">
+                      <div className="relative flex flex-col justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-xs transition hover:border-[#D6A419] hover:shadow-sm">
                         {/* Remove Button */}
                         <button
                           type="button"
@@ -318,7 +330,7 @@ export default function ComparePage() {
                         {/* Title */}
                         <Link
                           href={`/products/${item.slug || item.id}`}
-                          className="line-clamp-2 min-h-[38px] text-xs font-bold leading-5 text-slate-800 transition hover:text-amber-600 sm:text-sm"
+                          className="line-clamp-2 min-h-[38px] text-xs font-bold leading-5 text-slate-800 transition hover:text-[#D6A419] sm:text-sm"
                           title={item.title}
                         >
                           {item.title}
@@ -326,7 +338,7 @@ export default function ComparePage() {
 
                         {/* Price */}
                         <div className="mt-2.5 flex flex-wrap items-baseline gap-2">
-                          <span className="text-base font-extrabold text-amber-600 sm:text-lg">
+                          <span className="text-base font-extrabold text-[#f95738] sm:text-lg">
                             ৳{Number(item.price || 0).toLocaleString("en-BD")}
                           </span>
                           {item.regularPrice &&
@@ -346,7 +358,7 @@ export default function ComparePage() {
                             type="button"
                             onClick={() => handleAddToCart(item)}
                             disabled={addingCartId === item.id}
-                            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-amber-500 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-amber-600 disabled:opacity-60"
+                            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#12233F] py-2 text-xs font-bold text-white shadow-xs transition hover:bg-[#1a355f] disabled:opacity-60"
                           >
                             {addingCartId === item.id ? (
                               <Loader2 size={14} className="animate-spin" />
@@ -361,10 +373,10 @@ export default function ComparePage() {
                   ))}
 
                   {/* Empty slots for missing columns if less than 4 */}
-                  {Array.from({ length: 4 - items.length }).map((_, idx) => (
+                  {Array.from({ length: 5 - items.length }).map((_, idx) => (
                     <th
                       key={`empty-slot-${idx}`}
-                      className="min-w-[260px] max-w-[320px] p-4 text-center align-middle"
+                      className="min-w-[260px] max-w-[320px] p-4 text-center align-middle border-r border-slate-100 last:border-r-0"
                     >
                       <Link
                         href="/products"
@@ -388,11 +400,11 @@ export default function ComparePage() {
               <tbody className="divide-y divide-slate-100 text-xs text-slate-700 sm:text-sm">
                 {/* 1. Rating & Reviews */}
                 <tr className="hover:bg-slate-50/50">
-                  <td className="sticky left-0 z-10 bg-slate-50/90 p-4 font-semibold text-slate-900 backdrop-blur-xs">
+                  <td className="sticky left-0 z-10 bg-slate-50/95 p-4 font-semibold text-slate-900 backdrop-blur-xs border-r border-slate-200/80">
                     রেটিং ও রিভিউ
                   </td>
                   {items.map((item: CompareProduct) => (
-                    <td key={item.id} className="p-4 align-top">
+                    <td key={item.id} className="p-4 align-top border-r border-slate-100">
                       <div className="flex items-center gap-1.5">
                         <div className="flex text-amber-400">
                           {Array.from({ length: 5 }).map((_, i) => (
@@ -421,10 +433,10 @@ export default function ComparePage() {
                       </div>
                     </td>
                   ))}
-                  {Array.from({ length: 4 - items.length }).map((_, idx) => (
+                  {Array.from({ length: 5 - items.length }).map((_, idx) => (
                     <td
                       key={`empty-rating-${idx}`}
-                      className="p-4 text-center text-slate-300"
+                      className="p-4 text-center text-slate-300 border-r border-slate-100 last:border-r-0"
                     >
                       —
                     </td>
@@ -433,7 +445,7 @@ export default function ComparePage() {
 
                 {/* 2. Availability / Stock */}
                 <tr className="hover:bg-slate-50/50">
-                  <td className="sticky left-0 z-10 bg-slate-50/90 p-4 font-semibold text-slate-900 backdrop-blur-xs">
+                  <td className="sticky left-0 z-10 bg-slate-50/95 p-4 font-semibold text-slate-900 backdrop-blur-xs border-r border-slate-200/80">
                     স্টক ও প্রাপ্যতা
                   </td>
                   {items.map((item: CompareProduct) => {
@@ -442,7 +454,7 @@ export default function ComparePage() {
                     const isAvailable = stock === undefined || stock > 0;
 
                     return (
-                      <td key={item.id} className="p-4 align-top">
+                      <td key={item.id} className="p-4 align-top border-r border-slate-100">
                         {isAvailable ? (
                           <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
                             <CheckCircle2 size={13} />
@@ -462,10 +474,10 @@ export default function ComparePage() {
                       </td>
                     );
                   })}
-                  {Array.from({ length: 4 - items.length }).map((_, idx) => (
+                  {Array.from({ length: 5 - items.length }).map((_, idx) => (
                     <td
                       key={`empty-stock-${idx}`}
-                      className="p-4 text-center text-slate-300"
+                      className="p-4 text-center text-slate-300 border-r border-slate-100 last:border-r-0"
                     >
                       —
                     </td>
@@ -474,21 +486,21 @@ export default function ComparePage() {
 
                 {/* 3. Minimum Order Quantity (MOQ) */}
                 <tr className="hover:bg-slate-50/50">
-                  <td className="sticky left-0 z-10 bg-slate-50/90 p-4 font-semibold text-slate-900 backdrop-blur-xs">
+                  <td className="sticky left-0 z-10 bg-slate-50/95 p-4 font-semibold text-slate-900 backdrop-blur-xs border-r border-slate-200/80">
                     ন্যূনতম অর্ডার (MOQ)
                   </td>
                   {items.map((item: CompareProduct) => (
                     <td
                       key={item.id}
-                      className="p-4 align-top font-medium text-slate-800"
+                      className="p-4 align-top font-medium text-slate-800 border-r border-slate-100"
                     >
                       {item.moq ? `${item.moq} Pcs` : "১ টি"}
                     </td>
                   ))}
-                  {Array.from({ length: 4 - items.length }).map((_, idx) => (
+                  {Array.from({ length: 5 - items.length }).map((_, idx) => (
                     <td
                       key={`empty-moq-${idx}`}
-                      className="p-4 text-center text-slate-300"
+                      className="p-4 text-center text-slate-300 border-r border-slate-100 last:border-r-0"
                     >
                       —
                     </td>
@@ -497,7 +509,7 @@ export default function ComparePage() {
 
                 {/* 4. Category */}
                 <tr className="hover:bg-slate-50/50">
-                  <td className="sticky left-0 z-10 bg-slate-50/90 p-4 font-semibold text-slate-900 backdrop-blur-xs">
+                  <td className="sticky left-0 z-10 bg-slate-50/95 p-4 font-semibold text-slate-900 backdrop-blur-xs border-r border-slate-200/80">
                     ক্যাটাগরি
                   </td>
                   {items.map((item: CompareProduct) => {
@@ -505,7 +517,7 @@ export default function ComparePage() {
                     const category =
                       enriched?.category || item.category || "General";
                     return (
-                      <td key={item.id} className="p-4 align-top">
+                      <td key={item.id} className="p-4 align-top border-r border-slate-100">
                         <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
                           <Layers size={13} className="text-slate-500" />
                           <span>{category}</span>
@@ -513,10 +525,10 @@ export default function ComparePage() {
                       </td>
                     );
                   })}
-                  {Array.from({ length: 4 - items.length }).map((_, idx) => (
+                  {Array.from({ length: 5 - items.length }).map((_, idx) => (
                     <td
                       key={`empty-cat-${idx}`}
-                      className="p-4 text-center text-slate-300"
+                      className="p-4 text-center text-slate-300 border-r border-slate-100 last:border-r-0"
                     >
                       —
                     </td>
@@ -525,7 +537,7 @@ export default function ComparePage() {
 
                 {/* 5. Brand */}
                 <tr className="hover:bg-slate-50/50">
-                  <td className="sticky left-0 z-10 bg-slate-50/90 p-4 font-semibold text-slate-900 backdrop-blur-xs">
+                  <td className="sticky left-0 z-10 bg-slate-50/95 p-4 font-semibold text-slate-900 backdrop-blur-xs border-r border-slate-200/80">
                     ব্র্যান্ড
                   </td>
                   {items.map((item: CompareProduct) => {
@@ -535,16 +547,16 @@ export default function ComparePage() {
                     return (
                       <td
                         key={item.id}
-                        className="p-4 align-top font-semibold text-slate-800"
+                        className="p-4 align-top font-semibold text-slate-800 border-r border-slate-100"
                       >
                         {brand}
                       </td>
                     );
                   })}
-                  {Array.from({ length: 4 - items.length }).map((_, idx) => (
+                  {Array.from({ length: 5 - items.length }).map((_, idx) => (
                     <td
                       key={`empty-brand-${idx}`}
-                      className="p-4 text-center text-slate-300"
+                      className="p-4 text-center text-slate-300 border-r border-slate-100 last:border-r-0"
                     >
                       —
                     </td>
@@ -553,7 +565,7 @@ export default function ComparePage() {
 
                 {/* 6. Seller / Store */}
                 <tr className="hover:bg-slate-50/50">
-                  <td className="sticky left-0 z-10 bg-slate-50/90 p-4 font-semibold text-slate-900 backdrop-blur-xs">
+                  <td className="sticky left-0 z-10 bg-slate-50/95 p-4 font-semibold text-slate-900 backdrop-blur-xs border-r border-slate-200/80">
                     বিক্রেতা / স্টোর
                   </td>
                   {items.map((item: CompareProduct) => {
@@ -563,18 +575,18 @@ export default function ComparePage() {
                       item.storeName ||
                       "Aladin Verified Vendor";
                     return (
-                      <td key={item.id} className="p-4 align-top">
+                      <td key={item.id} className="p-4 align-top border-r border-slate-100">
                         <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
-                          <Store size={14} className="text-amber-600" />
+                          <Store size={14} className="text-[#D6A419]" />
                           <span>{store}</span>
                         </span>
                       </td>
                     );
                   })}
-                  {Array.from({ length: 4 - items.length }).map((_, idx) => (
+                  {Array.from({ length: 5 - items.length }).map((_, idx) => (
                     <td
                       key={`empty-store-${idx}`}
-                      className="p-4 text-center text-slate-300"
+                      className="p-4 text-center text-slate-300 border-r border-slate-100 last:border-r-0"
                     >
                       —
                     </td>
@@ -583,7 +595,7 @@ export default function ComparePage() {
 
                 {/* 7. Description / Overview */}
                 <tr className="hover:bg-slate-50/50">
-                  <td className="sticky left-0 z-10 bg-slate-50/90 p-4 font-semibold text-slate-900 backdrop-blur-xs">
+                  <td className="sticky left-0 z-10 bg-slate-50/95 p-4 font-semibold text-slate-900 backdrop-blur-xs border-r border-slate-200/80">
                     বিবরণ ও ফিচার
                   </td>
                   {items.map((item: CompareProduct) => {
@@ -594,13 +606,13 @@ export default function ComparePage() {
                     const plainDesc = desc.replace(/<[^>]*>?/gm, "").trim();
 
                     return (
-                      <td key={item.id} className="p-4 align-top">
+                      <td key={item.id} className="p-4 align-top border-r border-slate-100">
                         <p className="line-clamp-4 text-xs leading-relaxed text-slate-600">
                           {plainDesc || "বিস্তারিত জানতে পণ্যের পেজ দেখুন।"}
                         </p>
                         <Link
                           href={`/products/${item.slug || item.id}`}
-                          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-amber-600 hover:text-amber-700"
+                          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#12233F] hover:text-[#D6A419] transition-colors"
                         >
                           <span>পুরো বিবরণ পড়ুন</span>
                           <ExternalLink size={12} />
@@ -608,10 +620,10 @@ export default function ComparePage() {
                       </td>
                     );
                   })}
-                  {Array.from({ length: 4 - items.length }).map((_, idx) => (
+                  {Array.from({ length: 5 - items.length }).map((_, idx) => (
                     <td
                       key={`empty-desc-${idx}`}
-                      className="p-4 text-center text-slate-300"
+                      className="p-4 text-center text-slate-300 border-r border-slate-100 last:border-r-0"
                     >
                       —
                     </td>
@@ -620,17 +632,17 @@ export default function ComparePage() {
 
                 {/* 8. Bottom Action */}
                 <tr className="bg-slate-50/30">
-                  <td className="sticky left-0 z-10 bg-slate-50/90 p-4 font-semibold text-slate-900 backdrop-blur-xs">
+                  <td className="sticky left-0 z-10 bg-slate-50/95 p-4 font-semibold text-slate-900 backdrop-blur-xs border-r border-slate-200/80">
                     পদক্ষেপ
                   </td>
                   {items.map((item: CompareProduct) => (
-                    <td key={item.id} className="p-4 align-top">
+                    <td key={item.id} className="p-4 align-top border-r border-slate-100">
                       <div className="flex flex-col gap-2">
                         <button
                           type="button"
                           onClick={() => handleAddToCart(item)}
                           disabled={addingCartId === item.id}
-                          className="flex items-center justify-center gap-1.5 rounded-lg bg-amber-500 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-amber-600 disabled:opacity-60"
+                          className="flex items-center justify-center gap-1.5 rounded-lg bg-[#12233F] py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#1a355f] disabled:opacity-60"
                         >
                           {addingCartId === item.id ? (
                             <Loader2 size={14} className="animate-spin" />
@@ -643,17 +655,17 @@ export default function ComparePage() {
                         <button
                           type="button"
                           onClick={() => removeFromCompare(item.id)}
-                          className="text-center text-xs font-medium text-slate-400 hover:text-rose-600"
+                          className="text-center text-xs font-medium text-slate-400 hover:text-rose-600 transition-colors"
                         >
                           তুলনা থেকে বাদ দিন
                         </button>
                       </div>
                     </td>
                   ))}
-                  {Array.from({ length: 4 - items.length }).map((_, idx) => (
+                  {Array.from({ length: 5 - items.length }).map((_, idx) => (
                     <td
                       key={`empty-action-${idx}`}
-                      className="p-4 text-center text-slate-300"
+                      className="p-4 text-center text-slate-300 border-r border-slate-100 last:border-r-0"
                     >
                       —
                     </td>
@@ -709,6 +721,6 @@ export default function ComparePage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

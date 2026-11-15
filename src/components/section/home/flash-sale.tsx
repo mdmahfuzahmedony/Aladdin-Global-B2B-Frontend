@@ -439,7 +439,8 @@ export default function FlashSaleSection() {
                 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
                 sm:auto-cols-[calc((100%-24px)/3)]
                 md:auto-cols-[calc((100%-36px)/4)]
-                lg:auto-cols-[calc((100%-80px)/6)]
+                lg:auto-cols-[calc((100%-64px)/5)]
+                xl:auto-cols-[calc((100%-64px)/5)]
                 lg:gap-4
               "
             >
