@@ -42,6 +42,7 @@ export type CategoryDomain =
   | "FASHION_FOOTWEAR"
   | "ACCESSORIES"
   | "HOUSEHOLD_PET"
+  | "HOME_LIVING"
   | "GENERAL";
 
 export interface HighlightItem {
@@ -217,6 +218,22 @@ const KNOWN_LABELS: Record<string, string> = {
   petType: "Pet Animal",
   foodType: "Food Type",
   lifeStage: "Life Stage",
+
+  // Home & Living / Furniture
+  primaryMaterial: "Primary Material",
+  secondaryMaterial: "Secondary Material / Frame",
+  finishType: "Color & Finish",
+  width: "Width / Depth",
+  height: "Height",
+  thickness: "Thickness",
+  dimensionUnit: "Dimension Unit",
+  seatingCapacity: "Capacity / Size",
+  bedSize: "Bed Size",
+  weightCapacity: "Weight Capacity",
+  storageType: "Storage Type",
+  mobility: "Mobility / Wheels",
+  assemblyType: "Assembly & Setup",
+  termiteProof: "Protection (Termite / Water)",
 };
 
 // Ignore internal or already handled properties
@@ -240,6 +257,7 @@ const IGNORED_ATTRIBUTE_KEYS = new Set([
   "status",
   "vendorId",
   "sellerId",
+  "customSpecs",
 ]);
 
 export function formatKeyLabel(key: string): string {
@@ -457,6 +475,30 @@ export function detectCategoryDomain(
     return "HOUSEHOLD_PET";
   }
 
+  // 12. Home & Living / Furniture
+  if (
+    combined.includes("living") ||
+    combined.includes("bedroom") ||
+    combined.includes("furniture") ||
+    combined.includes("sofa") ||
+    combined.includes("bed") ||
+    combined.includes("table") ||
+    combined.includes("chair") ||
+    combined.includes("wardrobe") ||
+    combined.includes("almirah") ||
+    combined.includes("cabinet") ||
+    combined.includes("door") ||
+    combined.includes("office") ||
+    combined.includes("hospital") ||
+    combined.includes("home") ||
+    keys.includes("primarymaterial") ||
+    keys.includes("finishtype") ||
+    keys.includes("seatingcapacity") ||
+    keys.includes("bedsize")
+  ) {
+    return "HOME_LIVING";
+  }
+
   return "GENERAL";
 }
 
@@ -601,6 +643,24 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
 
       const shoeType = getVal("shoeType");
       if (shoeType) highlights.push({ id: "shoeType", label: "Style", value: shoeType, icon: <Sparkles size={13} />, variant: "emerald" });
+      break;
+    }
+
+    case "HOME_LIVING": {
+      const mat = getVal("primaryMaterial");
+      if (mat) highlights.push({ id: "material", label: "Material", value: mat, icon: <Layers size={13} />, variant: "amber" });
+
+      const finish = getVal("finishType");
+      if (finish) highlights.push({ id: "finish", label: "Finish", value: finish, icon: <Sparkles size={13} />, variant: "slate" });
+
+      const size = getVal("seatingCapacity") || getVal("bedSize");
+      if (size) highlights.push({ id: "size", label: "Capacity / Size", value: size, icon: <Tag size={13} />, variant: "blue" });
+
+      const dim = [getVal("length"), getVal("width"), getVal("height")].filter(Boolean).join(" × ");
+      if (dim) highlights.push({ id: "dim", label: "Dimensions", value: `${dim} ${getVal("dimensionUnit") || ""}`.trim(), icon: <Box size={13} />, variant: "indigo" });
+
+      const warranty = getVal("warranty");
+      if (warranty) highlights.push({ id: "warranty", label: "Warranty", value: warranty, icon: <ShieldCheck size={13} />, variant: "emerald" });
       break;
     }
 
@@ -881,6 +941,59 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
         title: "Technical Specifications & Materials",
         icon: <Sparkles size={16} className="text-amber-600" />,
         rows: accRows,
+      });
+    }
+  } else if (domain === "HOME_LIVING") {
+    const matRows = buildRows(["primaryMaterial", "secondaryMaterial", "finishType", "color", "termiteProof"]);
+    if (matRows.length > 0) {
+      groups.push({
+        id: "hl-material",
+        title: "Material & Craftsmanship",
+        icon: <Layers size={16} className="text-amber-600" />,
+        rows: matRows,
+      });
+    }
+
+    const dimRows = buildRows(["length", "width", "height", "thickness", "dimensionUnit", "seatingCapacity", "bedSize", "weightCapacity"]);
+    if (dimRows.length > 0) {
+      groups.push({
+        id: "hl-dimensions",
+        title: "Dimensions, Size & Capacity",
+        icon: <Box size={16} className="text-blue-600" />,
+        rows: dimRows,
+      });
+    }
+
+    const featRows = buildRows(["storageType", "mobility", "assemblyType", "warranty", "roomType", "countryOfOrigin"]);
+    if (featRows.length > 0) {
+      groups.push({
+        id: "hl-features",
+        title: "Features, Assembly & Warranty",
+        icon: <ShieldCheck size={16} className="text-emerald-600" />,
+        rows: featRows,
+      });
+    }
+  }
+
+  // Handle custom dynamic specifications
+  if (Array.isArray(attrs.customSpecs)) {
+    processedKeys.add("customSpecs");
+    const customRows: SpecRow[] = [];
+    attrs.customSpecs.forEach((spec: any, idx: number) => {
+      if (spec && (spec.label || spec.value)) {
+        customRows.push({
+          key: `custom_${idx}`,
+          label: String(spec.label || "Specification"),
+          value: String(spec.value || "Yes"),
+        });
+      }
+    });
+    if (customRows.length > 0) {
+      groups.push({
+        id: "hl-custom-specs",
+        title: "Additional Specifications",
+        icon: <Sparkles size={16} className="text-purple-600" />,
+        rows: customRows,
       });
     }
   }

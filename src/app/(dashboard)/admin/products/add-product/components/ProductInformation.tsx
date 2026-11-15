@@ -17,6 +17,7 @@ import { createClient } from "../../../../../../../lib/supabase-client";
 import Bread from "./product-field/Grocery/Bakery/Bread";
 import CakeSweetsPies from "./product-field/Grocery/Bakery/CakeSweetsPies";
 import ToastBakeryBiscuits from "./product-field/Grocery/Bakery/ToastBakeryBiscuits";
+import HomeLivingCategoryField from "./product-field/HomeLiving/HomeLivingCategoryField";
 
 // Grocery - Beverages
 import Juice from "./product-field/Grocery/Beverages/Juice";
@@ -409,6 +410,25 @@ function findComponentForCategory(
     if (!parent) break;
     parentNames.push(parent.name);
     parentId = parent.parentId;
+  }
+
+  // Home & Living
+  const isHomeLivingCategory =
+    key === "home-and-living" ||
+    key === "home-living" ||
+    rawLower.includes("home & living") ||
+    rawLower.includes("home and living") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return (
+        pKey === "home-and-living" ||
+        pKey === "home-living" ||
+        name.toLowerCase().includes("home & living") ||
+        name.toLowerCase().includes("home and living")
+      );
+    });
+  if (isHomeLivingCategory) {
+    return HomeLivingCategoryField;
   }
 
   const isDairyEggsCategory =

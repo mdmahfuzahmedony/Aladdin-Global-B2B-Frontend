@@ -31,6 +31,30 @@ interface NavbarSearchProps {
   className?: string;
 }
 
+const PLACEHOLDERS_BN = [
+  "পণ্য, ব্র্যান্ড বা ক্যাটাগরি খুঁজুন...",
+  "খুঁজুন 'মিনিকেট চাল' বা 'Miniket Rice'...",
+  "খুঁজুন 'রূপচাঁদা সয়াবিন তেল'...",
+  "খুঁজুন 'খাঁটি গাওয়া ঘি' (Cow Ghee)...",
+  "খুঁজুন 'সুন্দরবনের খাঁটি মধু'...",
+  "খুঁজুন 'ইস্পাহানি চা পাতা'...",
+  "খুঁজুন 'ম্যাগি নুডলস' (Maggi)...",
+  "খুঁজুন 'চিনিগুঁড়া পোলাও চাল'...",
+  "খুঁজুন 'প্রাণ খাঁটি সরিষার তেল'...",
+];
+
+const PLACEHOLDERS_EN = [
+  "Search products, brands or categories...",
+  "Search for 'Miniket Rice' (মিনিকেট চাল)...",
+  "Search for 'Soybean Oil' (সয়াবিন তেল)...",
+  "Search for 'Pure Cow Ghee' (গাওয়া ঘি)...",
+  "Search for 'Natural Honey' (মধু)...",
+  "Search for 'Mirzapore Tea' (চা পাতা)...",
+  "Search for 'Maggi Noodles' (নুডলস)...",
+  "Search for 'Aromatic Chinigura Rice'...",
+  "Search for 'Mustard Oil' (সরিষার তেল)...",
+];
+
 export function NavbarSearch({
   variant = "desktop",
   className = "",
@@ -43,6 +67,39 @@ export function NavbarSearch({
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  // Animated scrolling placeholder state
+  const placeholderList = language === "bn" ? PLACEHOLDERS_BN : PLACEHOLDERS_EN;
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(true);
+
+  // Cycle placeholder text every 2.8s
+  useEffect(() => {
+    setPlaceholderIndex(0);
+    setIsTransitioning(true);
+  }, [language]);
+
+  useEffect(() => {
+    if (query) return;
+
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setPlaceholderIndex((prev) => prev + 1);
+    }, 2800);
+
+    return () => clearInterval(interval);
+  }, [query, placeholderList.length]);
+
+  // Seamless infinite loop handler
+  useEffect(() => {
+    if (placeholderIndex === placeholderList.length) {
+      const timer = setTimeout(() => {
+        setIsTransitioning(false);
+        setPlaceholderIndex(0);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [placeholderIndex, placeholderList.length]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -162,22 +219,11 @@ export function NavbarSearch({
     }
   };
 
-  const placeholderText =
-    variant === "desktop"
-      ? language === "bn"
-        ? "পণ্য, ব্র্যান্ড বা ক্যাটাগরি খুঁজুন (বাংলা / English)..."
-        : t("searchPlaceholder") || "Search products, brands or categories..."
-      : language === "bn"
-        ? "পণ্য খুঁজুন (বাংলা / English)..."
-        : t("searchProductsPlaceholder") || "Search products...";
-
   return (
     <div
       ref={containerRef}
       className={`relative ${
-        variant === "desktop"
-          ? "w-full max-w-[480px] xl:max-w-[540px] ml-auto min-w-0"
-          : "w-full"
+        variant === "desktop" ? "flex-1 min-w-0" : "w-full"
       } ${className}`}
     >
       {/* FORM */}
@@ -188,6 +234,37 @@ export function NavbarSearch({
         }`}
       >
         <div className="relative flex flex-1 items-center min-w-0">
+          {/* ANIMATED SCROLLING PLACEHOLDER (Smooth vertical reel) */}
+          {!query && (
+            <div
+              className={`pointer-events-none absolute inset-y-0 left-0 right-8 flex items-center overflow-hidden select-none ${
+                variant === "desktop" ? "px-4" : "px-3"
+              }`}
+            >
+              <div className="h-6 w-full overflow-hidden relative">
+                <div
+                  className={`flex flex-col ${
+                    isTransitioning
+                      ? "transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                      : ""
+                  }`}
+                  style={{
+                    transform: `translateY(-${placeholderIndex * 24}px)`,
+                  }}
+                >
+                  {[...placeholderList, placeholderList[0]].map((text, idx) => (
+                    <div
+                      key={idx}
+                      className="h-6 flex items-center text-slate-400 text-xs sm:text-sm truncate select-none"
+                    >
+                      <span className="truncate">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           <input
             type="search"
             value={query}
@@ -198,8 +275,8 @@ export function NavbarSearch({
               }
             }}
             onKeyDown={handleKeyDown}
-            placeholder={placeholderText}
-            className={`w-full bg-transparent text-slate-700 outline-none placeholder:text-slate-400 ${
+            aria-label={t("search") || "Search products"}
+            className={`w-full bg-transparent text-slate-700 outline-none relative z-10 ${
               variant === "desktop"
                 ? "px-4 text-sm"
                 : "px-3 text-xs sm:text-sm"
