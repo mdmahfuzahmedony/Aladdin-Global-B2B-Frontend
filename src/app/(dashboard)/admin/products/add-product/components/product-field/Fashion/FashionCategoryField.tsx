@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   Shirt,
   Scissors,
@@ -10,16 +10,51 @@ import {
   ShieldCheck,
   Plus,
   Trash2,
-  Box,
+  Upload,
+  Loader2,
+  Image as ImageIcon,
+  Check,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase-client";
 
 export type FashionType = "clothing" | "footwear" | "accessories";
+
+export interface ColorVariantSize {
+  size: string;
+  stock: number;
+}
+
+export interface ColorVariant {
+  color: string;
+  images: string[];
+  sizes: ColorVariantSize[];
+}
 
 interface Props {
   value?: Record<string, any>;
   onChange: (value: Record<string, any>) => void;
   categoryName?: string;
 }
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
+
+const COMMON_COLORS = [
+  "Black (কালো)",
+  "White (সাদা)",
+  "Navy Blue (নেভি ব্লু)",
+  "Maroon (মেরুন)",
+  "Olive Green (জলপাই সবুজ)",
+  "Grey (ধূসর)",
+  "Sky Blue (আকাশি)",
+  "Red (লাল)",
+  "Royal Blue (রয়েল ব্লু)",
+  "Bottle Green (গাঢ় সবুজ)",
+  "Beige / Cream (অফ হোয়াইট)",
+  "Yellow (হলুদ)",
+];
+
+const CLOTHING_SIZE_PRESETS = ["S", "M", "L", "XL", "XXL", "3XL"];
+const FOOTWEAR_SIZE_PRESETS = ["38", "39", "40", "41", "42", "43", "44", "45"];
 
 export default function FashionCategoryField({
   value = {},
@@ -74,6 +109,15 @@ export default function FashionCategoryField({
     update("fashionType", newType);
   };
 
+  // Color & Size variants array in value.colors
+  const colorVariants: ColorVariant[] = Array.isArray(value.colors)
+    ? value.colors
+    : [];
+
+  const handleUpdateColors = (newColors: ColorVariant[]) => {
+    update("colors", newColors);
+  };
+
   // Dynamic custom specifications: array of { id, label, value }
   const customSpecs: Array<{ id: string; label: string; value: string }> =
     Array.isArray(value.customSpecs) ? value.customSpecs : [];
@@ -117,7 +161,7 @@ export default function FashionCategoryField({
             </h3>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            পোশাক, জুতো বা অ্যাক্সেসরিজের ফেব্রিক, ফিট, সাইজ ও বৈশিষ্ট্য পূরণ করুন।
+            পোশাক, জুতো বা অ্যাক্সেসরিজের ফেব্রিক, কালার-সাইজ ভ্যারিয়েন্ট ও ছবি পূরণ করুন।
           </p>
         </div>
 
@@ -166,7 +210,19 @@ export default function FashionCategoryField({
 
       <div className="p-5 space-y-6">
         {/* ============================================================== */}
-        {/* 1. CLOTHING / APPAREL FIELDS */}
+        {/* COLOR & SIZE VARIANT MANAGER WITH IMAGES                       */}
+        {/* (For Clothing and Footwear)                                    */}
+        {/* ============================================================== */}
+        {activeType !== "accessories" && (
+          <ColorVariantSection
+            colors={colorVariants}
+            onChange={handleUpdateColors}
+            activeType={activeType}
+          />
+        )}
+
+        {/* ============================================================== */}
+        {/* 1. CLOTHING / APPAREL FIELDS                                   */}
         {/* ============================================================== */}
         {activeType === "clothing" && (
           <div className="space-y-6 animate-in fade-in duration-200">
@@ -338,7 +394,7 @@ export default function FashionCategoryField({
         )}
 
         {/* ============================================================== */}
-        {/* 2. FOOTWEAR FIELDS */}
+        {/* 2. FOOTWEAR FIELDS                                             */}
         {/* ============================================================== */}
         {activeType === "footwear" && (
           <div className="space-y-6 animate-in fade-in duration-200">
@@ -450,7 +506,7 @@ export default function FashionCategoryField({
         )}
 
         {/* ============================================================== */}
-        {/* 3. ACCESSORIES FIELDS */}
+        {/* 3. ACCESSORIES FIELDS                                          */}
         {/* ============================================================== */}
         {activeType === "accessories" && (
           <div className="space-y-6 animate-in fade-in duration-200">
@@ -531,7 +587,7 @@ export default function FashionCategoryField({
         )}
 
         {/* ============================================================== */}
-        {/* 4. DYNAMIC CUSTOM SPECIFICATIONS */}
+        {/* 4. DYNAMIC CUSTOM SPECIFICATIONS                               */}
         {/* ============================================================== */}
         <div className="border-t border-slate-100 pt-5">
           <div className="flex items-center justify-between mb-3">
@@ -600,6 +656,472 @@ export default function FashionCategoryField({
         </div>
       </div>
     </section>
+  );
+}
+
+// ============================================================================
+// COLOR & SIZE VARIANT MANAGER (WITH IMAGE UPLOAD PER COLOR)
+// ============================================================================
+
+function ColorVariantSection({
+  colors,
+  onChange,
+  activeType,
+}: {
+  colors: ColorVariant[];
+  onChange: (colors: ColorVariant[]) => void;
+  activeType: FashionType;
+}) {
+  const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [uploadError, setUploadError] = useState("");
+
+  const getAccessToken = async () => {
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  };
+
+  const handleAddColor = (presetColor?: string) => {
+    const newColor: ColorVariant = {
+      color: presetColor || "",
+      images: [],
+      sizes:
+        activeType === "footwear"
+          ? [
+              { size: "40", stock: 10 },
+              { size: "41", stock: 10 },
+              { size: "42", stock: 10 },
+            ]
+          : [
+              { size: "M", stock: 20 },
+              { size: "L", stock: 20 },
+              { size: "XL", stock: 20 },
+            ],
+    };
+    onChange([...colors, newColor]);
+  };
+
+  const handleRemoveColor = (colorIndex: number) => {
+    onChange(colors.filter((_, idx) => idx !== colorIndex));
+  };
+
+  const handleColorNameChange = (colorIndex: number, newName: string) => {
+    const updated = colors.map((c, idx) =>
+      idx === colorIndex ? { ...c, color: newName } : c,
+    );
+    onChange(updated);
+  };
+
+  // Upload image for a specific color
+  const handleImageUpload = async (
+    colorIndex: number,
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadError("");
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Please select an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Image size must be 5MB or less.");
+      return;
+    }
+
+    try {
+      setUploadingIndex(colorIndex);
+      const token = await getAccessToken();
+      if (!token) throw new Error("You are not logged in.");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${API_URL}/api/uploads/product-image`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || "Image upload failed.");
+      }
+
+      const imageUrl = result?.data?.url;
+      if (!imageUrl) throw new Error("Image uploaded but URL was not returned.");
+
+      const updated = colors.map((c, idx) => {
+        if (idx === colorIndex) {
+          return {
+            ...c,
+            images: [...(c.images || []), imageUrl],
+          };
+        }
+        return c;
+      });
+
+      onChange(updated);
+    } catch (err: any) {
+      console.error("Color image upload error:", err);
+      setUploadError(err.message || "Failed to upload image.");
+    } finally {
+      setUploadingIndex(null);
+      if (fileInputRefs.current[colorIndex]) {
+        fileInputRefs.current[colorIndex]!.value = "";
+      }
+    }
+  };
+
+  const handleRemoveColorImage = (colorIndex: number, imageIndex: number) => {
+    const updated = colors.map((c, idx) => {
+      if (idx === colorIndex) {
+        return {
+          ...c,
+          images: c.images.filter((_, imgIdx) => imgIdx !== imageIndex),
+        };
+      }
+      return c;
+    });
+    onChange(updated);
+  };
+
+  // Size handlers
+  const handleAddSize = (colorIndex: number, sizeName: string) => {
+    const targetColor = colors[colorIndex];
+    if (!targetColor) return;
+
+    // Don't add duplicate size
+    if (targetColor.sizes.some((s) => s.size === sizeName)) return;
+
+    const updated = colors.map((c, idx) => {
+      if (idx === colorIndex) {
+        return {
+          ...c,
+          sizes: [...c.sizes, { size: sizeName, stock: 10 }],
+        };
+      }
+      return c;
+    });
+    onChange(updated);
+  };
+
+  const handleUpdateSize = (
+    colorIndex: number,
+    sizeIndex: number,
+    field: "size" | "stock",
+    value: string | number,
+  ) => {
+    const updated = colors.map((c, idx) => {
+      if (idx === colorIndex) {
+        const newSizes = c.sizes.map((s, sIdx) => {
+          if (sIdx === sizeIndex) {
+            return {
+              ...s,
+              [field]: field === "stock" ? Number(value) || 0 : value,
+            };
+          }
+          return s;
+        });
+        return { ...c, sizes: newSizes };
+      }
+      return c;
+    });
+    onChange(updated);
+  };
+
+  const handleRemoveSize = (colorIndex: number, sizeIndex: number) => {
+    const updated = colors.map((c, idx) => {
+      if (idx === colorIndex) {
+        return {
+          ...c,
+          sizes: c.sizes.filter((_, sIdx) => sIdx !== sizeIndex),
+        };
+      }
+      return c;
+    });
+    onChange(updated);
+  };
+
+  const sizePresets =
+    activeType === "footwear" ? FOOTWEAR_SIZE_PRESETS : CLOTHING_SIZE_PRESETS;
+
+  return (
+    <div className="rounded-xl border border-amber-200/80 bg-amber-50/30 p-4 sm:p-5">
+      {/* SECTION HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#D6A419] text-[#12233F]">
+              <Sparkles size={14} />
+            </span>
+            <h4 className="text-sm font-bold text-slate-800">
+              রং ও সাইজ ভ্যারিয়েশন এবং ছবি (Color, Size & Variant Images)
+            </h4>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            প্রতিটি রঙের জন্য আলাদা ছবি আপলোড করুন এবং সংশ্লিষ্ট সাইজের স্টক লিখে দিন। কাস্টমার রং পরিবর্তন করলে ছবি স্বয়ংক্রিয়ভাবে বদলে যাবে।
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => handleAddColor()}
+          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg bg-[#D6A419] px-3.5 py-2 text-xs font-bold text-[#12233F] shadow-xs transition hover:bg-[#c69a12] active:scale-95"
+        >
+          <Plus size={15} />
+          <span>+ নতুন কালার যোগ করুন</span>
+        </button>
+      </div>
+
+      {uploadError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-600">
+          {uploadError}
+        </div>
+      )}
+
+      {/* QUICK COLOR PRESETS IF EMPTY */}
+      {colors.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-amber-300 bg-white/70 p-6 text-center">
+          <p className="text-xs font-semibold text-slate-700">
+            এখনো কোনো কালার ভ্যারিয়েন্ট যোগ করা হয়নি।
+          </p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            নিচের যেকোনো রঙে ক্লিক করে সরাসরি শুরু করতে পারেন অথবা উপরের বাটনে ক্লিক করুন:
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {COMMON_COLORS.slice(0, 6).map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => handleAddColor(c.split(" ")[0])}
+                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:border-[#D6A419] hover:bg-amber-50/50 transition"
+              >
+                + {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {colors.map((colorObj, colorIndex) => (
+            <div
+              key={colorIndex}
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs space-y-4"
+            >
+              {/* COLOR CARD HEADER */}
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2 flex-1 max-w-sm">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-700">
+                    {colorIndex + 1}
+                  </span>
+
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={colorObj.color}
+                      onChange={(e) =>
+                        handleColorNameChange(colorIndex, e.target.value)
+                      }
+                      placeholder="রঙের নাম (যেমন: Navy Blue, Black, White)"
+                      className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-[#D6A419] focus:bg-white"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleRemoveColor(colorIndex)}
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-rose-500 hover:bg-rose-50 transition"
+                  title="এই কালার মুছে ফেলুন"
+                >
+                  <Trash2 size={14} />
+                  <span className="hidden sm:inline">মুছে ফেলুন</span>
+                </button>
+              </div>
+
+              {/* QUICK COLOR SELECTOR CHIPS */}
+              {!colorObj.color && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[11px] font-medium text-slate-400">
+                    পছন্দের রং নির্বাচন করুন:
+                  </span>
+                  {COMMON_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() =>
+                        handleColorNameChange(colorIndex, c.split(" ")[0])
+                      }
+                      className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600 hover:border-[#D6A419] hover:bg-amber-50 transition"
+                    >
+                      {c.split(" ")[0]}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* 1. IMAGES FOR THIS COLOR */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-2">
+                  📷 {colorObj.color ? `"${colorObj.color}"` : "এই রঙের"} ছবিসমূহ (Images for this Color)
+                </label>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* EXISTING UPLOADED IMAGES */}
+                  {colorObj.images &&
+                    colorObj.images.map((imgUrl, imgIndex) => (
+                      <div
+                        key={imgIndex}
+                        className="group relative h-20 w-20 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shadow-xs"
+                      >
+                        <img
+                          src={imgUrl}
+                          alt={`${colorObj.color || "Variant"} ${imgIndex + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleRemoveColorImage(colorIndex, imgIndex)
+                          }
+                          className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white opacity-90 hover:opacity-100 transition shadow-xs"
+                          title="ছবি মুছুন"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    ))}
+
+                  {/* UPLOAD BUTTON */}
+                  <label className="flex h-20 w-28 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-500 transition hover:border-[#D6A419] hover:bg-amber-50/40">
+                    <input
+                      ref={(el) => {
+                        fileInputRefs.current[colorIndex] = el;
+                      }}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(colorIndex, e)}
+                      className="hidden"
+                      disabled={uploadingIndex === colorIndex}
+                    />
+                    {uploadingIndex === colorIndex ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <Loader2 size={18} className="animate-spin text-[#D6A419]" />
+                        <span className="text-[10px] font-medium text-slate-500">
+                          আপলোড হচ্ছে...
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={18} className="text-slate-400" />
+                        <span className="mt-1 text-[11px] font-semibold text-slate-600">
+                          + ছবি আপলোড
+                        </span>
+                      </>
+                    )}
+                  </label>
+                </div>
+              </div>
+
+              {/* 2. SIZES & STOCK FOR THIS COLOR */}
+              <div className="border-t border-slate-100 pt-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2.5">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    📏 {colorObj.color ? `"${colorObj.color}"` : "এই রঙের"} সাইজ ও স্টক (Sizes & Stock)
+                  </label>
+
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[11px] text-slate-400">
+                      দ্রুত সাইজ যোগ:
+                    </span>
+                    {sizePresets.map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => handleAddSize(colorIndex, preset)}
+                        className={`rounded-md border px-2 py-0.5 text-[11px] font-semibold transition ${
+                          colorObj.sizes.some((s) => s.size === preset)
+                            ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-[#D6A419]"
+                        }`}
+                      >
+                        + {preset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SIZES LIST */}
+                {colorObj.sizes.length === 0 ? (
+                  <p className="rounded-md border border-dashed border-slate-200 p-2.5 text-center text-[11px] text-slate-400">
+                    কোনো সাইজ যোগ করা হয়নি। উপরের বাটনগুলো থেকে সাইজ যোগ করুন।
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+                    {colorObj.sizes.map((sizeItem, sizeIndex) => (
+                      <div
+                        key={sizeIndex}
+                        className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/70 p-1.5"
+                      >
+                        <input
+                          type="text"
+                          value={sizeItem.size}
+                          onChange={(e) =>
+                            handleUpdateSize(
+                              colorIndex,
+                              sizeIndex,
+                              "size",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="সাইজ"
+                          className="w-12 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-center text-xs font-bold text-slate-800 outline-none"
+                        />
+
+                        <input
+                          type="number"
+                          min={0}
+                          value={sizeItem.stock}
+                          onChange={(e) =>
+                            handleUpdateSize(
+                              colorIndex,
+                              sizeIndex,
+                              "stock",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="স্টক"
+                          className="w-full rounded-md border border-slate-200 bg-white px-1.5 py-1 text-xs text-slate-800 outline-none"
+                          title="স্টক সংখ্যা"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleRemoveSize(colorIndex, sizeIndex)
+                          }
+                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-400 hover:text-rose-500 transition"
+                          title="মুছুন"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
