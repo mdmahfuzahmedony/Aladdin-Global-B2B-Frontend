@@ -415,8 +415,8 @@ export default function MainNavbar() {
 
   return (
     <>
-      {/* FIXED / STICKY HEADER & TOP BANNER WRAPPER (Sticky on Desktop, Natural scroll on Mobile) */}
-      <div className="relative xl:sticky xl:top-0 z-50 w-full shadow-xs">
+      {/* FIXED / STICKY HEADER & TOP BANNER WRAPPER (Always Sticky on all screens) */}
+      <div id="main-site-navbar" className="sticky top-0 z-50 w-full shadow-xs">
         {/* TOP PROMO BANNER */}
         <div className="w-full max-w-none px-0 py-0">
           {bannerContent}

@@ -136,6 +136,37 @@ export default function ProductDetailsPage({ params }: Props) {
     void fetchCustomerLocation();
   }, [fetchCustomerLocation]);
 
+  // Track dynamic navbar height so sticky gallery pins exactly below navbar on all screen sizes
+  useEffect(() => {
+    const updateNavbarHeight = () => {
+      const nav = document.getElementById("main-site-navbar");
+      if (nav) {
+        const height = nav.getBoundingClientRect().height;
+        if (height > 0) {
+          document.documentElement.style.setProperty(
+            "--navbar-h",
+            `${Math.round(height)}px`
+          );
+        }
+      }
+    };
+
+    updateNavbarHeight();
+    window.addEventListener("resize", updateNavbarHeight);
+
+    const nav = document.getElementById("main-site-navbar");
+    let observer: ResizeObserver | null = null;
+    if (nav && typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(() => updateNavbarHeight());
+      observer.observe(nav);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateNavbarHeight);
+      observer?.disconnect();
+    };
+  }, []);
+
   // =====================================================
   // PRODUCT DATA
   // =====================================================
@@ -712,8 +743,8 @@ export default function ProductDetailsPage({ params }: Props) {
         </div>
 
         <section className="block lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(310px,0.75fr)] lg:gap-6 lg:items-start">
-          {/* 1. GALLERY: Fixed on Top on Mobile (z-30 so content passes underneath it) and Fixed on Laptop */}
-          <div className="sticky top-0 z-30 w-full bg-white shadow-sm sm:rounded-2xl sm:shadow-xs lg:sticky lg:top-[150px] lg:self-start lg:z-auto">
+          {/* 1. GALLERY: Fixed right below the navbar on Mobile (z-30 so content passes underneath it) and Fixed on Laptop */}
+          <div className="sticky top-[var(--navbar-h,180px)] z-30 w-full bg-white shadow-md sm:rounded-2xl sm:shadow-xs lg:sticky lg:top-[calc(var(--navbar-h,140px)+16px)] lg:self-start lg:z-auto">
             <div className="rounded-none sm:rounded-2xl border-b sm:border border-slate-200/90 bg-white p-2.5 sm:p-4 shadow-xs">
               <ProductGallery
                 images={product.images}
@@ -724,7 +755,7 @@ export default function ProductDetailsPage({ params }: Props) {
           </div>
 
           {/* 2. PRODUCT INFO: Passes underneath the fixed gallery on mobile (z-10), scrolls inside on laptop */}
-          <div className="relative z-10 mt-3 sm:mt-4 px-3 sm:px-0 lg:mt-0 lg:px-0 lg:self-start lg:max-h-[calc(100vh-170px)] lg:overflow-y-auto lg:pr-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
+          <div className="relative z-10 mt-3 sm:mt-4 px-3 sm:px-0 lg:mt-0 lg:px-0 lg:self-start lg:max-h-[calc(100vh-var(--navbar-h,140px)-32px)] lg:overflow-y-auto lg:pr-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
             <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 sm:p-6 shadow-xs">
               <ProductInfo
                 product={product}
@@ -738,7 +769,7 @@ export default function ProductDetailsPage({ params }: Props) {
           </div>
 
           {/* 3. DELIVERY + SELLER: Also passes underneath the gallery on mobile (z-10), Fixed on laptop */}
-          <div className="relative z-10 mt-4 px-3 sm:px-0 space-y-4 lg:mt-0 lg:px-0 lg:sticky lg:top-[150px] lg:self-start">
+          <div className="relative z-10 mt-4 px-3 sm:px-0 space-y-4 lg:mt-0 lg:px-0 lg:sticky lg:top-[calc(var(--navbar-h,140px)+16px)] lg:self-start">
             <DeliveryOptions
               delivery={product.delivery}
               deliverySettings={product.deliverySettings}
@@ -832,14 +863,14 @@ export default function ProductDetailsPage({ params }: Props) {
 
         {/* TABS */}
 
-        <section className="mt-7 px-3 sm:px-0">
+        <section className="relative z-10 mt-7 px-3 sm:px-0">
           <ProductTabs product={product} />
         </section>
 
         {/* FREQUENTLY BOUGHT */}
 
         {product.boughtTogether.length > 0 && (
-          <section className="mt-10 px-3 sm:px-0">
+          <section className="relative z-10 mt-10 px-3 sm:px-0">
             <FrequentlyBought products={product.boughtTogether} />
           </section>
         )}
@@ -847,7 +878,7 @@ export default function ProductDetailsPage({ params }: Props) {
         {/* RELATED PRODUCTS */}
 
         {product.relatedProducts.length > 0 && (
-          <section className="mt-10 px-3 sm:px-0">
+          <section className="relative z-10 mt-10 px-3 sm:px-0">
             <RelatedProducts
               title="Related Products"
               products={product.relatedProducts}
