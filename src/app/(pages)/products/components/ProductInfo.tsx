@@ -388,6 +388,10 @@ export default function ProductInfo({ product, onColorChange }: Props) {
           `Only ${selectedStock} item(s) available in selected size.`,
         );
       }
+      const variantSection = document.getElementById("product-variants-section");
+      if (variantSection) {
+        variantSection.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       return;
     }
 
@@ -735,7 +739,7 @@ export default function ProductInfo({ product, onColorChange }: Props) {
 
       {/* 5. COLOR & SIZE VARIANTS */}
       {hasColorVariants && (
-        <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-xs">
+        <section id="product-variants-section" className="space-y-3 rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-xs scroll-mt-28">
           <div className="flex items-center gap-2">
             <Palette size={15} className="text-[#12233f]" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
@@ -995,62 +999,6 @@ export default function ProductInfo({ product, onColorChange }: Props) {
           <p>{statusMessage}</p>
         </div>
       )}
-
-      {/* 10. MOBILE FLOATING STICKY ACTION BAR */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 sm:hidden border-t border-slate-200/80 bg-white/95 px-3 py-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-md">
-        <div className="flex items-center justify-between gap-2.5">
-          {/* Price & Stock info */}
-          <div className="min-w-0 pr-1">
-            <p className="text-xs text-slate-400 font-medium leading-none">
-              Total Price
-            </p>
-            <p className="text-lg font-black text-[#12233f] leading-tight">
-              ৳{(currentPrice * quantity).toLocaleString()}
-            </p>
-            {hasOldPrice && (
-              <p className="text-[10px] text-slate-400 line-through leading-none">
-                ৳{(oldPrice * quantity).toLocaleString()}
-              </p>
-            )}
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void handleAddToCart(false)}
-              disabled={
-                addingToCart ||
-                checkingLocation ||
-                locationRestricted ||
-                variantStockInvalid ||
-                availableStockCount <= 0
-              }
-              className="flex h-10 px-3 items-center justify-center gap-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#12233f] text-xs font-bold transition active:scale-95 disabled:opacity-40"
-              title="Add to Cart"
-            >
-              <ShoppingCart size={15} />
-              <span>Cart</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => void handleAddToCart(true)}
-              disabled={
-                addingToCart ||
-                checkingLocation ||
-                locationRestricted ||
-                variantStockInvalid ||
-                availableStockCount <= 0
-              }
-              className="flex h-10 px-4 items-center justify-center gap-1.5 rounded-xl bg-[#f59e0b] hover:bg-[#d97706] text-[#12233f] text-xs font-extrabold shadow-sm transition active:scale-95 disabled:opacity-40"
-            >
-              <Zap size={15} className="fill-[#12233f]" />
-              <span>Buy Now</span>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

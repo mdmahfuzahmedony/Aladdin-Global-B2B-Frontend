@@ -732,7 +732,7 @@ export default function ProductDetailsPage({ params }: Props) {
   // =====================================================
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-24 sm:pb-12">
+    <main className="min-h-screen bg-slate-50 pb-12">
       <div className="mx-auto max-w-[1500px] px-0 sm:px-6 lg:px-8 py-0 sm:py-5">
         <div className="hidden sm:block px-3 sm:px-0 mb-3.5">
           <ProductBreadcrumb
@@ -768,7 +768,7 @@ export default function ProductDetailsPage({ params }: Props) {
             </div>
           </div>
 
-          {/* 3. DELIVERY + SELLER: Also passes underneath the gallery on mobile (z-10), Fixed on laptop */}
+          {/* 3. DELIVERY + SELLER: Right Column - Fixed on Laptop */}
           <div className="relative z-10 mt-4 px-3 sm:px-0 space-y-4 lg:mt-0 lg:px-0 lg:sticky lg:top-[calc(var(--navbar-h,140px)+16px)] lg:self-start">
             <DeliveryOptions
               delivery={product.delivery}
