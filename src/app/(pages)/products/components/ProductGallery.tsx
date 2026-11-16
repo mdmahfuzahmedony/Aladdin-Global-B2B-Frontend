@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 import type { ProductImage } from "../types";
 
 type Props = {
   images: ProductImage[];
   productName: string;
+  selectedImageUrl?: string | null;
 };
 
-export default function ProductGallery({ images, productName }: Props) {
+export default function ProductGallery({ images, productName, selectedImageUrl }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -23,6 +24,15 @@ export default function ProductGallery({ images, productName }: Props) {
             alt: productName,
           },
         ];
+
+  // Whenever a specific color image is selected from outside, switch gallery to that image
+  useEffect(() => {
+    if (!selectedImageUrl) return;
+    const foundIndex = safeImages.findIndex((img) => img.url === selectedImageUrl);
+    if (foundIndex !== -1) {
+      setActiveIndex(foundIndex);
+    }
+  }, [selectedImageUrl, safeImages]);
 
   const activeImage = safeImages[activeIndex] || safeImages[0];
 
@@ -41,7 +51,7 @@ export default function ProductGallery({ images, productName }: Props) {
   return (
     <div className="space-y-3 sm:space-y-4">
       {/* Main Image Container */}
-      <div className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+      <div className="group relative flex aspect-[4/3] sm:aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
         {/* Slide Counter (e.g., 1 / 4) */}
         {safeImages.length > 1 && (
           <div className="absolute left-3 top-3 z-10 rounded-full bg-slate-900/60 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm shadow-sm">

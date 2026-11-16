@@ -53,6 +53,7 @@ export default function ProductDetailsPage({ params }: Props) {
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedColorImage, setSelectedColorImage] = useState<string | null>(null);
 
   const [customerLocation, setCustomerLocation] =
     useState<CustomerLocation | null>(null);
@@ -708,29 +709,34 @@ export default function ProductDetailsPage({ params }: Props) {
           productName={product.name}
         />
 
-        <section className="mt-4 sm:mt-5 grid gap-4 lg:gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(310px,0.75fr)]">
-          {/* GALLERY */}
-
-          <div className="min-w-0">
+        <section className="mt-4 sm:mt-5 grid gap-4 lg:gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(310px,0.75fr)] items-start">
+          {/* 1. GALLERY: Fixed / Sticky on both laptop and mobile */}
+          <div className="min-w-0 sticky top-0 z-20 bg-slate-50/95 backdrop-blur-xs py-1.5 lg:sticky lg:top-4 lg:bg-transparent lg:py-0 self-start">
             <div className="rounded-2xl border border-slate-200/90 bg-white p-2.5 sm:p-4 shadow-xs">
               <ProductGallery
                 images={product.images}
                 productName={product.name}
+                selectedImageUrl={selectedColorImage}
               />
             </div>
           </div>
 
-          {/* PRODUCT INFO */}
-
-          <div className="min-w-0">
+          {/* 2. PRODUCT INFO: Only this middle section scrolls */}
+          <div className="min-w-0 self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
             <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 sm:p-6 shadow-xs">
-              <ProductInfo product={product} />
+              <ProductInfo
+                product={product}
+                onColorChange={(_colorName, imageUrl) => {
+                  if (imageUrl) {
+                    setSelectedColorImage(imageUrl);
+                  }
+                }}
+              />
             </div>
           </div>
 
-          {/* DELIVERY + SELLER */}
-
-          <div className="min-w-0 space-y-4">
+          {/* 3. DELIVERY + SELLER: Fixed / Sticky on laptop, normal on mobile */}
+          <div className="min-w-0 space-y-4 lg:sticky lg:top-4 self-start">
             <DeliveryOptions
               delivery={product.delivery}
               deliverySettings={product.deliverySettings}

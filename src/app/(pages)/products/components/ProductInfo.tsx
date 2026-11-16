@@ -30,6 +30,7 @@ import { ProductCategoryHighlights } from "./ProductCategoryAttributes";
 
 type Props = {
   product: ProductDetails;
+  onColorChange?: (colorName: string, imageUrl?: string) => void;
 };
 
 export interface StoredCartItem {
@@ -74,7 +75,7 @@ const getValidImageUrl = (image: any): string => {
   return "";
 };
 
-export default function ProductInfo({ product }: Props) {
+export default function ProductInfo({ product, onColorChange }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
@@ -125,8 +126,12 @@ export default function ProductInfo({ product }: Props) {
   useEffect(() => {
     if (defaultColor && !selectedColor) {
       setSelectedColor(defaultColor);
+      const defColorObj = colors.find((c) => c.color === defaultColor);
+      if (defColorObj?.images?.[0]) {
+        onColorChange?.(defaultColor, defColorObj.images[0]);
+      }
     }
-  }, [defaultColor, selectedColor]);
+  }, [defaultColor, selectedColor, colors, onColorChange]);
 
   useEffect(() => {
     if (defaultSize && !selectedSize) {
@@ -752,15 +757,19 @@ export default function ProductInfo({ product }: Props) {
                 </span>
               )}
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2.5">
               {colors.map((color) => {
                 const isSelected = selectedColor === color.color;
+                const colorThumb = color.images?.[0];
                 return (
                   <button
                     key={color.color}
                     type="button"
                     onClick={() => {
                       setSelectedColor(color.color);
+                      if (color.images?.[0]) {
+                        onColorChange?.(color.color, color.images[0]);
+                      }
                       const firstAvailableSize =
                         color.sizes?.find((s) => getStock(s.stock) > 0) ||
                         color.sizes?.[0];
@@ -768,13 +777,26 @@ export default function ProductInfo({ product }: Props) {
                       setQuantity(1);
                       setStatusMessage("");
                     }}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                    className={`group flex items-center gap-2 rounded-xl border p-1.5 pr-3 text-xs font-semibold transition-all ${
                       isSelected
-                        ? "border-[#12233f] bg-[#12233f] text-white shadow-xs"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
+                        ? "border-[#12233f] bg-[#12233f] text-white shadow-sm ring-2 ring-[#12233f]/20 scale-[1.02]"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
                     }`}
                   >
-                    {color.color}
+                    {colorThumb ? (
+                      <img
+                        src={colorThumb}
+                        alt={color.color}
+                        className={`h-7 w-7 rounded-lg object-cover border transition ${
+                          isSelected ? "border-white/40" : "border-slate-200"
+                        }`}
+                      />
+                    ) : (
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-xs">
+                        🎨
+                      </span>
+                    )}
+                    <span>{color.color}</span>
                   </button>
                 );
               })}
