@@ -110,7 +110,7 @@ const KNOWN_LABELS: Record<string, string> = {
   organic: "Organic Status",
   freshnessGuarantee: "Freshness Guarantee",
   grade: "Produce Grade",
-  origin: "Origin / Farm Source",
+  origin: "Country of Origin",
 
   // Beverages
   beverageType: "Beverage Type",
@@ -220,6 +220,8 @@ const KNOWN_LABELS: Record<string, string> = {
   lifeStage: "Life Stage",
 
   // Home & Living / Furniture
+  material: "Material",
+  dimensions: "Dimensions",
   primaryMaterial: "Primary Material",
   secondaryMaterial: "Secondary Material / Frame",
   finishType: "Color & Finish",
@@ -647,18 +649,30 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
     }
 
     case "HOME_LIVING": {
-      const mat = getVal("primaryMaterial");
+      // 1. Material
+      const mat = getVal("material") || getVal("primaryMaterial") || getVal("fabric");
       if (mat) highlights.push({ id: "material", label: "Material", value: mat, icon: <Layers size={13} />, variant: "amber" });
 
-      const finish = getVal("finishType");
-      if (finish) highlights.push({ id: "finish", label: "Finish", value: finish, icon: <Sparkles size={13} />, variant: "slate" });
+      // 2. Dimensions
+      const dim = getVal("dimensions") || [getVal("length"), getVal("width"), getVal("height")].filter(Boolean).join(" × ");
+      if (dim) highlights.push({ id: "dimensions", label: "Dimensions", value: dim, icon: <Box size={13} />, variant: "blue" });
 
-      const size = getVal("seatingCapacity") || getVal("bedSize");
-      if (size) highlights.push({ id: "size", label: "Capacity / Size", value: size, icon: <Tag size={13} />, variant: "blue" });
+      // 3. Product Type (Room Type er jaigai Product Type)
+      const prodType = getVal("productType") || getVal("roomType") || getVal("itemType") || getVal("category");
+      if (prodType) highlights.push({ id: "productType", label: "Product Type", value: prodType, icon: <Tag size={13} />, variant: "indigo" });
 
-      const dim = [getVal("length"), getVal("width"), getVal("height")].filter(Boolean).join(" × ");
-      if (dim) highlights.push({ id: "dim", label: "Dimensions", value: `${dim} ${getVal("dimensionUnit") || ""}`.trim(), icon: <Box size={13} />, variant: "indigo" });
+      // 4. Country of Origin (Origin / কোন দেশের পণ্য)
+      const origin = getVal("countryOfOrigin") || getVal("origin") || getVal("country") || getVal("madeIn");
+      ["countryOfOrigin", "origin", "country", "madeIn", "country_of_origin"].forEach((k) =>
+        highlightedAttributeKeys.add(k)
+      );
+      if (origin) highlights.push({ id: "origin", label: "Country of Origin", value: origin, icon: <MapPin size={13} />, variant: "rose" });
 
+      // 5. Care Instructions
+      const care = getVal("careInstruction") || getVal("careInstructions") || getVal("washCare");
+      if (care) highlights.push({ id: "careInstruction", label: "Care Instruction", value: care, icon: <Sparkles size={13} />, variant: "slate" });
+
+      // 6. Optional: Warranty & Finish
       const warranty = getVal("warranty");
       if (warranty) highlights.push({ id: "warranty", label: "Warranty", value: warranty, icon: <ShieldCheck size={13} />, variant: "emerald" });
       break;
@@ -669,9 +683,26 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
   }
 
   Object.entries(attrs).forEach(([key, value]) => {
+    const lk = key.toLowerCase();
     if (
       IGNORED_ATTRIBUTE_KEYS.has(key) ||
-      highlightedAttributeKeys.has(key)
+      highlightedAttributeKeys.has(key) ||
+      lk === "countryoforigin" ||
+      lk === "origin" ||
+      lk === "country" ||
+      lk === "madein" ||
+      lk === "country_of_origin" ||
+      lk.includes("origin")
+    ) {
+      return;
+    }
+
+    const label = formatKeyLabel(key);
+    // Prevent duplicate badge labels
+    if (
+      highlights.some(
+        (h) => h.id === key || h.label.toLowerCase() === label.toLowerCase()
+      )
     ) {
       return;
     }
@@ -681,7 +712,7 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
 
     highlights.push({
       id: key,
-      label: formatKeyLabel(key),
+      label,
       value: formattedValue,
       icon: <Tag size={13} />,
       variant: "indigo",
@@ -754,6 +785,21 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
       const formattedVal = formatAttributeValue(v);
       if (formattedVal) {
         processedKeys.add(k);
+        const label = formatKeyLabel(k);
+        if (rows.some((r) => r.label.toLowerCase() === label.toLowerCase())) {
+          return;
+        }
+        if (
+          k.toLowerCase().includes("origin") ||
+          k === "countryOfOrigin" ||
+          k === "country" ||
+          k === "madeIn"
+        ) {
+          ["countryOfOrigin", "origin", "country", "madeIn", "country_of_origin"].forEach((alias) =>
+            processedKeys.add(alias)
+          );
+        }
+
         const isCertBadge =
           k.toLowerCase().includes("halal") ||
           k.toLowerCase().includes("organic") ||
@@ -762,7 +808,7 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
 
         rows.push({
           key: k,
-          label: formatKeyLabel(k),
+          label,
           value: formattedVal,
           isBadge: isCertBadge && (formattedVal === "Yes" || formattedVal.includes("Certified")),
           badgeVariant: "success",
@@ -944,7 +990,7 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
       });
     }
   } else if (domain === "HOME_LIVING") {
-    const matRows = buildRows(["primaryMaterial", "secondaryMaterial", "finishType", "color", "termiteProof"]);
+    const matRows = buildRows(["material", "primaryMaterial", "secondaryMaterial", "finishType", "color", "termiteProof"]);
     if (matRows.length > 0) {
       groups.push({
         id: "hl-material",
@@ -954,7 +1000,7 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
       });
     }
 
-    const dimRows = buildRows(["length", "width", "height", "thickness", "dimensionUnit", "seatingCapacity", "bedSize", "weightCapacity"]);
+    const dimRows = buildRows(["dimensions", "length", "width", "height", "thickness", "dimensionUnit", "seatingCapacity", "bedSize", "weightCapacity"]);
     if (dimRows.length > 0) {
       groups.push({
         id: "hl-dimensions",
@@ -964,11 +1010,11 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
       });
     }
 
-    const featRows = buildRows(["storageType", "mobility", "assemblyType", "warranty", "roomType", "countryOfOrigin"]);
+    const featRows = buildRows(["productType", "countryOfOrigin", "origin", "careInstruction", "warranty", "storageType", "mobility", "assemblyType"]);
     if (featRows.length > 0) {
       groups.push({
         id: "hl-features",
-        title: "Features, Assembly & Warranty",
+        title: "Product Type, Origin & Care",
         icon: <ShieldCheck size={16} className="text-emerald-600" />,
         rows: featRows,
       });
@@ -1001,15 +1047,30 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
   // 3. Fallback / Remaining Attributes
   const remainingRows: SpecRow[] = [];
   Object.entries(attrs).forEach(([k, v]) => {
+    const lk = k.toLowerCase();
     const formattedVal = formatAttributeValue(v);
     if (
       !IGNORED_ATTRIBUTE_KEYS.has(k) &&
       !processedKeys.has(k) &&
       formattedVal
     ) {
+      const label = formatKeyLabel(k);
+      const isOrigin = lk.includes("origin") || lk === "country" || lk === "madein";
+      const duplicateLabel =
+        groups.some((g) => g.rows.some((r) => r.label.toLowerCase() === label.toLowerCase())) ||
+        remainingRows.some((r) => r.label.toLowerCase() === label.toLowerCase());
+      const duplicateOrigin =
+        isOrigin &&
+        (groups.some((g) => g.rows.some((r) => r.label.toLowerCase().includes("origin"))) ||
+          remainingRows.some((r) => r.label.toLowerCase().includes("origin")));
+
+      if (duplicateLabel || duplicateOrigin) {
+        return;
+      }
+
       remainingRows.push({
         key: k,
-        label: formatKeyLabel(k),
+        label,
         value: formattedVal,
       });
     }
@@ -1060,10 +1121,10 @@ export function ProductCategoryHighlights({ product }: { product: ProductDetails
       <div className="mb-2 flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
           <Sparkles size={12} className="text-[#D6A419]" />
-          Key Highlights
+          Key Features
         </span>
         <span className="text-[10px] font-medium text-slate-400">
-          Category Specs
+          Specifications
         </span>
       </div>
 

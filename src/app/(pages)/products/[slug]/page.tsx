@@ -742,7 +742,7 @@ export default function ProductDetailsPage({ params }: Props) {
           />
         </div>
 
-        <section className="block lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(310px,0.75fr)] lg:gap-6 lg:items-start">
+        <section className="block lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(310px,0.75fr)] lg:gap-6 lg:items-stretch">
           {/* 1. GALLERY: Fixed right below the navbar on Mobile (z-30 so content passes underneath it) and Fixed on Laptop */}
           <div className="sticky top-[var(--navbar-h,180px)] z-30 w-full bg-white shadow-md sm:rounded-2xl sm:shadow-xs lg:sticky lg:top-[calc(var(--navbar-h,140px)+16px)] lg:self-start lg:z-auto">
             <div className="rounded-none sm:rounded-2xl border-b sm:border border-slate-200/90 bg-white p-2.5 sm:p-4 shadow-xs">
@@ -754,9 +754,9 @@ export default function ProductDetailsPage({ params }: Props) {
             </div>
           </div>
 
-          {/* 2. PRODUCT INFO: Passes underneath the fixed gallery on mobile (z-10), scrolls inside on laptop */}
-          <div className="relative z-10 mt-3 sm:mt-4 px-3 sm:px-0 lg:mt-0 lg:px-0 lg:self-start lg:max-h-[calc(100vh-var(--navbar-h,140px)-32px)] lg:overflow-y-auto lg:pr-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
-            <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 sm:p-6 shadow-xs">
+          {/* 2. PRODUCT INFO: Same Level as other columns on laptop, scrolls only if content overflows */}
+          <div className="relative z-10 mt-3 sm:mt-4 px-3 sm:px-0 lg:mt-0 lg:px-0 lg:h-full lg:self-stretch">
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 sm:p-6 shadow-xs lg:h-full lg:overflow-y-auto lg:pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
               <ProductInfo
                 product={product}
                 onColorChange={(_colorName, imageUrl) => {
