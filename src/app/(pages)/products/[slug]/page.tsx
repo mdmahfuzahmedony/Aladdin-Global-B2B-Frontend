@@ -702,17 +702,19 @@ export default function ProductDetailsPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-slate-50 pb-24 sm:pb-12">
-      <div className="mx-auto max-w-[1500px] px-3 sm:px-6 lg:px-8 py-3.5 sm:py-5">
-        <ProductBreadcrumb
-          category={product.category}
-          subcategory={product.subcategory}
-          productName={product.name}
-        />
+      <div className="mx-auto max-w-[1500px] px-0 sm:px-6 lg:px-8 py-0 sm:py-5">
+        <div className="hidden sm:block px-3 sm:px-0 mb-3.5">
+          <ProductBreadcrumb
+            category={product.category}
+            subcategory={product.subcategory}
+            productName={product.name}
+          />
+        </div>
 
-        <section className="mt-4 sm:mt-5 grid gap-4 lg:gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(310px,0.75fr)] items-start">
-          {/* 1. GALLERY: Fixed / Sticky on both laptop and mobile */}
-          <div className="min-w-0 sticky top-0 z-20 bg-slate-50/95 backdrop-blur-xs py-1.5 lg:sticky lg:top-4 lg:bg-transparent lg:py-0 self-start">
-            <div className="rounded-2xl border border-slate-200/90 bg-white p-2.5 sm:p-4 shadow-xs">
+        <section className="block lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(310px,0.75fr)] lg:gap-6 lg:items-start">
+          {/* 1. GALLERY: Fixed on Top on Mobile (z-30 so content passes underneath it) and Fixed on Laptop */}
+          <div className="sticky top-0 z-30 w-full bg-white shadow-sm sm:rounded-2xl sm:shadow-xs lg:sticky lg:top-[150px] lg:self-start lg:z-auto">
+            <div className="rounded-none sm:rounded-2xl border-b sm:border border-slate-200/90 bg-white p-2.5 sm:p-4 shadow-xs">
               <ProductGallery
                 images={product.images}
                 productName={product.name}
@@ -721,8 +723,8 @@ export default function ProductDetailsPage({ params }: Props) {
             </div>
           </div>
 
-          {/* 2. PRODUCT INFO: Only this middle section scrolls */}
-          <div className="min-w-0 self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
+          {/* 2. PRODUCT INFO: Passes underneath the fixed gallery on mobile (z-10), scrolls inside on laptop */}
+          <div className="relative z-10 mt-3 sm:mt-4 px-3 sm:px-0 lg:mt-0 lg:px-0 lg:self-start lg:max-h-[calc(100vh-170px)] lg:overflow-y-auto lg:pr-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
             <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 sm:p-6 shadow-xs">
               <ProductInfo
                 product={product}
@@ -735,8 +737,8 @@ export default function ProductDetailsPage({ params }: Props) {
             </div>
           </div>
 
-          {/* 3. DELIVERY + SELLER: Fixed / Sticky on laptop, normal on mobile */}
-          <div className="min-w-0 space-y-4 lg:sticky lg:top-4 self-start">
+          {/* 3. DELIVERY + SELLER: Also passes underneath the gallery on mobile (z-10), Fixed on laptop */}
+          <div className="relative z-10 mt-4 px-3 sm:px-0 space-y-4 lg:mt-0 lg:px-0 lg:sticky lg:top-[150px] lg:self-start">
             <DeliveryOptions
               delivery={product.delivery}
               deliverySettings={product.deliverySettings}
@@ -830,14 +832,14 @@ export default function ProductDetailsPage({ params }: Props) {
 
         {/* TABS */}
 
-        <section className="mt-7">
+        <section className="mt-7 px-3 sm:px-0">
           <ProductTabs product={product} />
         </section>
 
         {/* FREQUENTLY BOUGHT */}
 
         {product.boughtTogether.length > 0 && (
-          <section className="mt-10">
+          <section className="mt-10 px-3 sm:px-0">
             <FrequentlyBought products={product.boughtTogether} />
           </section>
         )}
@@ -845,7 +847,7 @@ export default function ProductDetailsPage({ params }: Props) {
         {/* RELATED PRODUCTS */}
 
         {product.relatedProducts.length > 0 && (
-          <section className="mt-10">
+          <section className="mt-10 px-3 sm:px-0">
             <RelatedProducts
               title="Related Products"
               products={product.relatedProducts}

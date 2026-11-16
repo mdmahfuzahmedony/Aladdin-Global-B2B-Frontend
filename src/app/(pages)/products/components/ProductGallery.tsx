@@ -51,7 +51,7 @@ export default function ProductGallery({ images, productName, selectedImageUrl }
   return (
     <div className="space-y-3 sm:space-y-4">
       {/* Main Image Container */}
-      <div className="group relative flex aspect-[4/3] sm:aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+      <div className="group relative flex aspect-[4/3] sm:aspect-square w-full max-h-[220px] sm:max-h-[340px] lg:max-h-none items-center justify-center overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white shadow-xs">
         {/* Slide Counter (e.g., 1 / 4) */}
         {safeImages.length > 1 && (
           <div className="absolute left-3 top-3 z-10 rounded-full bg-slate-900/60 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm shadow-sm">
@@ -133,7 +133,7 @@ export default function ProductGallery({ images, productName, selectedImageUrl }
                 key={image.id || index}
                 type="button"
                 onClick={() => setActiveIndex(index)}
-                className={`relative h-16 w-16 sm:h-18 sm:w-18 shrink-0 overflow-hidden rounded-xl border-2 bg-white transition duration-150 ${
+                className={`relative h-12 w-12 sm:h-18 sm:w-18 shrink-0 overflow-hidden rounded-lg sm:rounded-xl border-2 bg-white transition duration-150 ${
                   isSelected
                     ? "border-amber-500 ring-2 ring-amber-400/30 shadow-sm"
                     : "border-slate-200 opacity-75 hover:opacity-100 hover:border-slate-400"
