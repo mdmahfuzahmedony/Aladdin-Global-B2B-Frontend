@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import LocationModal from "@/app/(pages)/set-location/LocationModal";
 import { createClient } from "../../../../../lib/supabase-client";
-import { ProductDetails, ProductVariant, ProductImage } from "../types";
+import { ProductDetails, ProductVariant, ProductImage, RelatedProduct } from "../types";
 import ProductTabs from "../components/ProductTabs";
 import RelatedProducts from "../components/RelatedProducts";
 import DeliveryOptions from "../components/DeliveryOptions";
