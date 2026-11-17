@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Heart, Star, ShoppingCart, GitCompareArrows } from "lucide-react";
 import { useCompare } from "../../../context/CompareContext";
 import { createClient } from "../../../../lib/supabase-client";
+import { useLanguage } from "@/context/LanguageContext";
 
 type ProductCardProps = {
   id: string;
@@ -39,6 +40,7 @@ export default function ProductCard({
   flashSaleStock,
   isFlashSale = false,
 }: ProductCardProps) {
+  const { t } = useLanguage();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -190,7 +192,7 @@ export default function ProductCard({
             </span>
           ) : isNew ? (
             <span className="inline-block rounded bg-emerald-600 px-1.5 py-0.5 text-[9px] font-bold text-white sm:text-[10px]">
-              NEW
+              {t("new")}
             </span>
           ) : discountBadge ? (
             <span className="inline-block max-w-full truncate rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-bold text-white sm:text-[10px]">
@@ -285,11 +287,11 @@ export default function ProductCard({
         </div>
 
         <div className="mt-0.5 flex min-w-0 items-center justify-between gap-1 text-[9px] sm:text-[10px]">
-          <span className="truncate text-slate-500">MOQ: {moq}</span>
+          <span className="truncate text-slate-500">{t("moq")}: {moq}</span>
 
           {isFlashSale && (
             <span className="shrink-0 font-semibold text-rose-600">
-              {flashSaleStock ?? 0} left
+              {flashSaleStock ?? 0} {t("left")}
             </span>
           )}
         </div>
@@ -302,7 +304,7 @@ export default function ProductCard({
         >
           <ShoppingCart size={13} className="shrink-0" />
           <span className="truncate">
-            {isAddingToCart ? "Adding..." : "Add to Cart"}
+            {isAddingToCart ? t("adding") : t("addToCart")}
           </span>
         </button>
       </div>

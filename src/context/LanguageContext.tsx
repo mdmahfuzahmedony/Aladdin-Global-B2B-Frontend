@@ -242,6 +242,52 @@ const translations = {
     goToSlide: "Go to slide",
     promotionalBanner: "Promotional banner",
     productLoadError: "Could not load products",
+    stock: "Stock:",
+    pcs: "pcs",
+    reviews: "reviews",
+    off: "OFF",
+    outOfStock: "Out of Stock",
+    inStock: "In Stock",
+    available: "available",
+    buyNow: "Buy Now",
+    shortDes: "Short des:",
+    soldBy: "Sold by:",
+    verifiedSeller: "Verified Seller",
+    sellerOfficial: "Official Store",
+    sku: "SKU:",
+    categoryLabel: "Category:",
+    brandLabel: "Brand:",
+    authorLabel: "Author:",
+    publisherLabel: "Publisher:",
+    editionLabel: "Edition:",
+    genericLabel: "Generic:",
+    companyLabel: "Company:",
+    description: "Description",
+    specifications: "Specifications",
+    customerReviews: "Customer Reviews",
+    noDescription: "No description available for this product.",
+    relatedProducts: "Related Products",
+    viewDetails: "View Details",
+    welcomeUser: "Hello",
+    welcomeGuest: "Welcome to Aladdin",
+    accessPanel: "Access your B2B Panel",
+    sellerDashboard: "Seller Dashboard",
+    manageProducts: "Manage Products",
+    adminDashboard: "Admin Dashboard",
+    accountSettings: "Account Settings",
+    signOut: "Sign Out",
+    signingOut: "Signing Out...",
+    register: "Register",
+    seeAllWishlist: "See All Wishlist",
+    wishlistEmpty: "Your wishlist is empty",
+    browseProducts: "Browse Products",
+    brandTagline: "connects verified wholesale buyers and sellers across Bangladesh with genuine products and reliable delivery.",
+    howToShop: "How to Shop",
+    refundPolicy: "Refund Policy",
+    termsAndConditions: "Terms & Conditions",
+    paymentOptions: "Payment Options:",
+    cod: "Cash on Delivery",
+    payOnReceive: "Pay when you receive",
   },
   bn: {
     account: "অ্যাকাউন্ট",
@@ -474,6 +520,52 @@ const translations = {
     goToSlide: "ব্যানার দেখুন",
     promotionalBanner: "প্রচারমূলক ব্যানার",
     productLoadError: "পণ্য লোড করা যায়নি",
+    stock: "স্টক:",
+    pcs: "টি",
+    reviews: "রিভিউ",
+    off: "ছাড়",
+    outOfStock: "স্টক শেষ",
+    inStock: "স্টকে আছে",
+    available: "টি উপলব্ধ",
+    buyNow: "এখনই কিনুন",
+    shortDes: "সংক্ষিপ্ত বিবরণ:",
+    soldBy: "বিক্রেতা:",
+    verifiedSeller: "যাচাইকৃত বিক্রেতা",
+    sellerOfficial: "অফিশিয়াল স্টোর",
+    sku: "এসকেইউ:",
+    categoryLabel: "ক্যাটাগরি:",
+    brandLabel: "ব্র্যান্ড:",
+    authorLabel: "লেখক:",
+    publisherLabel: "প্রকাশনী:",
+    editionLabel: "সংস্করণ:",
+    genericLabel: "জেনেরিক:",
+    companyLabel: "প্রস্তুতকারক:",
+    description: "বিবরণ",
+    specifications: "স্পেসিফিকেশন",
+    customerReviews: "কাস্টমার রিভিউ",
+    noDescription: "এই পণ্যের জন্য কোনো বিবরণ দেওয়া হয়নি।",
+    relatedProducts: "সম্পর্কিত পণ্যসমূহ",
+    viewDetails: "বিস্তারিত দেখুন",
+    welcomeUser: "হ্যালো",
+    welcomeGuest: "আলাদিনে স্বাগতম",
+    accessPanel: "আপনার B2B প্যানেলে প্রবেশ করুন",
+    sellerDashboard: "সেলার ড্যাশবোর্ড",
+    manageProducts: "পণ্য পরিচালনা",
+    adminDashboard: "অ্যাডমিন ড্যাশবোর্ড",
+    accountSettings: "অ্যাকাউন্ট সেটিংস",
+    signOut: "লগআউট",
+    signingOut: "লগআউট হচ্ছে...",
+    register: "রেজিস্টার",
+    seeAllWishlist: "পুরো উইশলিস্ট দেখুন",
+    wishlistEmpty: "আপনার উইশলিস্ট খালি",
+    browseProducts: "পণ্য ব্রাউজ করুন",
+    brandTagline: "আসল পণ্য ও নির্ভরযোগ্য ডেলিভারির সাথে বাংলাদেশজুড়ে যাচাইকৃত পাইকারি ক্রেতা ও বিক্রেতাদের যুক্ত করে।",
+    howToShop: "কীভাবে কেনাকাটা করবেন",
+    refundPolicy: "রিফান্ড পলিসি",
+    termsAndConditions: "শর্তাবলী",
+    paymentOptions: "পেমেন্ট মাধ্যম:",
+    cod: "ক্যাশ অন ডেলিভারি",
+    payOnReceive: "পণ্য বুঝে পেয়ে মূল্য পরিশোধ করুন",
   },
 } as const;
 
@@ -501,10 +593,26 @@ export function LanguageProvider({
     document.documentElement.lang = language === "bn" ? "bn" : "en";
   }, [language]);
 
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const saved = window.localStorage.getItem(STORAGE_KEY);
+        if ((saved === "bn" || saved === "en") && saved !== language) {
+          setLanguageState(saved);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const setLanguage = useCallback((nextLanguage: Language) => {
     setLanguageState(nextLanguage);
     try {
       document.cookie = `${STORAGE_KEY}=${nextLanguage}; Path=/; Max-Age=31536000; SameSite=Lax`;
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(STORAGE_KEY, nextLanguage);
+      }
     } catch (error) {
       console.warn("Could not save the language preference:", error);
     }

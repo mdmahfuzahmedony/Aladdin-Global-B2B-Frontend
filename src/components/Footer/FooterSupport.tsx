@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 
-const supportLinks = [
-  { label: "Help Center", href: "/help" },
-
-];
-
 export function FooterSupport() {
   const { t } = useLanguage();
+
+  const supportLinks = [
+    { label: t("helpCenter"), href: "/help-center" },
+    { label: t("howToShop"), href: "/how-to-shop" },
+    { label: t("paymentMethods"), href: "/payment-methods" },
+    { label: t("refundPolicy"), href: "/refund-policy" },
+    { label: t("termsAndConditions"), href: "/terms-and-conditions" },
+  ];
 
   return (
     <div>

@@ -12,6 +12,7 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { createClient } from "../../../lib/supabase-client";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface WishlistProductPricing {
   customerRegularPrice: number;
@@ -44,6 +45,7 @@ export default function WishlistSidebar({
   onWishlistChanged,
   onCartChanged,
 }: WishlistSidebarProps) {
+  const { t } = useLanguage();
   const [items, setItems] = useState<WishlistApiItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -220,7 +222,7 @@ export default function WishlistSidebar({
             <div className="flex items-center gap-2">
               <Heart size={20} className="text-[#F59E0B]" fill="#F59E0B" />
               <h2 className="text-lg font-bold">
-                My Wishlist ({items.length})
+                {t("myWishlist")} ({items.length})
               </h2>
             </div>
 
@@ -316,7 +318,7 @@ export default function WishlistSidebar({
                         ) : (
                           <ShoppingCart size={12} />
                         )}
-                        {addingId === item.id ? "Adding..." : "Add to Cart"}
+                        {addingId === item.id ? t("adding") : t("addToCart")}
                       </button>
                     </div>
 
@@ -340,14 +342,14 @@ export default function WishlistSidebar({
               <div className="py-20 text-center">
                 <Heart size={48} className="mx-auto mb-3 text-gray-300" />
                 <p className="font-medium text-gray-500">
-                  Your wishlist is empty
+                  {t("wishlistEmpty")}
                 </p>
                 <Link
                   href="/products"
                   onClick={onClose}
                   className="mt-4 inline-block text-sm font-semibold text-[#0F172A] underline"
                 >
-                  Browse Products
+                  {t("browseProducts")}
                 </Link>
               </div>
             )}
@@ -360,7 +362,7 @@ export default function WishlistSidebar({
               onClick={onClose}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0F172A] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-slate-800"
             >
-              See All Wishlist
+              {t("seeAllWishlist")}
               <ArrowRight size={17} />
             </Link>
           </div>

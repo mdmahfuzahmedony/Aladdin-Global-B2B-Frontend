@@ -232,7 +232,7 @@ export default function ProductCard({
           {isNew && (
             <div className="absolute left-1.5 top-1.5 z-10 flex flex-col gap-1 pointer-events-none sm:left-2 sm:top-2">
               <span className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm sm:px-2">
-                {badgeText || "NEW"}
+                {badgeText || t("new")}
               </span>
             </div>
           )}
@@ -323,7 +323,7 @@ export default function ProductCard({
               {Number(rating || 0).toFixed(1)}
             </span>
             <span className="text-[10px] font-medium text-slate-400">
-              ({reviewsCount >= 1000 ? `${(reviewsCount / 1000).toFixed(1)}k` : reviewsCount} reviews)
+              ({reviewsCount >= 1000 ? `${(reviewsCount / 1000).toFixed(1)}k` : reviewsCount} {t("reviews")})
             </span>
           </div>
         </div>
@@ -345,7 +345,7 @@ export default function ProductCard({
           {/* Discount Percentage Badge */}
           {discountPercent && discountPercent > 0 ? (
             <span className="rounded-md border border-emerald-200/70 bg-emerald-50 px-1 py-0.5 text-[10px] font-bold text-emerald-600">
-              {discountPercent}% OFF
+              {discountPercent}% {t("off")}
             </span>
           ) : null}
         </div>
@@ -356,10 +356,10 @@ export default function ProductCard({
           <span>
             {realStock > 0 ? (
               <>
-                Stock: <span className="font-bold text-slate-900">{realStock}</span> pcs
+                {t("stock")} <span className="font-bold text-slate-900">{realStock}</span> {t("pcs")}
               </>
             ) : (
-              <span className="font-bold text-rose-500">Out of stock</span>
+              <span className="font-bold text-rose-500">{t("outOfStock")}</span>
             )}
           </span>
           {moq && moq !== "N/A" && (
@@ -379,7 +379,7 @@ export default function ProductCard({
           className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#0B1E3B] py-2 text-xs font-bold text-white shadow-xs transition-all duration-200 hover:bg-[#16305a] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ShoppingCart size={14} className="shrink-0 text-white" />
-          <span>{isAddingToCart ? t("adding") : "Add to Cart"}</span>
+          <span>{isAddingToCart ? t("adding") : t("addToCart")}</span>
         </button>
       </div>
 

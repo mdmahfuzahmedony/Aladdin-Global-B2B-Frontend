@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import type { ProductDetails } from "../types";
 import ProductReview from "./ProductReviews";
 import ProductCategorySpecs from "./ProductCategoryAttributes";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   FileText,
   Sliders,
@@ -35,6 +36,7 @@ type Props = {
 };
 
 export default function ProductTabs({ product }: Props) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabKey>("description");
 
   // Vendor rating interaction state
@@ -131,12 +133,12 @@ export default function ProductTabs({ product }: Props) {
   const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
     {
       key: "description",
-      label: "Description",
+      label: t("description"),
       icon: <FileText size={15} />,
     },
     {
       key: "specification",
-      label: "Specification",
+      label: t("specifications"),
       icon: <Sliders size={15} />,
     },
     {
@@ -146,7 +148,7 @@ export default function ProductTabs({ product }: Props) {
     },
     {
       key: "reviews",
-      label: `Customer Reviews (${product.reviewCount || 0})`,
+      label: `${t("customerReviews")} (${product.reviewCount || 0})`,
       icon: <MessageSquareQuote size={15} />,
     },
     {

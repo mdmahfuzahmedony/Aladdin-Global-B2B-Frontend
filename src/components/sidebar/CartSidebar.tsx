@@ -233,7 +233,7 @@ export default function CartSidebar({
               <ShoppingBag size={20} className="text-[#F59E0B]" />
 
               <h2 className="text-lg font-bold">
-                Shopping Cart ({items.length})
+                {t("shoppingCart")} ({items.length})
               </h2>
             </div>
 
@@ -355,7 +355,7 @@ export default function CartSidebar({
               <div className="py-20 text-center">
                 <ShoppingBag size={48} className="mx-auto mb-3 text-gray-300" />
 
-                <p className="font-medium text-gray-500">Your cart is empty</p>
+                <p className="font-medium text-gray-500">{t("cartEmpty")}</p>
               </div>
             )}
           </div>
@@ -364,7 +364,7 @@ export default function CartSidebar({
             <div className="border-t border-gray-100 bg-gray-50 p-6">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-600">
-                  Subtotal
+                  {t("subtotal")}
                 </span>
 
                 <span className="text-lg font-bold text-[#0F172A]">
@@ -377,7 +377,7 @@ export default function CartSidebar({
                 onClick={handleCheckoutClick}
                 className="w-full cursor-pointer rounded-xl bg-[#F59E0B] py-3 font-bold text-white shadow-sm transition-colors hover:bg-[#d97706]"
               >
-                Proceed to Checkout
+                {t("checkout")}
               </button>
             </div>
           )}

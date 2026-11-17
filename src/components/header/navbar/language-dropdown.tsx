@@ -12,6 +12,23 @@ export function LanguageDropdown() {
   const { language, setLanguage, t } = useLanguage();
 
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      setOpen(false);
+    }, 180);
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -28,11 +45,19 @@ export function LanguageDropdown() {
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, []);
 
   return (
-    <div ref={wrapperRef} className="relative z-[100]">
+    <div
+      ref={wrapperRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="relative z-[100]"
+    >
       {/* LANGUAGE BUTTON */}
       <button
         type="button"
@@ -55,8 +80,7 @@ export function LanguageDropdown() {
 
       {/* LANGUAGE & CURRENCY MENU */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[260px] rounded-2xl border border-slate-200 bg-white p-4 text-[#12233F] shadow-2xl">
-
+        <div className="absolute right-0 top-full mt-1.5 w-[260px] rounded-2xl border border-slate-200 bg-white p-4 text-[#12233F] shadow-2xl before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
           {/* LANGUAGE SECTION */}
           <div>
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
@@ -134,7 +158,6 @@ export function LanguageDropdown() {
               </button>
             </div>
           </div>
-
         </div>
       )}
     </div>

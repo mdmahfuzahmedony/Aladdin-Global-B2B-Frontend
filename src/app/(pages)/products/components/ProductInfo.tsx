@@ -18,6 +18,7 @@ import {
   GitCompareArrows,
 } from "lucide-react";
 import { useCompare } from "@/context/CompareContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 import type {
   ProductDetails,
@@ -26,7 +27,10 @@ import type {
   ProductAttributes,
 } from "../types";
 import { createClient } from "../../../../../lib/supabase-client";
-import { ProductCategoryHighlights } from "./ProductCategoryAttributes";
+import {
+  ProductCategoryHighlights,
+  detectCategoryDomain,
+} from "./ProductCategoryAttributes";
 
 type Props = {
   product: ProductDetails;
@@ -77,6 +81,7 @@ const getValidImageUrl = (image: any): string => {
 
 export default function ProductInfo({ product, onColorChange }: Props) {
   const router = useRouter();
+  const { t } = useLanguage();
   const supabase = useMemo(() => createClient(), []);
 
   const [quantity, setQuantity] = useState(1);
@@ -282,11 +287,43 @@ export default function ProductInfo({ product, onColorChange }: Props) {
         ? Math.round((savingAmount / oldPrice) * 100)
         : 0;
 
-  const brandName =
+  const domain = useMemo(() => {
+    return detectCategoryDomain(
+      product.category || "",
+      product.subcategory || "",
+      attributes as Record<string, unknown>
+    );
+  }, [product.category, product.subcategory, attributes]);
+
+  const isBook = domain === "BOOKS";
+  const isMedicine = domain === "MEDICINE";
+
+  const bookAuthor =
+    (typeof attributes.author === "string" ? attributes.author : "") ||
+    (typeof attributes.writer === "string" ? attributes.writer : "");
+  const bookPublisher =
+    (typeof attributes.publisher === "string" ? attributes.publisher : "") ||
+    (typeof attributes.publication === "string" ? attributes.publication : "");
+  const bookEdition =
+    (typeof attributes.edition === "string" ? attributes.edition : "") ||
+    (typeof attributes.publicationYear === "string"
+      ? attributes.publicationYear
+      : "");
+
+  const medicineGeneric =
+    typeof attributes.genericName === "string" ? attributes.genericName : "";
+  const medicineManufacturer =
+    (typeof attributes.manufacturer === "string"
+      ? attributes.manufacturer
+      : "") ||
     product.brand ||
-    (typeof attributes.brand === "string"
-      ? attributes.brand
-      : "Aladdin Global");
+    "";
+
+  const rawBrand =
+    product.brand ||
+    (typeof attributes.brand === "string" ? attributes.brand : "");
+  const brandName =
+    rawBrand && rawBrand !== "Aladdin Global" && !isBook ? rawBrand : "";
 
   const soldCount =
     product.soldCount !== undefined && product.soldCount !== null
@@ -609,7 +646,7 @@ export default function ProductInfo({ product, onColorChange }: Props) {
         {/* Category */}
         <div className="flex items-start gap-2">
           <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
-            Category:
+            {t("categoryLabel")}
           </span>
           <span className="font-semibold text-slate-800">
             {product.category || "General"}
@@ -620,44 +657,100 @@ export default function ProductInfo({ product, onColorChange }: Props) {
         {/* SKU */}
         <div className="flex items-start gap-2">
           <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
-            SKU:
+            {t("sku")}
           </span>
           <span className="font-mono font-semibold text-slate-700">
             {product.sku || "N/A"}
           </span>
         </div>
 
-        {/* Brand */}
-        <div className="flex items-start gap-2">
-          <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
-            Brand:
-          </span>
-          <span className="font-bold text-blue-700">{brandName}</span>
-        </div>
+        {/* Brand / Author / Publisher / Medicine Generic */}
+        {isBook ? (
+          <>
+            {bookAuthor && (
+              <div className="flex items-start gap-2">
+                <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
+                  {t("authorLabel")}
+                </span>
+                <span className="font-bold text-slate-900">{bookAuthor}</span>
+              </div>
+            )}
+            {bookPublisher && (
+              <div className="flex items-start gap-2">
+                <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
+                  {t("publisherLabel")}
+                </span>
+                <span className="font-semibold text-blue-700">
+                  {bookPublisher}
+                </span>
+              </div>
+            )}
+            {bookEdition && (
+              <div className="flex items-start gap-2">
+                <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
+                  {t("editionLabel")}
+                </span>
+                <span className="font-medium text-slate-700">
+                  {bookEdition}
+                </span>
+              </div>
+            )}
+          </>
+        ) : isMedicine ? (
+          <>
+            {medicineGeneric && (
+              <div className="flex items-start gap-2">
+                <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
+                  {t("genericLabel")}
+                </span>
+                <span className="font-bold text-emerald-800">
+                  {medicineGeneric}
+                </span>
+              </div>
+            )}
+            {medicineManufacturer && (
+              <div className="flex items-start gap-2">
+                <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
+                  {t("companyLabel")}
+                </span>
+                <span className="font-bold text-blue-700">
+                  {medicineManufacturer}
+                </span>
+              </div>
+            )}
+          </>
+        ) : brandName ? (
+          <div className="flex items-start gap-2">
+            <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
+              {t("brandLabel")}
+            </span>
+            <span className="font-bold text-blue-700">{brandName}</span>
+          </div>
+        ) : null}
 
         {/* Short description */}
         <div className="flex items-start gap-2">
           <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
-            Short des:
+            {t("shortDes")}
           </span>
           <p className="font-normal text-slate-700 leading-relaxed">
             {product.shortDescription ||
               product.description?.replace(/<[^>]+>/g, "").slice(0, 160) ||
-              "Quality product from verified supplier."}
+              t("noDescription")}
           </p>
         </div>
 
         {/* Sold by */}
         <div className="flex flex-wrap items-center gap-2 pt-0.5 border-t border-slate-200/60">
           <span className="w-24 sm:w-28 shrink-0 font-medium text-slate-400">
-            Sold by:
+            {t("soldBy")}
           </span>
           <div className="flex flex-wrap items-center gap-2 font-semibold text-[#12233f]">
             <span>
-              {product.sellerName || product.vendor?.name || "Official Store"}
+              {product.sellerName || product.vendor?.name || t("sellerOfficial")}
             </span>
             <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200/60">
-              Verified Seller
+              {t("verifiedSeller")}
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200/60">
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
@@ -908,12 +1001,12 @@ export default function ProductInfo({ product, onColorChange }: Props) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span>In Stock ({availableStockCount} available)</span>
+            <span>{t("inStock")} ({availableStockCount} {t("available")})</span>
           </div>
         ) : (
           <div className="flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 border border-rose-200/70">
             <span className="h-2 w-2 rounded-full bg-rose-500"></span>
-            <span>Out of Stock</span>
+            <span>{t("outOfStock")}</span>
           </div>
         )}
       </div>
@@ -933,7 +1026,7 @@ export default function ProductInfo({ product, onColorChange }: Props) {
           className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#f59e0b] hover:bg-[#d97706] text-[#12233f] text-sm font-extrabold shadow-sm transition hover:shadow active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Zap size={18} className="fill-[#12233f]" />
-          <span>Buy Now</span>
+          <span>{t("buyNow")}</span>
         </button>
 
         <button
@@ -949,7 +1042,7 @@ export default function ProductInfo({ product, onColorChange }: Props) {
           className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#12233f] hover:bg-[#1b3155] text-white text-sm font-extrabold shadow-sm transition hover:shadow active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ShoppingCart size={18} />
-          <span>{addingToCart ? "Adding..." : "Add to Cart"}</span>
+          <span>{addingToCart ? t("adding") : t("addToCart")}</span>
         </button>
       </div>
 

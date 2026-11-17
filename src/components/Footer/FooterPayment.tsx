@@ -1,11 +1,16 @@
 
+"use client";
+
 import { Truck } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function FooterPayment() {
+  const { t } = useLanguage();
+
   return (
     <div>
       <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-[#12233F]">
-        Payment Options:
+        {t("paymentOptions")}
       </h4>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -14,10 +19,10 @@ export function FooterPayment() {
 
           <div>
             <p className="text-xs font-bold text-black">
-              Cash on Delivery
+              {t("cod")}
             </p>
             <p className="text-[10px] text-slate-500">
-              Pay when you receive
+              {t("payOnReceive")}
             </p>
           </div>
         </div>

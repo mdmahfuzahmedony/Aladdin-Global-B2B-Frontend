@@ -7,6 +7,7 @@ import "./globals.css";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "./toast.css";
 
 import { SiteSettingsProvider } from "../context/SiteSettingsContext";
 import { CompareProvider } from "../context/CompareContext";
@@ -57,15 +58,16 @@ export default async function RootLayout({
 
               <ToastContainer
                 position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
+                autoClose={2500}
+                hideProgressBar
                 newestOnTop
                 closeOnClick
                 rtl={false}
-                pauseOnFocusLoss
+                pauseOnFocusLoss={false}
                 draggable
                 pauseOnHover
-                theme="colored"
+                theme="light"
+                closeButton={false}
               />
             </CompareProvider>
           </LanguageProvider>

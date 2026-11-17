@@ -4,7 +4,8 @@ import { toast } from "react-toastify";
 import { useState } from "react";
 import Link from "next/link";
 import { Heart, Star, ShoppingCart } from "lucide-react";
-import { createClient } from "../../../../lib/supabase-client"; // আপনার প্রজেক্টের পাথ অনুযায়ী ঠিক করে নিতে পারেন
+import { createClient } from "../../../../lib/supabase-client";
+import { useLanguage } from "@/context/LanguageContext";
 
 export type FeaturedProduct = {
   id: string;
@@ -25,6 +26,7 @@ export default function FeaturedCard({
 }: {
   product: FeaturedProduct;
 }) {
+  const { t } = useLanguage();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
@@ -213,7 +215,7 @@ export default function FeaturedCard({
 
         {product.moq && (
           <div className="mt-1 text-[10px] text-slate-500 sm:text-[11px]">
-            MOQ: {product.moq}
+            {t("moq")}: {product.moq}
           </div>
         )}
 
@@ -226,7 +228,7 @@ export default function FeaturedCard({
         >
           <ShoppingCart size={14} className="shrink-0" />
           <span className="truncate">
-            {isAddingToCart ? "Adding..." : "Add to Cart"}
+            {isAddingToCart ? t("adding") : t("addToCart")}
           </span>
         </button>
       </div>

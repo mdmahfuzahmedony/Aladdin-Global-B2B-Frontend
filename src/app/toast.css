@@ -1,0 +1,138 @@
+/* ==========================================================================
+   Modern Compact Toastify Styles
+   Transforms React-Toastify into a sleek, compact, floating pill/card
+   Optimized for both Desktop and Mobile screens.
+   ========================================================================== */
+
+/* 1. Global Container */
+.Toastify__toast-container {
+  z-index: 999999 !important;
+  padding: 0 !important;
+  width: auto !important;
+  max-width: 380px !important;
+  pointer-events: none !important;
+}
+
+.Toastify__toast-container--top-right {
+  top: 16px !important;
+  right: 16px !important;
+}
+
+/* 2. Responsive Mobile Positioning (Floating Pill in Center) */
+@media (max-width: 640px) {
+  .Toastify__toast-container {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    right: auto !important;
+    top: 12px !important;
+    width: auto !important;
+    max-width: calc(100vw - 28px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+}
+
+/* 3. The Toast Element (Compact, Sleek, Rounded Modern Card) */
+.Toastify__toast {
+  pointer-events: auto !important;
+  min-height: 38px !important;
+  max-height: 120px !important;
+  width: auto !important;
+  min-width: 200px !important;
+  max-width: 360px !important;
+  margin: 0 0 8px 0 !important;
+  padding: 8px 14px !important;
+  border-radius: 12px !important; /* Modern sleek rounded card */
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  box-shadow: 0 8px 20px -4px rgba(18, 35, 63, 0.12),
+              0 2px 6px -1px rgba(18, 35, 63, 0.05) !important;
+  color: #0f172a !important;
+  font-family: inherit !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.Toastify__toast:hover {
+  box-shadow: 0 12px 28px -4px rgba(18, 35, 63, 0.16),
+              0 4px 8px -1px rgba(18, 35, 63, 0.08) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 4. Toast Body */
+.Toastify__toast-body {
+  margin: 0 !important;
+  padding: 0 2px !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  font-weight: 500 !important;
+  color: #1e293b !important;
+  display: flex !important;
+  align-items: center !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+/* 5. Icons (Micro, Crisp) */
+.Toastify__toast-icon {
+  width: 17px !important;
+  height: 17px !important;
+  min-width: 17px !important;
+  margin-inline-end: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.Toastify__toast-icon svg {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+/* 6. Variants: Subtle border & icon accents instead of harsh full-screen colors */
+.Toastify__toast--success {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  background: #ffffff !important;
+}
+.Toastify__toast--success .Toastify__toast-icon svg {
+  fill: #10b981 !important;
+}
+
+.Toastify__toast--error {
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  background: #ffffff !important;
+}
+.Toastify__toast--error .Toastify__toast-icon svg {
+  fill: #ef4444 !important;
+}
+
+.Toastify__toast--info {
+  border-color: rgba(59, 130, 246, 0.35) !important;
+  background: #ffffff !important;
+}
+.Toastify__toast--info .Toastify__toast-icon svg {
+  fill: #3b82f6 !important;
+}
+
+.Toastify__toast--warning {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  background: #ffffff !important;
+}
+.Toastify__toast--warning .Toastify__toast-icon svg {
+  fill: #f59e0b !important;
+}
+
+/* 7. Close button (Hidden for sleek clean pill) */
+.Toastify__close-button {
+  display: none !important;
+}
+
+/* 8. Hide Progress Bar */
+.Toastify__progress-bar {
+  display: none !important;
+}

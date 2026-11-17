@@ -11,6 +11,7 @@ import {
   Package,
 } from "lucide-react";
 import { createClient } from "../../../../lib/supabase-client";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface WishlistProduct {
   id: string;
@@ -31,6 +32,7 @@ interface WishlistItem {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 export default function WishlistPage() {
+  const { t } = useLanguage();
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -166,10 +168,10 @@ export default function WishlistPage() {
         <div className="mb-6">
           <h1 className="flex items-center gap-2 text-2xl font-bold text-[#0F172A]">
             <Heart size={25} className="text-[#F59E0B]" />
-            My Wishlist
+            {t("myWishlist")}
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Your saved products in one place.
+            {t("customerFavorites")}
           </p>
         </div>
 
@@ -281,7 +283,7 @@ export default function WishlistPage() {
                       ) : (
                         <ShoppingCart size={17} />
                       )}
-                      Add to Cart
+                      {t("addToCart")}
                     </button>
 
                     <button
@@ -290,7 +292,7 @@ export default function WishlistPage() {
                       disabled={busyId === item.id}
                       className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:border-red-200 hover:text-red-500 disabled:opacity-50"
                     >
-                      Remove
+                      {t("clearAll")}
                     </button>
                   </div>
                 </div>
@@ -303,14 +305,14 @@ export default function WishlistPage() {
 
             <h2 className="text-base font-semibold text-[#0F172A]">
               {items.length === 0
-                ? "Your wishlist is empty."
-                : "No products found."}
+                ? t("wishlistEmpty")
+                : t("noProducts")}
             </h2>
 
             <p className="mt-1 text-sm text-gray-500">
               {items.length === 0
-                ? "Save products you like to find them here."
-                : "Try searching with a different product name."}
+                ? t("emptyCartDescription")
+                : t("discoverDeals")}
             </p>
 
             {items.length === 0 && (
@@ -318,7 +320,7 @@ export default function WishlistPage() {
                 href="/products"
                 className="mt-5 inline-flex items-center rounded-lg bg-[#0F172A] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1E293B]"
               >
-                Explore Products
+                {t("browseProducts")}
               </Link>
             )}
           </div>

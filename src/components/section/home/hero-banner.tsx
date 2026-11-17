@@ -118,7 +118,7 @@ export default function HeroImageSlider() {
   }
 
   return (
-    <div className="group relative mx-3 mt-2 h-[150px] w-auto overflow-hidden rounded-lg bg-[#12233F] sm:mx-auto sm:mt-0 sm:h-[300px] sm:w-full sm:max-w-[1500px] sm:rounded-none lg:h-[300px] xl:h-300px]">
+    <div className="group relative w-full overflow-hidden bg-[#12233F] h-[180px] sm:h-[260px] md:h-[320px] lg:h-[380px] xl:h-[420px]">
       {/* Images container */}
       <div
         className="flex h-full transition-transform duration-700 ease-in-out"
@@ -142,29 +142,30 @@ export default function HeroImageSlider() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#12233F]/90 via-[#12233F]/30 to-transparent" />
 
             {/* Banner content */}
-            <div className="absolute bottom-6 left-4 right-4 z-10 text-left sm:bottom-8 sm:left-8 sm:right-8">
-              <span className="rounded-full bg-[#d6a419] px-3 py-1 text-xs font-extrabold text-[#12233F]">
-                {t("featuredOffer")}
-              </span>
+            <div className="absolute inset-0 z-10 flex items-end">
+              <div className="mx-auto w-full max-w-[1500px] px-4 pb-6 sm:px-8 sm:pb-8">
+                <span className="rounded-full bg-[#d6a419] px-3 py-1 text-xs font-extrabold text-[#12233F]">
+                  {t("featuredOffer")}
+                </span>
 
-              <h2 className="mt-2 text-xl font-extrabold text-white sm:text-3xl">
-                {slide.name}
-              </h2>
+                <h2 className="mt-2 text-xl font-extrabold text-white sm:text-3xl">
+                  {slide.name}
+                </h2>
 
-              <p className="mt-1 max-w-lg text-xs text-slate-200 sm:text-sm">
-                {t("discoverDeals")}
-              </p>
+                <p className="mt-1 max-w-lg text-xs text-slate-200 sm:text-sm">
+                  {t("discoverDeals")}
+                </p>
 
-              {slide.link && (
-                <a
-                  href={slide.link}
-                  className="mt-3 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-[#
-                  12233F] transition hover:bg-[#d6a419] sm:mt-4 sm:px-5 sm:py-2.5"
-                >
-                  {t("shopNow")}
-                  <ArrowRight size={14} />
-                </a>
-              )}
+                {slide.link && (
+                  <a
+                    href={slide.link}
+                    className="mt-3 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-[#12233F] transition hover:bg-[#d6a419] sm:mt-4 sm:px-5 sm:py-2.5"
+                  >
+                    {t("shopNow")}
+                    <ArrowRight size={14} />
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -176,9 +177,9 @@ export default function HeroImageSlider() {
           type="button"
           onClick={prevSlide}
           aria-label={t("previousSlide")}
-          className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-[#12233F] opacity-100 shadow-md transition hover:bg-white sm:left-4 sm:h-10 sm:w-10 sm:opacity-0 sm:group-hover:opacity-100"
+          className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-[#12233F] opacity-100 shadow-md transition hover:bg-white sm:left-6 sm:h-11 sm:w-11 sm:opacity-0 sm:group-hover:opacity-100"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={22} />
         </button>
       )}
 
@@ -188,15 +189,15 @@ export default function HeroImageSlider() {
           type="button"
           onClick={nextSlide}
           aria-label={t("nextSlide")}
-          className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-[#12233F] opacity-100 shadow-md transition hover:bg-white sm:right-4 sm:h-10 sm:w-10 sm:opacity-0 sm:group-hover:opacity-100"
+          className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-[#12233F] opacity-100 shadow-md transition hover:bg-white sm:right-6 sm:h-11 sm:w-11 sm:opacity-0 sm:group-hover:opacity-100"
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={22} />
         </button>
       )}
 
       {/* Dots indicator */}
       {sliderImages.length > 1 && (
-        <div className="absolute bottom-4 right-4 z-20 flex gap-2 sm:right-8">
+        <div className="absolute bottom-4 right-4 z-20 flex gap-2 sm:bottom-6 sm:right-8">
           {sliderImages.map((slide, index) => (
             <button
               key={slide.id}

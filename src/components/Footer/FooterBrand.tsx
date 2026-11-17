@@ -56,8 +56,7 @@ export function FooterBrand() {
       </div>
 
       <p className="mb-4 text-xs leading-relaxed text-slate-600 sm:text-sm">
-        {siteName} connects verified wholesale buyers and sellers across
-        Bangladesh with genuine products and reliable delivery.
+        {siteName} {t("brandTagline")}
       </p>
 
       <div className="space-y-2 text-xs text-slate-600 sm:text-sm">

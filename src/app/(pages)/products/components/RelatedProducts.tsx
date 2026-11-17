@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Sparkles, ArrowRight } from "lucide-react";
 import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
 import type { RelatedProduct } from "../types";
+import { useLanguage } from "@/context/LanguageContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
@@ -16,11 +17,13 @@ type Props = {
 };
 
 export default function RelatedProducts({
-  title = "সম্পর্কিত পণ্যসমূহ (Related Products)",
+  title,
   products = [],
   categoryId,
   currentProductId,
 }: Props) {
+  const { t } = useLanguage();
+  const displayTitle = title || t("relatedProducts");
   const [items, setItems] = useState<RelatedProduct[]>(products);
   const [loading, setLoading] = useState(false);
 
@@ -163,11 +166,11 @@ export default function RelatedProducts({
               <Sparkles size={16} />
             </span>
             <h2 className="text-lg sm:text-xl font-bold text-[#12233f]">
-              {title}
+              {displayTitle}
             </h2>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            এই পণ্যের সাথে পছন্দের তালিকায় থাকা আরও কিছু জনপ্রিয় পণ্য
+            {t("discoverDeals")}
           </p>
         </div>
 
@@ -175,7 +178,7 @@ export default function RelatedProducts({
           href="/products"
           className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-[#12233f] transition hover:border-[#D6A419] hover:bg-amber-50/50 hover:text-[#D6A419]"
         >
-          <span>আরও দেখুন</span>
+          <span>{t("viewAll")}</span>
           <ArrowRight size={13} />
         </Link>
       </div>
