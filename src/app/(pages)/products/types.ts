@@ -71,6 +71,7 @@ export type ProductDetails = {
   name: string;
   category: string;
   categorySlug?: string;
+  categoryId?: string;
   subcategory?: string;
   brand?: string;
   sku: string;

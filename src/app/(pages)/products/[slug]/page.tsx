@@ -576,11 +576,62 @@ export default function ProductDetailsPage({ params }: Props) {
 
         if (relItems.length === 0) {
           try {
-            const fallbackRes = await fetch(`${API_URL}/api/products?limit=14`, { cache: "no-store" });
+            const targetCatId = String(item.categoryId || item.category?.id || "");
+            const targetCatName = String(item.category?.name || "").toLowerCase();
+            const isMedicine =
+              targetCatName.includes("medicine") ||
+              targetCatName.includes("otc") ||
+              targetCatName.includes("prescription") ||
+              targetCatName.includes("healthcare") ||
+              targetCatName.includes("ওষুধ");
+            const isBook =
+              targetCatName.includes("book") ||
+              targetCatName.includes("বই");
+            const isStationery =
+              targetCatName.includes("stationery") ||
+              targetCatName.includes("স্টেশনারি");
+
+            const queryParam = isMedicine
+              ? `?search=Medicine&limit=24`
+              : targetCatId
+                ? `?categoryId=${encodeURIComponent(targetCatId)}&limit=24`
+                : `?limit=24`;
+
+            const fallbackRes = await fetch(`${API_URL}/api/products${queryParam}`, {
+              cache: "no-store",
+            });
             const fallbackJson = await fallbackRes.json();
             const list = Array.isArray(fallbackJson?.data) ? fallbackJson.data : [];
+
             relItems = list
-              .filter((p: any) => p.id !== item.id && p.slug !== item.slug)
+              .filter((p: any) => {
+                if (p.id === item.id || p.slug === item.slug) return false;
+                const pCatId = String(p.categoryId || p.category?.id || "");
+                const pCatName = String(p.category?.name || "").toLowerCase();
+
+                // Strict domain isolation
+                if (isMedicine) {
+                  return (
+                    pCatName.includes("medicine") ||
+                    pCatName.includes("otc") ||
+                    pCatName.includes("prescription") ||
+                    pCatName.includes("healthcare") ||
+                    pCatName.includes("ওষুধ")
+                  ) && !pCatName.includes("stationery") && !pCatName.includes("book");
+                }
+                if (isBook) {
+                  return (
+                    (pCatName.includes("book") || pCatName.includes("বই")) &&
+                    !pCatName.includes("stationery")
+                  );
+                }
+                if (isStationery) {
+                  return pCatName.includes("stationery") && !pCatName.includes("book");
+                }
+
+                // If not one of the special domains, match exact category ID
+                return targetCatId ? pCatId === targetCatId : false;
+              })
               .slice(0, 12)
               .map((rel: any) => {
                 const regPrice = Number(rel.pricing?.customerRegularPrice ?? rel.regularPrice ?? rel.price ?? 0);
@@ -616,6 +667,7 @@ export default function ProductDetailsPage({ params }: Props) {
 
           category: item.category?.name || "General",
           categorySlug: item.category?.slug || undefined,
+          categoryId: item.categoryId ? String(item.categoryId) : undefined,
           subcategory: item.attributes?.subcategory || undefined,
 
           sku: String(item.sku ?? ""),
@@ -941,7 +993,7 @@ export default function ProductDetailsPage({ params }: Props) {
           <RelatedProducts
             title="সম্পর্কিত পণ্যসমূহ (Related Products)"
             products={product.relatedProducts}
-            categoryId={product.categorySlug}
+            categoryId={product.categoryId || product.categorySlug}
             currentProductId={product.id}
           />
         </section>

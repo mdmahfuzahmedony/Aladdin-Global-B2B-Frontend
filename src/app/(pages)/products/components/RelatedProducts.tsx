@@ -31,26 +31,66 @@ export default function RelatedProducts({
     }
   }, [products]);
 
-  // Fallback auto-fetch if no products passed
+  // Fallback auto-fetch ONLY within the same category/domain if no products passed
   useEffect(() => {
     if (items.length > 0) return;
+    if (!categoryId) return;
 
     let mounted = true;
     async function loadFallbackProducts() {
       try {
         setLoading(true);
-        const res = await fetch(`${API_URL}/api/products?limit=14`, {
+        const catLower = (categoryId || "").toLowerCase();
+        const isMedicine =
+          catLower.includes("medicine") ||
+          catLower.includes("otc") ||
+          catLower.includes("prescription") ||
+          catLower.includes("healthcare") ||
+          catLower.includes("health");
+
+        const query = isMedicine
+          ? `?search=Medicine&limit=24`
+          : `?categoryId=${encodeURIComponent(categoryId!)}&limit=24`;
+
+        const res = await fetch(`${API_URL}/api/products${query}`, {
           cache: "no-store",
         });
         const json = await res.json();
         const list = Array.isArray(json?.data) ? json.data : [];
 
         const mapped: RelatedProduct[] = list
-          .filter(
-            (p: any) =>
-              String(p.id) !== String(currentProductId) &&
-              String(p.slug) !== String(currentProductId)
-          )
+          .filter((p: any) => {
+            if (
+              String(p.id) === String(currentProductId) ||
+              String(p.slug) === String(currentProductId)
+            ) {
+              return false;
+            }
+
+            const pCatName = String(p.category?.name || "").toLowerCase();
+            const pCatId = String(p.categoryId || p.category?.id || "").toLowerCase();
+
+            if (isMedicine) {
+              return (
+                (pCatName.includes("medicine") ||
+                  pCatName.includes("otc") ||
+                  pCatName.includes("prescription") ||
+                  pCatName.includes("healthcare")) &&
+                !pCatName.includes("stationery") &&
+                !pCatName.includes("book")
+              );
+            }
+
+            if (catLower.includes("book")) {
+              return pCatName.includes("book") && !pCatName.includes("stationery");
+            }
+
+            if (catLower.includes("stationery")) {
+              return pCatName.includes("stationery") && !pCatName.includes("book");
+            }
+
+            return pCatId === catLower || pCatName.includes(catLower);
+          })
           .slice(0, 12)
           .map((p: any) => {
             const regPrice = Number(
@@ -107,7 +147,7 @@ export default function RelatedProducts({
     return () => {
       mounted = false;
     };
-  }, [items.length, currentProductId]);
+  }, [items.length, currentProductId, categoryId]);
 
   if (items.length === 0 && !loading) {
     return null;
