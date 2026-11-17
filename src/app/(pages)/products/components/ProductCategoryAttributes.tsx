@@ -23,6 +23,10 @@ import {
   MapPin,
   Flame,
   Info,
+  BookOpen,
+  User,
+  PenTool,
+  Bookmark,
 } from "lucide-react";
 import type { ProductDetails, ProductAttributes } from "../types";
 
@@ -43,6 +47,8 @@ export type CategoryDomain =
   | "ACCESSORIES"
   | "HOUSEHOLD_PET"
   | "HOME_LIVING"
+  | "BOOKS"
+  | "STATIONERY"
   | "GENERAL";
 
 export interface HighlightItem {
@@ -236,6 +242,26 @@ const KNOWN_LABELS: Record<string, string> = {
   mobility: "Mobility / Wheels",
   assemblyType: "Assembly & Setup",
   termiteProof: "Protection (Termite / Water)",
+
+  // Books & Publications
+  author: "Author / লেখক",
+  publisher: "Publisher / প্রকাশনী",
+  translator: "Translator / Editor",
+  edition: "Edition / সংস্করণ",
+  publicationYear: "Publication Year / বছর",
+  language: "Language / ভাষা",
+  coverType: "Cover Type / কভার",
+  numberOfPages: "Pages / পৃষ্ঠা",
+  isbn: "ISBN / বারকোড",
+  genre: "Genre / বিষয়",
+  bookWeight: "Book Weight",
+  paperType: "Paper Type",
+
+  // Stationery & Office Supplies
+  itemType: "Item Type / ধরণ",
+  packSize: "Pack Size / পরিমাণ",
+  paperGsm: "Paper Quality (GSM)",
+  inkColor: "Ink / Color",
 };
 
 // Ignore internal or already handled properties
@@ -501,6 +527,41 @@ export function detectCategoryDomain(
     return "HOME_LIVING";
   }
 
+  // 13. Books & Publications
+  if (
+    combined.includes("book") ||
+    combined.includes("বই") ||
+    combined.includes("novel") ||
+    combined.includes("publication") ||
+    combined.includes("academic") ||
+    combined.includes("fiction") ||
+    keys.includes("author") ||
+    keys.includes("publisher") ||
+    keys.includes("isbn") ||
+    keys.includes("numberofpages") ||
+    keys.includes("covertype")
+  ) {
+    return "BOOKS";
+  }
+
+  // 14. Stationery & Office Supplies
+  if (
+    combined.includes("stationery") ||
+    combined.includes("স্টেশনারি") ||
+    combined.includes("pen") ||
+    combined.includes("pencil") ||
+    combined.includes("notebook") ||
+    combined.includes("calculator") ||
+    combined.includes("diary") ||
+    combined.includes("stapler") ||
+    keys.includes("papergsm") ||
+    keys.includes("inkcolor") ||
+    keys.includes("packsize") ||
+    keys.includes("itemtype")
+  ) {
+    return "STATIONERY";
+  }
+
   return "GENERAL";
 }
 
@@ -675,6 +736,71 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
       // 6. Optional: Warranty & Finish
       const warranty = getVal("warranty");
       if (warranty) highlights.push({ id: "warranty", label: "Warranty", value: warranty, icon: <ShieldCheck size={13} />, variant: "emerald" });
+      break;
+    }
+
+    case "BOOKS": {
+      // 1. Author (লেখক)
+      const author = getVal("author");
+      if (author) highlights.push({ id: "author", label: "Author", value: author, icon: <User size={13} />, variant: "amber" });
+
+      // 2. Publisher (প্রকাশনী)
+      const publisher = getVal("publisher");
+      if (publisher) highlights.push({ id: "publisher", label: "Publisher", value: publisher, icon: <BookOpen size={13} />, variant: "indigo" });
+
+      // 3. Cover Type (কভার)
+      const cover = getVal("coverType");
+      if (cover) highlights.push({ id: "coverType", label: "Cover", value: cover, icon: <Bookmark size={13} />, variant: "blue" });
+
+      // 4. Number of Pages (পৃষ্ঠা)
+      const pages = getVal("numberOfPages");
+      if (pages) highlights.push({ id: "numberOfPages", label: "Pages", value: `${pages} Pages`, icon: <Layers size={13} />, variant: "slate" });
+
+      // 5. Language (ভাষা)
+      const lang = getVal("language");
+      if (lang) highlights.push({ id: "language", label: "Language", value: lang, icon: <Sparkles size={13} />, variant: "emerald" });
+
+      // 6. Country of Origin
+      const origin = getVal("countryOfOrigin") || getVal("origin") || getVal("country") || getVal("madeIn");
+      ["countryOfOrigin", "origin", "country", "madeIn", "country_of_origin"].forEach((k) =>
+        highlightedAttributeKeys.add(k)
+      );
+      if (origin) highlights.push({ id: "origin", label: "Country of Origin", value: origin, icon: <MapPin size={13} />, variant: "rose" });
+      break;
+    }
+
+    case "STATIONERY": {
+      // 1. Brand (ব্র্যান্ড)
+      const brand = getVal("brand");
+      if (brand) highlights.push({ id: "brand", label: "Brand", value: brand, icon: <Tag size={13} />, variant: "indigo" });
+
+      // 2. Item Type (পণ্যের ধরণ)
+      const itemType = getVal("itemType") || getVal("productType");
+      if (itemType) highlights.push({ id: "itemType", label: "Item Type", value: itemType, icon: <PenTool size={13} />, variant: "amber" });
+
+      // 3. Pack Size (প্যাক)
+      const pack = getVal("packSize");
+      if (pack) highlights.push({ id: "packSize", label: "Pack Size", value: pack, icon: <Box size={13} />, variant: "blue" });
+
+      // 4. Paper GSM / Material
+      const gsm = getVal("paperGsm");
+      const mat = getVal("material");
+      if (gsm && gsm !== "N/A" && !gsm.includes("প্রযোজ্য নয়")) {
+        highlights.push({ id: "paperGsm", label: "Paper GSM", value: gsm, icon: <Layers size={13} />, variant: "slate" });
+      } else if (mat) {
+        highlights.push({ id: "material", label: "Material", value: mat, icon: <Layers size={13} />, variant: "slate" });
+      }
+
+      // 5. Color / Ink
+      const ink = getVal("inkColor");
+      if (ink) highlights.push({ id: "inkColor", label: "Color / Ink", value: ink, icon: <Droplets size={13} />, variant: "rose" });
+
+      // 6. Country of Origin
+      const origin = getVal("countryOfOrigin") || getVal("origin") || getVal("country") || getVal("madeIn");
+      ["countryOfOrigin", "origin", "country", "madeIn", "country_of_origin"].forEach((k) =>
+        highlightedAttributeKeys.add(k)
+      );
+      if (origin) highlights.push({ id: "origin", label: "Country of Origin", value: origin, icon: <MapPin size={13} />, variant: "rose" });
       break;
     }
 
@@ -1019,6 +1145,46 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
         rows: featRows,
       });
     }
+  } else if (domain === "BOOKS") {
+    const bookPubRows = buildRows(["author", "publisher", "translator", "edition", "publicationYear", "language", "genre"]);
+    if (bookPubRows.length > 0) {
+      groups.push({
+        id: "book-pub",
+        title: "Book & Publication Details",
+        icon: <BookOpen size={16} className="text-amber-600" />,
+        rows: bookPubRows,
+      });
+    }
+
+    const bookPhysicalRows = buildRows(["numberOfPages", "coverType", "isbn", "paperType", "bookWeight", "countryOfOrigin", "origin"]);
+    if (bookPhysicalRows.length > 0) {
+      groups.push({
+        id: "book-physical",
+        title: "Physical Specification & Binding",
+        icon: <Layers size={16} className="text-indigo-600" />,
+        rows: bookPhysicalRows,
+      });
+    }
+  } else if (domain === "STATIONERY") {
+    const statItemRows = buildRows(["itemType", "brand", "packSize", "dimensions"]);
+    if (statItemRows.length > 0) {
+      groups.push({
+        id: "stat-items",
+        title: "Product & Packaging Details",
+        icon: <PenTool size={16} className="text-indigo-600" />,
+        rows: statItemRows,
+      });
+    }
+
+    const statMaterialRows = buildRows(["paperGsm", "inkColor", "material", "warranty", "countryOfOrigin", "origin"]);
+    if (statMaterialRows.length > 0) {
+      groups.push({
+        id: "stat-material",
+        title: "Material, Ink & Quality",
+        icon: <Layers size={16} className="text-amber-600" />,
+        rows: statMaterialRows,
+      });
+    }
   }
 
   // Handle custom dynamic specifications
@@ -1182,6 +1348,10 @@ export function ProductCategorySpecs({ product }: { product: ProductDetails }) {
         return "Accessory Specifications";
       case "HOUSEHOLD_PET":
         return "Household & Care Standards";
+      case "BOOKS":
+        return "Book & Literature Standards";
+      case "STATIONERY":
+        return "Stationery & Office Supplies";
       default:
         return "Verified Product Specifications";
     }

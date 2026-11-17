@@ -13,6 +13,7 @@ export type ProductVariant = {
 
 export type RelatedProduct = {
   id: string;
+  slug?: string;
   name: string;
   image: string;
   price: number;

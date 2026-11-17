@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { ComponentType, Dispatch, SetStateAction } from "react";
 
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Globe } from "lucide-react";
 
 import ProductDescriptionEditor from "./product-field/ProductDescriptionEditor";
 import { getFashionFieldComponent } from "./product-field/Fashion/fieldRegistry";
@@ -18,6 +18,7 @@ import Bread from "./product-field/Grocery/Bakery/Bread";
 import CakeSweetsPies from "./product-field/Grocery/Bakery/CakeSweetsPies";
 import ToastBakeryBiscuits from "./product-field/Grocery/Bakery/ToastBakeryBiscuits";
 import HomeLivingCategoryField from "./product-field/HomeLiving/HomeLivingCategoryField";
+import BooksStationeryDispatcher from "./product-field/BooksStationery/BooksStationeryDispatcher";
 
 // Grocery - Beverages
 import Juice from "./product-field/Grocery/Beverages/Juice";
@@ -429,6 +430,33 @@ function findComponentForCategory(
     });
   if (isHomeLivingCategory) {
     return HomeLivingCategoryField;
+  }
+
+  // Books & Stationery
+  const isBookOrStationeryCategory =
+    key === "books-and-stationery" ||
+    key === "books-stationery" ||
+    key === "books" ||
+    key === "stationery" ||
+    rawLower.includes("book") ||
+    rawLower.includes("stationery") ||
+    rawLower.includes("বই") ||
+    rawLower.includes("স্টেশনারি") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return (
+        pKey === "books-and-stationery" ||
+        pKey === "books-stationery" ||
+        pKey === "books" ||
+        pKey === "stationery" ||
+        name.toLowerCase().includes("book") ||
+        name.toLowerCase().includes("stationery") ||
+        name.toLowerCase().includes("বই") ||
+        name.toLowerCase().includes("স্টেশনারি")
+      );
+    });
+  if (isBookOrStationeryCategory) {
+    return BooksStationeryDispatcher;
   }
 
   // Fashion
@@ -988,6 +1016,39 @@ type ProductInformationProps = {
   setCouponDiscount: Dispatch<SetStateAction<string>>;
 };
 
+export const WORLD_COUNTRIES = [
+  "বাংলাদেশ (Bangladesh)",
+  "চীন (China)",
+  "ভারত (India)",
+  "ভিয়েতনাম (Vietnam)",
+  "মালয়েশিয়া (Malaysia)",
+  "থাইল্যান্ড (Thailand)",
+  "তুরস্ক (Turkey)",
+  "ইন্দোনেশিয়া (Indonesia)",
+  "পাকিস্তান (Pakistan)",
+  "জাপান (Japan)",
+  "দক্ষিণ কোরিয়া (South Korea)",
+  "সংযুক্ত আরব আমিরাত (UAE)",
+  "সৌদি আরব (Saudi Arabia)",
+  "যুক্তরাষ্ট্র (USA)",
+  "যুক্তরাজ্য (UK)",
+  "জার্মানি (Germany)",
+  "ইতালি (Italy)",
+  "ফ্রান্স (France)",
+  "স্পেন (Spain)",
+  "পর্তুগাল (Portugal)",
+  "ব্রাজিল (Brazil)",
+  "মিশর (Egypt)",
+  "অস্ট্রেলিয়া (Australia)",
+  "কানাডা (Canada)",
+  "সিঙ্গাপুর (Singapore)",
+  "তাইওয়ান (Taiwan)",
+  "শ্রীলঙ্কা (Sri Lanka)",
+  "নেপাল (Nepal)",
+  "রাশিয়া (Russia)",
+  "ইরান (Iran)",
+];
+
 export default function ProductInformation({
   form,
   isCategoryOpen,
@@ -1010,6 +1071,34 @@ export default function ProductInformation({
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [categoryError, setCategoryError] = useState("");
+  const [isCustomCountry, setIsCustomCountry] = useState(false);
+
+  const currentCountry =
+    productAttributes?.countryOfOrigin || productAttributes?.origin || "";
+  const isCustomCountryActive =
+    isCustomCountry ||
+    Boolean(currentCountry && !WORLD_COUNTRIES.includes(currentCountry));
+
+  const handleCountrySelect = (val: string) => {
+    if (val === "__custom__") {
+      setIsCustomCountry(true);
+      return;
+    }
+    setIsCustomCountry(false);
+    setProductAttributes((prev) => ({
+      ...prev,
+      countryOfOrigin: val,
+      origin: val,
+    }));
+  };
+
+  const handleCustomCountryChange = (val: string) => {
+    setProductAttributes((prev) => ({
+      ...prev,
+      countryOfOrigin: val,
+      origin: val,
+    }));
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -1162,7 +1251,10 @@ export default function ProductInformation({
 
   const handleSelectCategory = (category: Category) => {
     onCategorySelect(category);
-    setProductAttributes({});
+    setProductAttributes((prev) => {
+      const countryOfOrigin = prev?.countryOfOrigin || prev?.origin;
+      return countryOfOrigin ? { countryOfOrigin, origin: countryOfOrigin } : {};
+    });
   };
 
   const ProductSpecificComponent = useMemo(() => {
@@ -1248,6 +1340,55 @@ export default function ProductInformation({
             placeholder="Enter product SKU"
             className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-[#D6A419]"
           />
+        </div>
+
+        {/* Country of Origin (উৎপাদনকারী দেশ) */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <label
+              htmlFor="country-of-origin"
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-700"
+            >
+              <Globe size={14} className="text-[#D6A419]" />
+              <span>উৎপাদনকারী দেশ (Country of Origin)</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => setIsCustomCountry(!isCustomCountryActive)}
+              className="text-[11px] font-medium text-[#D6A419] hover:underline"
+            >
+              {isCustomCountryActive ? "তালিকা থেকে বাছুন" : "অন্য দেশ লিখুন"}
+            </button>
+          </div>
+
+          {isCustomCountryActive ? (
+            <input
+              id="country-of-origin"
+              type="text"
+              value={currentCountry}
+              onChange={(e) => handleCustomCountryChange(e.target.value)}
+              placeholder="যেকোনো দেশের নাম লিখুন (যেমন: Turkey, Italy, Vietnam...)"
+              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-[#D6A419]"
+            />
+          ) : (
+            <select
+              id="country-of-origin"
+              value={currentCountry}
+              onChange={(e) => handleCountrySelect(e.target.value)}
+              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition focus:border-[#D6A419]"
+            >
+              <option value="">দেশ নির্বাচন করুন (Select Country of Origin)</option>
+              {WORLD_COUNTRIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+              <option value="__custom__">+ অন্য দেশ কাস্টম লিখুন (Custom Country)...</option>
+            </select>
+          )}
+          <p className="mt-1 text-[11px] text-slate-400">
+            যেকোনো দেশের পণ্য নির্বাচন করুন। দেশ সিলেক্ট করলে পণ্যের তথ্যে &quot;Country of Origin&quot; প্রদর্শিত হবে।
+          </p>
         </div>
 
         {/* Short Description */}

@@ -548,6 +548,66 @@ export default function ProductDetailsPage({ params }: Props) {
             ? Number(vendorData.totalReviews)
             : item.reviews?.length || 0;
 
+        // RELATED PRODUCTS CALCULATION
+        let relItems: RelatedProduct[] = [];
+        if (Array.isArray(item.relatedProducts) && item.relatedProducts.length > 0) {
+          relItems = item.relatedProducts.map((rel: any) => {
+            const regPrice = Number(rel.pricing?.customerRegularPrice ?? rel.regularPrice ?? rel.price ?? 0);
+            const salePr = Number(rel.pricing?.customerSalePrice ?? rel.salePrice ?? 0);
+            const hasSale = salePr > 0 && salePr < regPrice;
+            const effectivePrice = hasSale ? salePr : regPrice;
+            const discount = hasSale ? Math.round(((regPrice - salePr) / regPrice) * 100) : undefined;
+            const img = Array.isArray(rel.images) && rel.images[0] ? rel.images[0] : (rel.image || "/placeholder.png");
+
+            return {
+              id: String(rel.id),
+              slug: rel.slug,
+              name: rel.title || rel.name || "Product",
+              image: img,
+              price: effectivePrice,
+              oldPrice: hasSale ? regPrice : undefined,
+              rating: Number(rel.topRatedAttribute?.averageRating ?? rel.rating ?? 4.8),
+              reviews: Number(rel.topRatedAttribute?.totalReviews ?? rel.reviewsCount ?? rel.reviews ?? 0),
+              sold: Number(rel.topSellerAttribute?.unitsSold ?? rel.unitsSold ?? rel.sold ?? 0),
+              discount,
+            };
+          });
+        }
+
+        if (relItems.length === 0) {
+          try {
+            const fallbackRes = await fetch(`${API_URL}/api/products?limit=14`, { cache: "no-store" });
+            const fallbackJson = await fallbackRes.json();
+            const list = Array.isArray(fallbackJson?.data) ? fallbackJson.data : [];
+            relItems = list
+              .filter((p: any) => p.id !== item.id && p.slug !== item.slug)
+              .slice(0, 12)
+              .map((rel: any) => {
+                const regPrice = Number(rel.pricing?.customerRegularPrice ?? rel.regularPrice ?? rel.price ?? 0);
+                const salePr = Number(rel.pricing?.customerSalePrice ?? rel.salePrice ?? 0);
+                const hasSale = salePr > 0 && salePr < regPrice;
+                const effectivePrice = hasSale ? salePr : regPrice;
+                const discount = hasSale ? Math.round(((regPrice - salePr) / regPrice) * 100) : undefined;
+                const img = Array.isArray(rel.images) && rel.images[0] ? rel.images[0] : (rel.image || "/placeholder.png");
+
+                return {
+                  id: String(rel.id),
+                  slug: rel.slug,
+                  name: rel.title || rel.name || "Product",
+                  image: img,
+                  price: effectivePrice,
+                  oldPrice: hasSale ? regPrice : undefined,
+                  rating: Number(rel.topRatedAttribute?.averageRating ?? rel.rating ?? 4.8),
+                  reviews: Number(rel.topRatedAttribute?.totalReviews ?? rel.reviewsCount ?? rel.reviews ?? 0),
+                  sold: Number(rel.topSellerAttribute?.unitsSold ?? rel.unitsSold ?? rel.sold ?? 0),
+                  discount,
+                };
+              });
+          } catch (fallbackErr) {
+            console.warn("Related products fallback fetch error:", fallbackErr);
+          }
+        }
+
         // FINAL PRODUCT
 
         const mappedProduct: ProductDetails = {
@@ -637,7 +697,7 @@ export default function ProductDetailsPage({ params }: Props) {
 
           deliverySettings,
 
-          relatedProducts: [],
+          relatedProducts: relItems,
           boughtTogether: [],
         };
 
@@ -877,14 +937,14 @@ export default function ProductDetailsPage({ params }: Props) {
 
         {/* RELATED PRODUCTS */}
 
-        {product.relatedProducts.length > 0 && (
-          <section className="relative z-10 mt-10 px-3 sm:px-0">
-            <RelatedProducts
-              title="Related Products"
-              products={product.relatedProducts}
-            />
-          </section>
-        )}
+        <section className="relative z-10 mt-10 px-3 sm:px-0">
+          <RelatedProducts
+            title="সম্পর্কিত পণ্যসমূহ (Related Products)"
+            products={product.relatedProducts}
+            categoryId={product.categorySlug}
+            currentProductId={product.id}
+          />
+        </section>
       </div>
 
       {/* EXISTING LOCATION MODAL */}

@@ -49,7 +49,11 @@ export default function HomeLivingCategoryField({
   categoryName = "Home & Living",
 }: Props) {
   const update = (key: string, v: any) => {
-    onChange({ ...value, [key]: v });
+    if (key === "countryOfOrigin") {
+      onChange({ ...value, countryOfOrigin: v, origin: v });
+    } else {
+      onChange({ ...value, [key]: v });
+    }
   };
 
   // Custom specs handlers
@@ -328,10 +332,31 @@ export default function HomeLivingCategoryField({
 
             <SelectWithCustom
               label="উৎপাদনকারী দেশ (Country of Origin)"
-              value={value.countryOfOrigin}
+              value={value.countryOfOrigin || value.origin}
               onChange={(v) => update("countryOfOrigin", v)}
-              options={["বাংলাদেশ (Bangladesh)", "মালয়েশিয়া (Malaysia)", "চীন (China)", "ভারত (India)", "থাইল্যান্ড (Thailand)"]}
-              placeholder="অন্য দেশ লিখুন..."
+              options={[
+                "বাংলাদেশ (Bangladesh)",
+                "চীন (China)",
+                "ভারত (India)",
+                "ভিয়েতনাম (Vietnam)",
+                "মালয়েশিয়া (Malaysia)",
+                "থাইল্যান্ড (Thailand)",
+                "তুরস্ক (Turkey)",
+                "ইন্দোনেশিয়া (Indonesia)",
+                "পাকিস্তান (Pakistan)",
+                "জাপান (Japan)",
+                "দক্ষিণ কোরিয়া (South Korea)",
+                "সংযুক্ত আরব আমিরাত (UAE)",
+                "সৌদি আরব (Saudi Arabia)",
+                "যুক্তরাষ্ট্র (USA)",
+                "যুক্তরাজ্য (UK)",
+                "জার্মানি (Germany)",
+                "ইতালি (Italy)",
+                "ফ্রান্স (France)",
+                "স্পেন (Spain)",
+                "মিশর (Egypt)",
+              ]}
+              placeholder="যেকোনো দেশ লিখুন (যেমন: Turkey, Italy, Vietnam...)"
             />
           </div>
         </div>

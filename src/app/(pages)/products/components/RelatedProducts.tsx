@@ -1,101 +1,165 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Heart, Star } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
+import ProductCard from "@/components/cards/product/New-Arrivals-ProductCartd";
 import type { RelatedProduct } from "../types";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
+
 type Props = {
-  title: string;
-  products: RelatedProduct[];
+  title?: string;
+  products?: RelatedProduct[];
+  categoryId?: string;
+  currentProductId?: string;
 };
 
-export default function RelatedProducts({ title, products }: Props) {
+export default function RelatedProducts({
+  title = "সম্পর্কিত পণ্যসমূহ (Related Products)",
+  products = [],
+  categoryId,
+  currentProductId,
+}: Props) {
+  const [items, setItems] = useState<RelatedProduct[]>(products);
+  const [loading, setLoading] = useState(false);
+
+  // Sync with prop when passed
+  useEffect(() => {
+    if (Array.isArray(products) && products.length > 0) {
+      setItems(products);
+    }
+  }, [products]);
+
+  // Fallback auto-fetch if no products passed
+  useEffect(() => {
+    if (items.length > 0) return;
+
+    let mounted = true;
+    async function loadFallbackProducts() {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_URL}/api/products?limit=14`, {
+          cache: "no-store",
+        });
+        const json = await res.json();
+        const list = Array.isArray(json?.data) ? json.data : [];
+
+        const mapped: RelatedProduct[] = list
+          .filter(
+            (p: any) =>
+              String(p.id) !== String(currentProductId) &&
+              String(p.slug) !== String(currentProductId)
+          )
+          .slice(0, 12)
+          .map((p: any) => {
+            const regPrice = Number(
+              p.pricing?.customerRegularPrice ?? p.regularPrice ?? p.price ?? 0
+            );
+            const salePr = Number(
+              p.pricing?.customerSalePrice ?? p.salePrice ?? 0
+            );
+            const hasSale = salePr > 0 && salePr < regPrice;
+            const effectivePrice = hasSale ? salePr : regPrice;
+            const discount = hasSale
+              ? Math.round(((regPrice - salePr) / regPrice) * 100)
+              : undefined;
+            const img =
+              Array.isArray(p.images) && p.images[0]
+                ? p.images[0]
+                : p.image || "/placeholder.png";
+
+            return {
+              id: String(p.id),
+              slug: p.slug,
+              name: p.title || p.name || "Product",
+              image: img,
+              price: effectivePrice,
+              oldPrice: hasSale ? regPrice : undefined,
+              rating: Number(
+                p.topRatedAttribute?.averageRating ?? p.rating ?? 4.8
+              ),
+              reviews: Number(
+                p.topRatedAttribute?.totalReviews ??
+                  p.reviewsCount ??
+                  p.reviews ??
+                  0
+              ),
+              sold: Number(
+                p.topSellerAttribute?.unitsSold ?? p.unitsSold ?? p.sold ?? 0
+              ),
+              discount,
+            };
+          });
+
+        if (mounted && mapped.length > 0) {
+          setItems(mapped);
+        }
+      } catch (err) {
+        console.warn("Failed to load related products fallback:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    loadFallbackProducts();
+
+    return () => {
+      mounted = false;
+    };
+  }, [items.length, currentProductId]);
+
+  if (items.length === 0 && !loading) {
+    return null;
+  }
+
   return (
-    <section>
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <h2 className="text-xl font-bold text-[#12233f] sm:text-2xl">
-          {title}
-        </h2>
+    <section className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-xs">
+      {/* Header */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-[#D6A419]">
+              <Sparkles size={16} />
+            </span>
+            <h2 className="text-lg sm:text-xl font-bold text-[#12233f]">
+              {title}
+            </h2>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            এই পণ্যের সাথে পছন্দের তালিকায় থাকা আরও কিছু জনপ্রিয় পণ্য
+          </p>
+        </div>
 
         <Link
           href="/products"
-          className="shrink-0 text-sm font-semibold text-[#12233f] transition hover:text-[#f59e0b]"
+          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-[#12233f] transition hover:border-[#D6A419] hover:bg-amber-50/50 hover:text-[#D6A419]"
         >
-          More Products →
+          <span>আরও দেখুন</span>
+          <ArrowRight size={13} />
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {products.map((product) => (
-          <Link
-            href={`/products/${product.id}`}
-            key={product.id}
-            className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            {/* Image */}
-            <div className="relative aspect-square overflow-hidden bg-slate-50">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="h-full w-full object-contain p-4 transition duration-300 group-hover:scale-105"
-              />
-
-              {product.discount && (
-                <span className="absolute left-2 top-2 rounded-md bg-red-500 px-2 py-1 text-[10px] font-bold text-white">
-                  {product.discount}% OFF
-                </span>
-              )}
-
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                }}
-                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm"
-              >
-                <Heart size={15} className="text-slate-500" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-3">
-              <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-5 text-slate-700">
-                {product.name}
-              </h3>
-
-              {product.rating !== undefined && (
-                <div className="mt-2 flex items-center gap-1 text-xs">
-                  <span className="flex items-center gap-0.5 rounded bg-emerald-600 px-1.5 py-0.5 font-bold text-white">
-                    {product.rating.toFixed(1)}
-                    <Star size={10} fill="currentColor" />
-                  </span>
-
-                  {product.reviews !== undefined && (
-                    <span className="text-slate-400">({product.reviews})</span>
-                  )}
-                </div>
-              )}
-
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="font-bold text-[#12233f]">
-                  ৳{product.price.toLocaleString()}
-                </span>
-
-                {product.oldPrice && (
-                  <span className="text-xs text-slate-400 line-through">
-                    ৳{product.oldPrice.toLocaleString()}
-                  </span>
-                )}
-              </div>
-
-              {product.sold !== undefined && (
-                <p className="mt-1 text-xs text-slate-400">
-                  {product.sold.toLocaleString()} Sold
-                </p>
-              )}
-            </div>
-          </Link>
+      {/* Grid: 6 columns on desktop using the exact New-Arrivals-ProductCartd */}
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 sm:gap-3">
+        {items.map((product) => (
+          <div key={product.id} className="min-w-0">
+            <ProductCard
+              id={product.id}
+              slug={product.slug || product.id}
+              title={product.name}
+              image={product.image}
+              price={product.price}
+              regularPrice={product.oldPrice}
+              rating={product.rating ?? 4.8}
+              reviewsCount={product.reviews ?? 0}
+              moq="1"
+              stockQuantity={product.sold ? 100 : undefined}
+              isNew={Boolean(product.discount)}
+              badgeText={product.discount ? `${product.discount}% OFF` : undefined}
+              discountBadge={product.discount ? `${product.discount}% OFF` : undefined}
+            />
+          </div>
         ))}
       </div>
     </section>

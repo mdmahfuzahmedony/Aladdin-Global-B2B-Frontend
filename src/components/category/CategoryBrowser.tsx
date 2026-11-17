@@ -543,8 +543,8 @@ export default function CategoryBrowser({ slug }: { slug?: string }) {
               {/* Product Grid */}
 
               {loading ? (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-4">
-                  {Array.from({ length: 8 }, (_, index) => (
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3.5">
+                  {Array.from({ length: 10 }, (_, index) => (
                     <div
                       key={index}
                       className="animate-pulse rounded-xl border border-slate-200 bg-white p-3"
@@ -560,7 +560,7 @@ export default function CategoryBrowser({ slug }: { slug?: string }) {
                   ))}
                 </div>
               ) : displayedProducts.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-4">
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3.5">
                   {displayedProducts.map((product) => {
                     const regularPrice = Number(
                       product.pricing?.customerRegularPrice ?? 0,
