@@ -19,6 +19,7 @@ import CakeSweetsPies from "./product-field/Grocery/Bakery/CakeSweetsPies";
 import ToastBakeryBiscuits from "./product-field/Grocery/Bakery/ToastBakeryBiscuits";
 import HomeLivingCategoryField from "./product-field/HomeLiving/HomeLivingCategoryField";
 import BooksStationeryDispatcher from "./product-field/BooksStationery/BooksStationeryDispatcher";
+import HealthBeautyDispatcher from "./product-field/HealthBeauty/HealthBeautyDispatcher";
 
 // Grocery - Beverages
 import Juice from "./product-field/Grocery/Beverages/Juice";
@@ -457,6 +458,51 @@ function findComponentForCategory(
     });
   if (isBookOrStationeryCategory) {
     return BooksStationeryDispatcher;
+  }
+
+  // Health & Beauty (Medicine, Healthcare, Beauty, Skincare)
+  const isHealthBeautyCategory =
+    key === "health-and-beauty" ||
+    key === "health-beauty" ||
+    key === "beauty" ||
+    key === "otc-medicine" ||
+    key === "prescription-medicine" ||
+    key === "healthcare-products" ||
+    key === "diabetes-care" ||
+    key === "dental-care" ||
+    key === "herbal-and-ayurvedic" ||
+    key === "devices-and-equipment" ||
+    key === "sexual-wellness" ||
+    key === "women-s-care" ||
+    key === "womens-care" ||
+    key === "men-s-care" ||
+    key === "mens-care" ||
+    key === "kid-s-care" ||
+    key === "kids-care" ||
+    rawLower.includes("health") ||
+    rawLower.includes("beauty") ||
+    rawLower.includes("medicine") ||
+    rawLower.includes("skincare") ||
+    rawLower.includes("cosmetic") ||
+    rawLower.includes("ওষুধ") ||
+    rawLower.includes("ঔষধ") ||
+    rawLower.includes("রূপচর্চা") ||
+    rawLower.includes("ফার্মেসি") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return (
+        pKey === "health-and-beauty" ||
+        pKey === "health-beauty" ||
+        pKey === "beauty" ||
+        name.toLowerCase().includes("health") ||
+        name.toLowerCase().includes("beauty") ||
+        name.toLowerCase().includes("medicine") ||
+        name.toLowerCase().includes("ওষুধ") ||
+        name.toLowerCase().includes("রূপচর্চা")
+      );
+    });
+  if (isHealthBeautyCategory) {
+    return HealthBeautyDispatcher;
   }
 
   // Fashion

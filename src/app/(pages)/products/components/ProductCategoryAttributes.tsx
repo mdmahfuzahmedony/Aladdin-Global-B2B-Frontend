@@ -27,6 +27,10 @@ import {
   User,
   PenTool,
   Bookmark,
+  Pill,
+  Building2,
+  Sun,
+  Activity,
 } from "lucide-react";
 import type { ProductDetails, ProductAttributes } from "../types";
 
@@ -49,6 +53,8 @@ export type CategoryDomain =
   | "HOME_LIVING"
   | "BOOKS"
   | "STATIONERY"
+  | "MEDICINE"
+  | "BEAUTY_SKINCARE"
   | "GENERAL";
 
 export interface HighlightItem {
@@ -95,13 +101,13 @@ const KNOWN_LABELS: Record<string, string> = {
   packType: "Packaging Type",
   dietaryPreference: "Dietary Preference",
   texture: "Texture",
-  keyIngredients: "Key Ingredients",
+  keyIngredients: "Key Ingredients / উপাদান",
   allergenInfo: "Allergen Information",
   packCount: "Package Count",
   manufacturingDate: "Manufacturing Date",
   expiryDate: "Expiry Date",
   shelfLife: "Shelf Life",
-  storageCondition: "Storage Condition",
+  storageCondition: "Storage / সংরক্ষণ",
   countryOfOrigin: "Country of Origin",
   certification: "Certifications",
   isHalal: "Halal Certified",
@@ -120,7 +126,7 @@ const KNOWN_LABELS: Record<string, string> = {
 
   // Beverages
   beverageType: "Beverage Type",
-  productType: "Product Type",
+  productType: "Product Type / ধরণ",
   teaType: "Tea Variety",
   coffeeType: "Coffee Variety",
   drinkType: "Drink Type",
@@ -262,6 +268,26 @@ const KNOWN_LABELS: Record<string, string> = {
   packSize: "Pack Size / পরিমাণ",
   paperGsm: "Paper Quality (GSM)",
   inkColor: "Ink / Color",
+
+  // Medicine & Pharmaceuticals
+  genericName: "Generic Name / জেনেরিক",
+  manufacturer: "Pharma / প্রস্তুতকারক",
+  dosageForm: "Dosage Form / ফরম",
+  strength: "Strength / মাত্রা",
+  prescriptionRequired: "Prescription / প্রেসক্রিপশন",
+  darNo: "DAR / DGDA Reg. No",
+  indications: "Therapeutic Indications / রোগ",
+  sideEffectsWarnings: "Warnings & Precautions",
+
+  // Beauty & Skincare
+  skinType: "Skin Type / ত্বকের ধরণ",
+  benefits: "Key Benefits / উপকারিতা",
+  netWeightVolume: "Net Volume / Weight",
+  spf: "SPF / Sun Protection",
+  applicationTime: "Application / ব্যবহারের সময়",
+  targetGender: "Target User / প্রযোজ্য",
+  certifications: "Safety & Certifications",
+  formulation: "Texture / ফর্মুলেশন",
 };
 
 // Ignore internal or already handled properties
@@ -562,6 +588,55 @@ export function detectCategoryDomain(
     return "STATIONERY";
   }
 
+  // 15. Medicine & Pharmaceuticals
+  if (
+    combined.includes("medicine") ||
+    combined.includes("otc") ||
+    combined.includes("prescription") ||
+    combined.includes("pharma") ||
+    combined.includes("tablet") ||
+    combined.includes("capsule") ||
+    combined.includes("syrup") ||
+    combined.includes("diabetes") ||
+    combined.includes("herbal") ||
+    combined.includes("ayurvedic") ||
+    combined.includes("ওষুধ") ||
+    combined.includes("ঔষধ") ||
+    combined.includes("ফার্মেসি") ||
+    keys.includes("genericname") ||
+    keys.includes("dosageform") ||
+    keys.includes("darno") ||
+    keys.includes("indications")
+  ) {
+    return "MEDICINE";
+  }
+
+  // 16. Beauty, Skincare & Cosmetics
+  if (
+    combined.includes("beauty") ||
+    combined.includes("skincare") ||
+    combined.includes("cream") ||
+    combined.includes("lotion") ||
+    combined.includes("serum") ||
+    combined.includes("cosmetic") ||
+    combined.includes("makeup") ||
+    combined.includes("sunscreen") ||
+    combined.includes("facewash") ||
+    combined.includes("women's care") ||
+    combined.includes("men's care") ||
+    combined.includes("kid's care") ||
+    combined.includes("রূপচর্চা") ||
+    combined.includes("ক্রিম") ||
+    combined.includes("লোশন") ||
+    keys.includes("skintype") ||
+    keys.includes("keyingredients") ||
+    keys.includes("spf") ||
+    keys.includes("applicationtime") ||
+    keys.includes("formulation")
+  ) {
+    return "BEAUTY_SKINCARE";
+  }
+
   return "GENERAL";
 }
 
@@ -801,6 +876,159 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
         highlightedAttributeKeys.add(k)
       );
       if (origin) highlights.push({ id: "origin", label: "Country of Origin", value: origin, icon: <MapPin size={13} />, variant: "rose" });
+      break;
+    }
+
+    case "MEDICINE": {
+      // 1. Generic Name (জেনেরিক নাম)
+      const generic = getVal("genericName");
+      if (generic) {
+        highlights.push({
+          id: "genericName",
+          label: "Generic",
+          value: generic,
+          icon: <Pill size={13} />,
+          variant: "emerald",
+        });
+      }
+
+      // 2. Dosage Form & Strength (ডোজ ফরম ও শক্তি)
+      const dosage = getVal("dosageForm");
+      const strength = getVal("strength");
+      if (dosage || strength) {
+        const val = [dosage, strength].filter(Boolean).join(" • ");
+        highlights.push({
+          id: "dosageForm",
+          label: "Form & Strength",
+          value: val,
+          icon: <Layers size={13} />,
+          variant: "blue",
+        });
+      }
+
+      // 3. Manufacturer (প্রস্তুতকারক)
+      const mfg = getVal("manufacturer") || getVal("pharma") || getVal("brand");
+      if (mfg) {
+        highlights.push({
+          id: "manufacturer",
+          label: "Manufacturer",
+          value: mfg,
+          icon: <Building2 size={13} />,
+          variant: "indigo",
+        });
+      }
+
+      // 4. Prescription Status (প্রেসক্রিপশন শর্ত)
+      const rx = getVal("prescriptionRequired");
+      if (rx) {
+        const isRx = rx.toLowerCase().includes("rx") || rx.toLowerCase().includes("ডাক্তারের");
+        highlights.push({
+          id: "prescriptionRequired",
+          label: "Prescription",
+          value: rx,
+          icon: <ShieldCheck size={13} />,
+          variant: isRx ? "rose" : "amber",
+        });
+      }
+
+      // 5. Pack Size (প্যাক সাইজ)
+      const pack = getVal("packSize");
+      if (pack) {
+        highlights.push({
+          id: "packSize",
+          label: "Pack Size",
+          value: pack,
+          icon: <Box size={13} />,
+          variant: "slate",
+        });
+      }
+
+      // 6. Indications (রোগ/উপকারিতা)
+      const indications = getVal("indications");
+      if (indications) {
+        highlights.push({
+          id: "indications",
+          label: "Indications",
+          value: indications,
+          icon: <Activity size={13} />,
+          variant: "emerald",
+        });
+      }
+      break;
+    }
+
+    case "BEAUTY_SKINCARE": {
+      // 1. Brand (ব্র্যান্ড)
+      const brand = getVal("brand");
+      if (brand) {
+        highlights.push({
+          id: "brand",
+          label: "Brand",
+          value: brand,
+          icon: <Tag size={13} />,
+          variant: "rose",
+        });
+      }
+
+      // 2. Skin Type (ত্বকের ধরণ)
+      const skinType = getVal("skinType");
+      if (skinType) {
+        highlights.push({
+          id: "skinType",
+          label: "Skin Type",
+          value: skinType,
+          icon: <Droplets size={13} />,
+          variant: "blue",
+        });
+      }
+
+      // 3. Key Benefits (উপকারিতা)
+      const benefits = getVal("benefits");
+      if (benefits) {
+        highlights.push({
+          id: "benefits",
+          label: "Key Benefit",
+          value: benefits,
+          icon: <Sparkles size={13} />,
+          variant: "amber",
+        });
+      }
+
+      // 4. Key Ingredients (মূল উপাদান)
+      const ingredients = getVal("keyIngredients");
+      if (ingredients) {
+        highlights.push({
+          id: "keyIngredients",
+          label: "Active Ingredients",
+          value: ingredients,
+          icon: <CheckCircle2 size={13} />,
+          variant: "emerald",
+        });
+      }
+
+      // 5. Net Volume / Weight (পরিমাণ)
+      const netWeight = getVal("netWeightVolume") || getVal("netWeight") || getVal("packSize");
+      if (netWeight) {
+        highlights.push({
+          id: "netWeightVolume",
+          label: "Net Weight/Vol",
+          value: netWeight,
+          icon: <Box size={13} />,
+          variant: "slate",
+        });
+      }
+
+      // 6. SPF / Sun Protection (সানস্ক্রিন)
+      const spf = getVal("spf");
+      if (spf && !spf.includes("প্রযোজ্য নয়") && spf !== "N/A") {
+        highlights.push({
+          id: "spf",
+          label: "Sun Protection",
+          value: spf,
+          icon: <Sun size={13} />,
+          variant: "rose",
+        });
+      }
       break;
     }
 
@@ -1185,6 +1413,77 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
         rows: statMaterialRows,
       });
     }
+  } else if (domain === "MEDICINE") {
+    const pharmaDetails = buildRows([
+      "genericName",
+      "manufacturer",
+      "dosageForm",
+      "strength",
+      "packSize",
+      "darNo",
+    ]);
+    if (pharmaDetails.length > 0) {
+      groups.push({
+        id: "medicine-details",
+        title: "Pharmaceutical Details & Formulation",
+        icon: <Pill size={16} className="text-emerald-600" />,
+        rows: pharmaDetails,
+      });
+    }
+
+    const medicineUsage = buildRows([
+      "prescriptionRequired",
+      "indications",
+      "storageCondition",
+      "expiryDate",
+      "sideEffectsWarnings",
+      "countryOfOrigin",
+      "origin",
+    ]);
+    if (medicineUsage.length > 0) {
+      groups.push({
+        id: "medicine-usage",
+        title: "Indications, Storage & Safety Instructions",
+        icon: <ShieldCheck size={16} className="text-blue-600" />,
+        rows: medicineUsage,
+      });
+    }
+  } else if (domain === "BEAUTY_SKINCARE") {
+    const beautyProduct = buildRows([
+      "productType",
+      "brand",
+      "skinType",
+      "formulation",
+      "netWeightVolume",
+      "countryOfOrigin",
+      "origin",
+    ]);
+    if (beautyProduct.length > 0) {
+      groups.push({
+        id: "beauty-product",
+        title: "Product Formulation & Skin Suitability",
+        icon: <Sparkles size={16} className="text-rose-500" />,
+        rows: beautyProduct,
+      });
+    }
+
+    const beautyBenefits = buildRows([
+      "keyIngredients",
+      "benefits",
+      "spf",
+      "applicationTime",
+      "targetGender",
+      "certifications",
+      "expiryDate",
+    ]);
+    if (beautyBenefits.length > 0) {
+      groups.push({
+        id: "beauty-benefits",
+        title: "Ingredients, Benefits & Sun Protection",
+        icon: <Droplets size={16} className="text-indigo-600" />,
+        rows: beautyBenefits,
+      });
+    }
   }
 
   // Handle custom dynamic specifications
@@ -1352,6 +1651,10 @@ export function ProductCategorySpecs({ product }: { product: ProductDetails }) {
         return "Book & Literature Standards";
       case "STATIONERY":
         return "Stationery & Office Supplies";
+      case "MEDICINE":
+        return "Pharmacy & Medicine Standards";
+      case "BEAUTY_SKINCARE":
+        return "Dermatological & Beauty Care Standards";
       default:
         return "Verified Product Specifications";
     }
