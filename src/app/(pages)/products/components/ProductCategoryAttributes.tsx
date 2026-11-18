@@ -39,6 +39,9 @@ import {
   Power,
   Wifi,
   Gauge,
+  Trophy,
+  Dumbbell,
+  Medal,
 } from "lucide-react";
 import type { ProductDetails, ProductAttributes } from "../types";
 
@@ -65,6 +68,8 @@ export type CategoryDomain =
   | "BEAUTY_SKINCARE"
   | "ELECTRONICS_GADGETS"
   | "ELECTRICAL_APPLIANCES"
+  | "FITNESS_GYM"
+  | "SPORTS_OUTDOOR"
   | "GENERAL";
 
 export interface HighlightItem {
@@ -321,6 +326,22 @@ const KNOWN_LABELS: Record<string, string> = {
   coilMaterial: "Coil / কয়েল মেটেরিয়াল",
   inverterTechnology: "Inverter / এনার্জি স্টার",
   safetyFeatures: "Safety / সুরক্ষা ফিচার",
+
+  // Gym & Fitness
+  fitnessItemType: "Fitness Item / ফিটনেস সরঞ্জাম",
+  weightResistance: "Weight / ওজন বা রেজিস্ট্যান্স",
+  dimensionsSize: "Dimensions / সাইজ ও পরিমাপ",
+  gripAntiSlip: "Grip / গ্রিপ ও অ্যান্টি-স্লিপ",
+  maxLoadCapacity: "Max Load / সর্বোচ্চ ধারণ ক্ষমতা",
+  targetUser: "User Group / প্রযোজ্য",
+
+  // Sports & Outdoor
+  sportDiscipline: "Sport / খেলার ধরণ",
+  equipmentType: "Equipment / সরঞ্জামের ধরণ",
+  sizeAgeGroup: "Size / বয়স শ্রেণী",
+  materialWoodType: "Wood / মূল উপাদান",
+  weightBalance: "Weight & Balance / ওজন ব্যালেন্স",
+  tournamentApproval: "Approval / টুর্নামেন্ট অনুমোদন",
 };
 
 // Ignore internal or already handled properties
@@ -736,6 +757,57 @@ export function detectCategoryDomain(
     keys.includes("invertertechnology")
   ) {
     return "ELECTRICAL_APPLIANCES";
+  }
+
+  // 19. Gym & Fitness Accessories
+  if (
+    combined.includes("fitness") ||
+    combined.includes("gym") ||
+    combined.includes("dumbbell") ||
+    combined.includes("barbell") ||
+    combined.includes("treadmill") ||
+    combined.includes("yoga") ||
+    combined.includes("cardio") ||
+    combined.includes("workout") ||
+    combined.includes("ফিটনেস") ||
+    combined.includes("জিম") ||
+    combined.includes("ডাম্বেল") ||
+    combined.includes("ব্যায়াম") ||
+    keys.includes("fitnessitemtype") ||
+    keys.includes("weightresistance") ||
+    keys.includes("maxloadcapacity") ||
+    keys.includes("gripantislip")
+  ) {
+    return "FITNESS_GYM";
+  }
+
+  // 20. Sports & Outdoor Equipment
+  if (
+    combined.includes("cricket") ||
+    combined.includes("football") ||
+    combined.includes("soccer") ||
+    combined.includes("badminton") ||
+    combined.includes("tennis") ||
+    combined.includes("carrom") ||
+    combined.includes("volleyball") ||
+    combined.includes("basketball") ||
+    combined.includes("swimming") ||
+    combined.includes("skating") ||
+    combined.includes("sports") ||
+    combined.includes("ক্রিকেট") ||
+    combined.includes("ফুটবল") ||
+    combined.includes("ব্যাডমিন্টন") ||
+    combined.includes("টেনিস") ||
+    combined.includes("ক্যারম") ||
+    combined.includes("সাঁতার") ||
+    combined.includes("খেলাধুলা") ||
+    keys.includes("sportdiscipline") ||
+    keys.includes("equipmenttype") ||
+    keys.includes("materialwoodtype") ||
+    keys.includes("weightbalance") ||
+    keys.includes("tournamentapproval")
+  ) {
+    return "SPORTS_OUTDOOR";
   }
 
   return "GENERAL";
@@ -1300,6 +1372,171 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
       break;
     }
 
+    case "FITNESS_GYM": {
+      // 1. Fitness Item Type & Brand
+      const brand = getVal("brand");
+      const fitType = getVal("fitnessItemType");
+      if (brand || fitType) {
+        const val = [brand, fitType].filter(Boolean).join(" • ");
+        highlights.push({
+          id: "fitnessItemType",
+          label: "Fitness Gear",
+          value: val,
+          icon: <Dumbbell size={13} />,
+          variant: "emerald",
+        });
+      }
+
+      // 2. Weight or Resistance Level
+      const weight = getVal("weightResistance");
+      if (weight && !weight.includes("N/A")) {
+        highlights.push({
+          id: "weightResistance",
+          label: "Weight/Resistance",
+          value: weight,
+          icon: <Scale size={13} />,
+          variant: "indigo",
+        });
+      }
+
+      // 3. Material
+      const mat = getVal("material");
+      if (mat) {
+        highlights.push({
+          id: "material",
+          label: "Material",
+          value: mat,
+          icon: <Layers size={13} />,
+          variant: "slate",
+        });
+      }
+
+      // 4. Max Load Capacity
+      const load = getVal("maxLoadCapacity");
+      if (load && !load.includes("N/A")) {
+        highlights.push({
+          id: "maxLoadCapacity",
+          label: "Max Load",
+          value: load,
+          icon: <Activity size={13} />,
+          variant: "rose",
+        });
+      }
+
+      // 5. Dimensions or Grip
+      const dim = getVal("dimensionsSize");
+      const grip = getVal("gripAntiSlip");
+      if (dim) {
+        highlights.push({
+          id: "dimensionsSize",
+          label: "Size",
+          value: dim,
+          icon: <Box size={13} />,
+          variant: "blue",
+        });
+      } else if (grip) {
+        highlights.push({
+          id: "gripAntiSlip",
+          label: "Grip Tech",
+          value: grip,
+          icon: <Sparkles size={13} />,
+          variant: "amber",
+        });
+      }
+
+      // 6. Warranty
+      const warranty = getVal("warranty");
+      if (warranty && !warranty.includes("No Warranty")) {
+        highlights.push({
+          id: "warranty",
+          label: "Warranty",
+          value: warranty,
+          icon: <ShieldCheck size={13} />,
+          variant: "emerald",
+        });
+      }
+      break;
+    }
+
+    case "SPORTS_OUTDOOR": {
+      // 1. Sport Discipline & Equipment
+      const sport = getVal("sportDiscipline");
+      const equip = getVal("equipmentType");
+      if (sport || equip) {
+        const val = [sport, equip].filter(Boolean).join(" • ");
+        highlights.push({
+          id: "equipmentType",
+          label: "Sport Gear",
+          value: val,
+          icon: <Trophy size={13} />,
+          variant: "amber",
+        });
+      }
+
+      // 2. Brand & Model
+      const brand = getVal("brand");
+      const model = getVal("modelName");
+      if (brand || model) {
+        const val = [brand, model].filter(Boolean).join(" ");
+        highlights.push({
+          id: "brandModel",
+          label: "Brand/Model",
+          value: val,
+          icon: <Medal size={13} />,
+          variant: "indigo",
+        });
+      }
+
+      // 3. Material or Wood Type
+      const woodMat = getVal("materialWoodType");
+      if (woodMat) {
+        highlights.push({
+          id: "materialWoodType",
+          label: "Wood/Material",
+          value: woodMat,
+          icon: <Layers size={13} />,
+          variant: "slate",
+        });
+      }
+
+      // 4. Weight & Balance
+      const weightBal = getVal("weightBalance");
+      if (weightBal && !weightBal.includes("N/A")) {
+        highlights.push({
+          id: "weightBalance",
+          label: "Weight/Balance",
+          value: weightBal,
+          icon: <Scale size={13} />,
+          variant: "blue",
+        });
+      }
+
+      // 5. Tournament Approval
+      const approval = getVal("tournamentApproval");
+      if (approval) {
+        highlights.push({
+          id: "tournamentApproval",
+          label: "Standard",
+          value: approval,
+          icon: <Award size={13} />,
+          variant: "rose",
+        });
+      }
+
+      // 6. Warranty
+      const warranty = getVal("warranty");
+      if (warranty && !warranty.includes("No Warranty")) {
+        highlights.push({
+          id: "warranty",
+          label: "Warranty",
+          value: warranty,
+          icon: <ShieldCheck size={13} />,
+          variant: "emerald",
+        });
+      }
+      break;
+    }
+
     default:
       break;
   }
@@ -1846,6 +2083,95 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
         rows: elecWarranty,
       });
     }
+  } else if (domain === "FITNESS_GYM") {
+    const fitSpecs = buildRows([
+      "fitnessItemType",
+      "brand",
+      "modelName",
+      "weightResistance",
+      "maxLoadCapacity",
+      "targetUser",
+    ]);
+    if (fitSpecs.length > 0) {
+      groups.push({
+        id: "fit-specs",
+        title: "Fitness Equipment & Specifications",
+        icon: <Dumbbell size={16} className="text-emerald-600" />,
+        rows: fitSpecs,
+      });
+    }
+
+    const fitBuild = buildRows([
+      "material",
+      "dimensionsSize",
+      "gripAntiSlip",
+    ]);
+    if (fitBuild.length > 0) {
+      groups.push({
+        id: "fit-build",
+        title: "Material, Dimensions & Grip",
+        icon: <Layers size={16} className="text-indigo-600" />,
+        rows: fitBuild,
+      });
+    }
+
+    const fitWarranty = buildRows([
+      "warranty",
+      "countryOfOrigin",
+      "origin",
+    ]);
+    if (fitWarranty.length > 0) {
+      groups.push({
+        id: "fit-warranty",
+        title: "Warranty & Manufacturing Origin",
+        icon: <ShieldCheck size={16} className="text-emerald-600" />,
+        rows: fitWarranty,
+      });
+    }
+  } else if (domain === "SPORTS_OUTDOOR") {
+    const sportSpecs = buildRows([
+      "sportDiscipline",
+      "equipmentType",
+      "brand",
+      "modelName",
+      "sizeAgeGroup",
+      "tournamentApproval",
+    ]);
+    if (sportSpecs.length > 0) {
+      groups.push({
+        id: "sport-specs",
+        title: "Sport & Equipment Specifications",
+        icon: <Trophy size={16} className="text-orange-600" />,
+        rows: sportSpecs,
+      });
+    }
+
+    const sportMaterial = buildRows([
+      "materialWoodType",
+      "weightBalance",
+    ]);
+    if (sportMaterial.length > 0) {
+      groups.push({
+        id: "sport-material",
+        title: "Wood, Material & Balance",
+        icon: <Layers size={16} className="text-indigo-600" />,
+        rows: sportMaterial,
+      });
+    }
+
+    const sportWarranty = buildRows([
+      "warranty",
+      "countryOfOrigin",
+      "origin",
+    ]);
+    if (sportWarranty.length > 0) {
+      groups.push({
+        id: "sport-warranty",
+        title: "Warranty & Manufacturing Origin",
+        icon: <ShieldCheck size={16} className="text-emerald-600" />,
+        rows: sportWarranty,
+      });
+    }
   }
 
   // Handle custom dynamic specifications
@@ -2021,6 +2347,10 @@ export function ProductCategorySpecs({ product }: { product: ProductDetails }) {
         return "Gadgets & IT Standards";
       case "ELECTRICAL_APPLIANCES":
         return "Electrical & Power Standards";
+      case "FITNESS_GYM":
+        return "Gym & Fitness Standards";
+      case "SPORTS_OUTDOOR":
+        return "Sports & Athletic Standards";
       default:
         return "Verified Product Specifications";
     }

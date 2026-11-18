@@ -21,6 +21,7 @@ import HomeLivingCategoryField from "./product-field/HomeLiving/HomeLivingCatego
 import BooksStationeryDispatcher from "./product-field/BooksStationery/BooksStationeryDispatcher";
 import HealthBeautyDispatcher from "./product-field/HealthBeauty/HealthBeautyDispatcher";
 import ElectronicsDispatcher from "./product-field/Electronics/ElectronicsDispatcher";
+import SportsFitnessDispatcher from "./product-field/SportsFitness/SportsFitnessDispatcher";
 
 // Grocery - Beverages
 import Juice from "./product-field/Grocery/Beverages/Juice";
@@ -546,6 +547,46 @@ function findComponentForCategory(
     });
   if (isElectronicsCategory) {
     return ElectronicsDispatcher;
+  }
+
+  // Sports & Fitness Accessories (Cricket, Football, Gym, Workout, Yoga, etc.)
+  const isSportsFitnessCategory =
+    key === "sports" ||
+    key === "fitness" ||
+    key === "sports-and-fitness" ||
+    key === "sports-fitness" ||
+    key === "sports-accessories" ||
+    key === "fitness-accessories" ||
+    key === "sports-fitness-accessories" ||
+    key === "sports-and-fitness-accessories" ||
+    rawLower.includes("sport") ||
+    rawLower.includes("fitness") ||
+    rawLower.includes("gym") ||
+    rawLower.includes("খেলা") ||
+    rawLower.includes("ফিটনেস") ||
+    rawLower.includes("জিম") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return (
+        pKey === "sports-and-fitness-accessories" ||
+        pKey === "sports-fitness-accessories" ||
+        pKey === "sports-fitness" ||
+        pKey === "sports" ||
+        pKey === "fitness" ||
+        name.toLowerCase().includes("sport") ||
+        name.toLowerCase().includes("fitness") ||
+        name.toLowerCase().includes("gym") ||
+        name.toLowerCase().includes("খেলা") ||
+        name.toLowerCase().includes("ফিটনেস")
+      );
+    });
+  if (
+    isSportsFitnessCategory &&
+    key !== "sports-drinks" &&
+    !rawLower.includes("drinks") &&
+    !rawLower.includes("পানীয়")
+  ) {
+    return SportsFitnessDispatcher;
   }
 
   // Fashion
