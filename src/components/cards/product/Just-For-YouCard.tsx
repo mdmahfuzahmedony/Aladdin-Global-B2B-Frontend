@@ -35,7 +35,7 @@ export default function JustForYouCard({
 
       {/* Product Information */}
       <div className="flex flex-1 flex-col border-t border-slate-100 p-2 sm:p-3">
-        <h3 className="line-clamp-2 min-h-[30px] break-words text-[11px] font-bold leading-snug text-[#12233F] transition group-hover:text-blue-600 sm:min-h-[34px] sm:text-xs">
+        <h3 className="line-clamp-2 min-h-[30px] break-words text-[11px] font-bold leading-snug text-[#12233F] sm:min-h-[34px] sm:text-xs">
           {product.name}
         </h3>
 

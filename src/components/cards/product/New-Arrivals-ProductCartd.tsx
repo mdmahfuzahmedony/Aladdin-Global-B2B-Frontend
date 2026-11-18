@@ -309,7 +309,7 @@ export default function ProductCard({
 
         {/* TITLE & RATING & REVIEWS */}
         <div className="block min-w-0 px-1 sm:px-1.5">
-          <h3 className="line-clamp-2 min-h-[34px] text-xs font-bold leading-tight text-[#12233F] transition-colors group-hover:text-amber-600 sm:text-[13px]">
+          <h3 className="line-clamp-2 min-h-[34px] text-xs font-bold leading-tight text-[#12233F] sm:text-[13px]">
             {title}
           </h3>
 

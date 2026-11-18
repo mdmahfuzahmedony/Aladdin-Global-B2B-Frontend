@@ -61,7 +61,7 @@ export default function TopRatedCard({
           </div>
 
           {/* PRODUCT TITLE */}
-          <h3 className="min-h-[32px] line-clamp-2 break-words text-[11px] font-bold leading-4 text-[#12233F] transition hover:text-blue-600 sm:text-xs">
+          <h3 className="min-h-[32px] line-clamp-2 break-words text-[11px] font-bold leading-4 text-[#12233F] sm:text-xs">
             {product.title}
           </h3>
         </Link>

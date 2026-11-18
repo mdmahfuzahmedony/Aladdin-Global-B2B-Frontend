@@ -20,6 +20,7 @@ import ToastBakeryBiscuits from "./product-field/Grocery/Bakery/ToastBakeryBiscu
 import HomeLivingCategoryField from "./product-field/HomeLiving/HomeLivingCategoryField";
 import BooksStationeryDispatcher from "./product-field/BooksStationery/BooksStationeryDispatcher";
 import HealthBeautyDispatcher from "./product-field/HealthBeauty/HealthBeautyDispatcher";
+import ElectronicsDispatcher from "./product-field/Electronics/ElectronicsDispatcher";
 
 // Grocery - Beverages
 import Juice from "./product-field/Grocery/Beverages/Juice";
@@ -503,6 +504,48 @@ function findComponentForCategory(
     });
   if (isHealthBeautyCategory) {
     return HealthBeautyDispatcher;
+  }
+
+  // Electronics & Electricals (Gadgets, Computers, Appliances, Wiring, Fans, AC, Lights, etc.)
+  const isElectronicsCategory =
+    key === "electronics" ||
+    key === "electrical" ||
+    key === "electronics-and-electricals" ||
+    key === "electronics-electricals" ||
+    key === "electronics-electrical" ||
+    key === "consumer-electronics" ||
+    key === "gadgets" ||
+    key === "electrical-appliances" ||
+    key === "home-appliances" ||
+    key === "mobile-and-tablets" ||
+    key === "computers-and-accessories" ||
+    rawLower.includes("electronic") ||
+    rawLower.includes("electrical") ||
+    rawLower.includes("gadget") ||
+    rawLower.includes("ইলেকট্রনিক্স") ||
+    rawLower.includes("ইলেকট্রিক্যাল") ||
+    rawLower.includes("গ্যাজেট") ||
+    rawLower.includes("অ্যাপ্লায়েন্স") ||
+    rawLower.includes("মোবাইল") ||
+    rawLower.includes("ল্যাপটপ") ||
+    rawLower.includes("কম্পিউটার") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return (
+        pKey === "electronics" ||
+        pKey === "electrical" ||
+        pKey === "electronics-and-electricals" ||
+        pKey === "consumer-electronics" ||
+        pKey === "gadgets" ||
+        name.toLowerCase().includes("electronic") ||
+        name.toLowerCase().includes("electrical") ||
+        name.toLowerCase().includes("gadget") ||
+        name.toLowerCase().includes("ইলেকট্রনিক্স") ||
+        name.toLowerCase().includes("ইলেকট্রিক্যাল")
+      );
+    });
+  if (isElectronicsCategory) {
+    return ElectronicsDispatcher;
   }
 
   // Fashion

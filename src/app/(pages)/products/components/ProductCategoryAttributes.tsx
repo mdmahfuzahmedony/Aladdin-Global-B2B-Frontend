@@ -31,6 +31,14 @@ import {
   Building2,
   Sun,
   Activity,
+  Smartphone,
+  Zap,
+  Cpu,
+  Monitor,
+  BatteryCharging,
+  Power,
+  Wifi,
+  Gauge,
 } from "lucide-react";
 import type { ProductDetails, ProductAttributes } from "../types";
 
@@ -55,6 +63,8 @@ export type CategoryDomain =
   | "STATIONERY"
   | "MEDICINE"
   | "BEAUTY_SKINCARE"
+  | "ELECTRONICS_GADGETS"
+  | "ELECTRICAL_APPLIANCES"
   | "GENERAL";
 
 export interface HighlightItem {
@@ -288,6 +298,29 @@ const KNOWN_LABELS: Record<string, string> = {
   targetGender: "Target User / প্রযোজ্য",
   certifications: "Safety & Certifications",
   formulation: "Texture / ফর্মুলেশন",
+
+  // Electronics & Gadgets
+  deviceType: "Device Type / পণ্যের ধরণ",
+  modelName: "Model / মডেল সংস্করণ",
+  ram: "RAM / র‍্যাম মেমোরি",
+  storage: "Storage / রম স্টোরেজ",
+  screenSize: "Display / স্ক্রিন সাইজ",
+  batteryCapacity: "Battery / ব্যাটারি ক্ষমতা",
+  operatingSystem: "OS / অপারেটিং সিস্টেম",
+  connectivity: "Connectivity / কানেক্টিভিটি",
+  chargingPower: "Charging / পাওয়ার ইনপুট",
+  colorVariant: "Color Variant / কালার",
+
+  // Electrical & Appliances
+  applianceType: "Appliance / যন্ত্রের ধরণ",
+  modelNumber: "Model No / মডেল নম্বর",
+  wattage: "Power / ওয়াট রেটিং",
+  operatingVoltage: "Voltage / ভোল্টেজ রেটিং",
+  capacitySize: "Capacity / সাইজ / টন",
+  powerPhase: "Phase / পাওয়ার ফেজ",
+  coilMaterial: "Coil / কয়েল মেটেরিয়াল",
+  inverterTechnology: "Inverter / এনার্জি স্টার",
+  safetyFeatures: "Safety / সুরক্ষা ফিচার",
 };
 
 // Ignore internal or already handled properties
@@ -635,6 +668,74 @@ export function detectCategoryDomain(
     keys.includes("formulation")
   ) {
     return "BEAUTY_SKINCARE";
+  }
+
+  // 17. Consumer Electronics & Gadgets
+  if (
+    combined.includes("smartphone") ||
+    combined.includes("laptop") ||
+    combined.includes("gadget") ||
+    combined.includes("smartwatch") ||
+    combined.includes("earbuds") ||
+    combined.includes("headphone") ||
+    combined.includes("mobile") ||
+    combined.includes("tablet") ||
+    combined.includes("মোবাইল") ||
+    combined.includes("ল্যাপটপ") ||
+    combined.includes("গ্যাজেট") ||
+    combined.includes("ট্যাবলেট") ||
+    combined.includes("স্মার্টওয়াচ") ||
+    combined.includes("কম্পিউটার") ||
+    keys.includes("devicetype") ||
+    keys.includes("ram") ||
+    keys.includes("storage") ||
+    keys.includes("screensize") ||
+    keys.includes("batterycapacity") ||
+    keys.includes("operatingsystem")
+  ) {
+    return "ELECTRONICS_GADGETS";
+  }
+
+  // 18. Electrical Appliances & Equipment
+  if (
+    combined.includes("electrical") ||
+    combined.includes("electric") ||
+    combined.includes("electronics") ||
+    combined.includes("fan") ||
+    combined.includes("ac") ||
+    combined.includes("air conditioner") ||
+    combined.includes("fridge") ||
+    combined.includes("refrigerator") ||
+    combined.includes("geyser") ||
+    combined.includes("water heater") ||
+    combined.includes("pump") ||
+    combined.includes("motor") ||
+    combined.includes("generator") ||
+    combined.includes("ips") ||
+    combined.includes("ups") ||
+    combined.includes("solar") ||
+    combined.includes("cable") ||
+    combined.includes("wire") ||
+    combined.includes("switch") ||
+    combined.includes("socket") ||
+    combined.includes("breaker") ||
+    combined.includes("ইলেকট্রিক্যাল") ||
+    combined.includes("ফ্যান") ||
+    combined.includes("লাইট") ||
+    combined.includes("এসি") ||
+    combined.includes("ফ্রিজ") ||
+    combined.includes("মোটর") ||
+    combined.includes("পাম্প") ||
+    combined.includes("তার") ||
+    combined.includes("ক্যাবল") ||
+    combined.includes("সুইচ") ||
+    keys.includes("appliancetype") ||
+    keys.includes("wattage") ||
+    keys.includes("operatingvoltage") ||
+    keys.includes("coilmaterial") ||
+    keys.includes("invertertechnology")
+  ) {
+    return "ELECTRICAL_APPLIANCES";
   }
 
   return "GENERAL";
@@ -1027,6 +1128,173 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
           value: spf,
           icon: <Sun size={13} />,
           variant: "rose",
+        });
+      }
+      break;
+    }
+
+    case "ELECTRONICS_GADGETS": {
+      // 1. Device Type & Brand
+      const brand = getVal("brand");
+      const devType = getVal("deviceType");
+      if (brand || devType) {
+        const val = [brand, devType].filter(Boolean).join(" • ");
+        highlights.push({
+          id: "deviceType",
+          label: "Device",
+          value: val,
+          icon: <Smartphone size={13} />,
+          variant: "blue",
+        });
+      }
+
+      // 2. RAM & Storage Combo
+      const ram = getVal("ram");
+      const storage = getVal("storage");
+      if ((ram && !ram.includes("N/A")) || (storage && !storage.includes("N/A"))) {
+        const val = [ram, storage].filter((x) => x && !x.includes("N/A")).join(" / ");
+        if (val) {
+          highlights.push({
+            id: "ramStorage",
+            label: "RAM / ROM",
+            value: val,
+            icon: <Cpu size={13} />,
+            variant: "indigo",
+          });
+        }
+      }
+
+      // 3. Screen / Display
+      const screen = getVal("screenSize");
+      if (screen && !screen.includes("N/A")) {
+        highlights.push({
+          id: "screenSize",
+          label: "Display",
+          value: screen,
+          icon: <Monitor size={13} />,
+          variant: "amber",
+        });
+      }
+
+      // 4. Battery Capacity
+      const battery = getVal("batteryCapacity");
+      if (battery && !battery.includes("N/A")) {
+        highlights.push({
+          id: "batteryCapacity",
+          label: "Battery",
+          value: battery,
+          icon: <BatteryCharging size={13} />,
+          variant: "emerald",
+        });
+      }
+
+      // 5. Fast Charging / Connectivity
+      const charge = getVal("chargingPower");
+      const conn = getVal("connectivity");
+      if (charge && !charge.includes("N/A")) {
+        highlights.push({
+          id: "chargingPower",
+          label: "Fast Charging",
+          value: charge,
+          icon: <Zap size={13} />,
+          variant: "rose",
+        });
+      } else if (conn) {
+        highlights.push({
+          id: "connectivity",
+          label: "Connectivity",
+          value: conn,
+          icon: <Wifi size={13} />,
+          variant: "slate",
+        });
+      }
+
+      // 6. Warranty
+      const warranty = getVal("warranty");
+      if (warranty && !warranty.includes("No Warranty")) {
+        highlights.push({
+          id: "warranty",
+          label: "Warranty",
+          value: warranty,
+          icon: <ShieldCheck size={13} />,
+          variant: "emerald",
+        });
+      }
+      break;
+    }
+
+    case "ELECTRICAL_APPLIANCES": {
+      // 1. Appliance Type & Brand
+      const brand = getVal("brand");
+      const appType = getVal("applianceType");
+      if (brand || appType) {
+        const val = [brand, appType].filter(Boolean).join(" • ");
+        highlights.push({
+          id: "applianceType",
+          label: "Appliance",
+          value: val,
+          icon: <Zap size={13} />,
+          variant: "amber",
+        });
+      }
+
+      // 2. Power / Wattage
+      const watt = getVal("wattage");
+      if (watt && !watt.includes("N/A")) {
+        highlights.push({
+          id: "wattage",
+          label: "Power Rating",
+          value: watt,
+          icon: <Power size={13} />,
+          variant: "rose",
+        });
+      }
+
+      // 3. Capacity / Size (Ton, Liters, Inch)
+      const cap = getVal("capacitySize");
+      if (cap) {
+        highlights.push({
+          id: "capacitySize",
+          label: "Capacity / Size",
+          value: cap,
+          icon: <Gauge size={13} />,
+          variant: "blue",
+        });
+      }
+
+      // 4. Inverter / Energy Rating
+      const inverter = getVal("inverterTechnology");
+      if (inverter && !inverter.includes("N/A")) {
+        highlights.push({
+          id: "inverterTechnology",
+          label: "Energy Tech",
+          value: inverter,
+          icon: <Sparkles size={13} />,
+          variant: "emerald",
+        });
+      }
+
+      // 5. Operating Voltage
+      const volt = getVal("operatingVoltage");
+      if (volt) {
+        highlights.push({
+          id: "operatingVoltage",
+          label: "Voltage",
+          value: volt,
+          icon: <Zap size={13} />,
+          variant: "slate",
+        });
+      }
+
+      // 6. Warranty
+      const warranty = getVal("warranty");
+      if (warranty && !warranty.includes("No Warranty")) {
+        highlights.push({
+          id: "warranty",
+          label: "Warranty",
+          value: warranty,
+          icon: <ShieldCheck size={13} />,
+          variant: "emerald",
         });
       }
       break;
@@ -1484,6 +1752,100 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
         rows: beautyBenefits,
       });
     }
+  } else if (domain === "ELECTRONICS_GADGETS") {
+    const gadgetCore = buildRows([
+      "deviceType",
+      "brand",
+      "modelName",
+      "ram",
+      "storage",
+      "operatingSystem",
+    ]);
+    if (gadgetCore.length > 0) {
+      groups.push({
+        id: "gadget-core",
+        title: "Device, Memory & Operating System",
+        icon: <Smartphone size={16} className="text-sky-600" />,
+        rows: gadgetCore,
+      });
+    }
+
+    const gadgetDisplayPower = buildRows([
+      "screenSize",
+      "batteryCapacity",
+      "chargingPower",
+      "connectivity",
+      "colorVariant",
+    ]);
+    if (gadgetDisplayPower.length > 0) {
+      groups.push({
+        id: "gadget-display-power",
+        title: "Display, Battery & Connectivity",
+        icon: <Monitor size={16} className="text-indigo-600" />,
+        rows: gadgetDisplayPower,
+      });
+    }
+
+    const gadgetWarranty = buildRows([
+      "warranty",
+      "countryOfOrigin",
+      "origin",
+    ]);
+    if (gadgetWarranty.length > 0) {
+      groups.push({
+        id: "gadget-warranty",
+        title: "Warranty & Manufacturing Origin",
+        icon: <ShieldCheck size={16} className="text-emerald-600" />,
+        rows: gadgetWarranty,
+      });
+    }
+  } else if (domain === "ELECTRICAL_APPLIANCES") {
+    const elecPower = buildRows([
+      "applianceType",
+      "brand",
+      "modelNumber",
+      "wattage",
+      "operatingVoltage",
+      "capacitySize",
+      "powerPhase",
+    ]);
+    if (elecPower.length > 0) {
+      groups.push({
+        id: "elec-power",
+        title: "Appliance & Power Ratings",
+        icon: <Zap size={16} className="text-amber-600" />,
+        rows: elecPower,
+      });
+    }
+
+    const elecEngineering = buildRows([
+      "coilMaterial",
+      "inverterTechnology",
+      "safetyFeatures",
+      "certifications",
+    ]);
+    if (elecEngineering.length > 0) {
+      groups.push({
+        id: "elec-engineering",
+        title: "Engineering, Inverter & Safety",
+        icon: <Power size={16} className="text-blue-600" />,
+        rows: elecEngineering,
+      });
+    }
+
+    const elecWarranty = buildRows([
+      "warranty",
+      "countryOfOrigin",
+      "origin",
+    ]);
+    if (elecWarranty.length > 0) {
+      groups.push({
+        id: "elec-warranty",
+        title: "Warranty & Manufacturing Origin",
+        icon: <ShieldCheck size={16} className="text-emerald-600" />,
+        rows: elecWarranty,
+      });
+    }
   }
 
   // Handle custom dynamic specifications
@@ -1655,6 +2017,10 @@ export function ProductCategorySpecs({ product }: { product: ProductDetails }) {
         return "Pharmacy & Medicine Standards";
       case "BEAUTY_SKINCARE":
         return "Dermatological & Beauty Care Standards";
+      case "ELECTRONICS_GADGETS":
+        return "Gadgets & IT Standards";
+      case "ELECTRICAL_APPLIANCES":
+        return "Electrical & Power Standards";
       default:
         return "Verified Product Specifications";
     }
