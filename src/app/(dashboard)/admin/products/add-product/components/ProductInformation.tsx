@@ -22,6 +22,8 @@ import BooksStationeryDispatcher from "./product-field/BooksStationery/BooksStat
 import HealthBeautyDispatcher from "./product-field/HealthBeauty/HealthBeautyDispatcher";
 import ElectronicsDispatcher from "./product-field/Electronics/ElectronicsDispatcher";
 import SportsFitnessDispatcher from "./product-field/SportsFitness/SportsFitnessDispatcher";
+import GroceryDispatcher from "./product-field/Grocery/GroceryDispatcher";
+import ToysDispatcher from "./product-field/Toys/ToysDispatcher";
 
 // Grocery - Beverages
 import Juice from "./product-field/Grocery/Beverages/Juice";
@@ -589,6 +591,32 @@ function findComponentForCategory(
     return SportsFitnessDispatcher;
   }
 
+  // Toys & Games (Unified All-in-One Category Dispatcher)
+  const isToysCategory =
+    key === "toys-and-games" ||
+    key === "toys-games" ||
+    key === "toys-games-206xi" ||
+    key === "toys" ||
+    key === "kids-toys" ||
+    key.includes("toy") ||
+    rawLower.includes("toy") ||
+    rawLower.includes("খেলনা") ||
+    rawLower.includes("পুতুল") ||
+    rawLower.includes("পাজল") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return (
+        pKey === "toys-and-games" ||
+        pKey === "toys-games" ||
+        pKey.includes("toy") ||
+        name.toLowerCase().includes("toy") ||
+        name.toLowerCase().includes("খেলনা")
+      );
+    });
+  if (isToysCategory) {
+    return ToysDispatcher;
+  }
+
   // Fashion
   const isFashionCategory =
     key === "fashion" ||
@@ -600,6 +628,91 @@ function findComponentForCategory(
   if (isFashionCategory) {
     const fashionComponent = getFashionFieldComponent(category.name, parentNames);
     if (fashionComponent) return fashionComponent;
+  }
+
+  // Grocery & Food (Unified All-in-One Category Dispatcher)
+  const isGroceryCategory =
+    key === "grocery" ||
+    key === "groceries" ||
+    key === "food" ||
+    key === "cooking-and-essential" ||
+    key === "cooking-essential" ||
+    key === "cooking-essentials" ||
+    key === "beverages" ||
+    key === "beverage" ||
+    key === "drinks" ||
+    key === "bakery" ||
+    key === "bakery-and-biscuits" ||
+    key === "bakery-biscuits" ||
+    key === "snacks" ||
+    key === "dairy-and-eggs" ||
+    key === "dairy-eggs" ||
+    key === "dairy" ||
+    key === "eggs" ||
+    key === "fish-and-meat" ||
+    key === "meat-and-fish" ||
+    key === "meat" ||
+    key === "fish" ||
+    key === "fruits-and-vegetables" ||
+    key === "fruits-vegetables" ||
+    key === "frozen-and-canned" ||
+    key === "frozen-canned" ||
+    key === "canned-and-packaged" ||
+    key === "canned-packaged" ||
+    key === "spices-and-salt" ||
+    key === "spices-salt" ||
+    key === "confectioneries" ||
+    key === "confectionery" ||
+    key === "breakfast" ||
+    key === "pet-care" ||
+    key === "londry-and-household" ||
+    key === "laundry-and-household" ||
+    key === "household" ||
+    key === "cleaning" ||
+    key === "homemade-and-resturent" ||
+    key === "organic" ||
+    key === "organice" ||
+    rawLower.includes("grocer") ||
+    rawLower.includes("মুদি") ||
+    rawLower.includes("খাবার") ||
+    rawLower.includes("খাদ্য") ||
+    rawLower.includes("চাল") ||
+    rawLower.includes("ডাল") ||
+    rawLower.includes("তেল") ||
+    rawLower.includes("মসলা") ||
+    rawLower.includes("আটা") ||
+    rawLower.includes("ময়দা") ||
+    rawLower.includes("সুজি") ||
+    rawLower.includes("লবণ") ||
+    rawLower.includes("চিনি") ||
+    rawLower.includes("বিস্কুট") ||
+    rawLower.includes("বেকারি") ||
+    rawLower.includes("স্ন্যাকস") ||
+    rawLower.includes("পানীয়") ||
+    rawLower.includes("ডেইরি") ||
+    rawLower.includes("দুধ") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return (
+        pKey === "grocery" ||
+        pKey === "food" ||
+        pKey.includes("grocer") ||
+        name.toLowerCase().includes("grocer") ||
+        name.toLowerCase().includes("মুদি") ||
+        name.toLowerCase().includes("food") ||
+        name.toLowerCase().includes("beverage") ||
+        name.toLowerCase().includes("cooking") ||
+        name.toLowerCase().includes("bakery") ||
+        name.toLowerCase().includes("dairy")
+      );
+    });
+
+  if (
+    isGroceryCategory &&
+    key !== "sports-drinks" &&
+    !rawLower.includes("sport")
+  ) {
+    return GroceryDispatcher;
   }
 
   const isDairyEggsCategory =

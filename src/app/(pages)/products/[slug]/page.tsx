@@ -13,6 +13,8 @@ import ProductInfo from "../components/ProductInfo";
 import ProductGallery from "../components/ProductGallery";
 import ProductBreadcrumb from "../components/ProductBreadcrumb";
 import FrequentlyBought from "../components/FrequentlyBought";
+import ProductChatModal from "@/components/chat/ProductChatModal";
+import { MessageSquare, ShieldAlert } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
@@ -61,6 +63,10 @@ export default function ProductDetailsPage({ params }: Props) {
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [locationLoading, setLocationLoading] = useState(true);
   const [locationError, setLocationError] = useState<string | null>(null);
+
+  // Chat & Complaint Modal
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [chatMode, setChatMode] = useState<"VENDOR" | "ADMIN">("VENDOR");
 
   // =====================================================
   // CUSTOMER LOCATION
@@ -953,22 +959,52 @@ export default function ProductDetailsPage({ params }: Props) {
                 </div>
               </div>
 
-              {product.sellerId ? (
-                <Link
-                  href={`/vendor/store/${product.sellerId}`}
-                  className="mt-4 flex w-full items-center justify-center rounded-xl border border-[#12233f] px-4 py-2.5 text-xs font-bold text-[#12233f] transition hover:bg-[#12233f] hover:text-white"
-                >
-                  View Seller Store
-                </Link>
-              ) : (
+              {/* Chat with Seller & Report to Admin Action Buttons */}
+              <div className="mt-4 space-y-2 border-t border-slate-100 pt-3.5">
                 <button
                   type="button"
-                  disabled
-                  className="mt-4 w-full cursor-not-allowed rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-400"
+                  onClick={() => {
+                    setChatMode("VENDOR");
+                    setChatModalOpen(true);
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 px-4 py-2.5 text-xs font-bold text-[#12233f] shadow-xs transition active:scale-[0.99]"
                 >
-                  Seller Store Unavailable
+                  <MessageSquare size={15} />
+                  <span>Chat with Seller (বিক্রেতার সাথে চ্যাট)</span>
                 </button>
-              )}
+
+                <div className="flex items-center gap-2">
+                  {product.sellerId ? (
+                    <Link
+                      href={`/vendor/store/${product.sellerId}`}
+                      className="flex-1 flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100 truncate"
+                    >
+                      View Store
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="flex-1 cursor-not-allowed rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-400"
+                    >
+                      Store Unavailable
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChatMode("ADMIN");
+                      setChatModalOpen(true);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50/70 hover:bg-red-100 px-3 py-2 text-xs font-bold text-red-700 transition"
+                    title="প্রোডাক্ট কোড সহ সরাসরি অ্যাডমিনের কাছে অভিযোগ করুন"
+                  >
+                    <ShieldAlert size={14} />
+                    <span>Report / অভিযোগ</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -1007,6 +1043,27 @@ export default function ProductDetailsPage({ params }: Props) {
           void fetchCustomerLocation();
         }}
       />
+
+      {/* PRODUCT CHAT & COMPLAINT MODAL (WITH AUTH GATE) */}
+      {product && (
+        <ProductChatModal
+          isOpen={chatModalOpen}
+          onClose={() => setChatModalOpen(false)}
+          initialMode={chatMode}
+          product={{
+            id: product.id,
+            name: product.name,
+            sku: product.sku,
+            price: product.price,
+            image:
+              (typeof product.images?.[0] === "string"
+                ? product.images[0]
+                : product.images?.[0]?.url) || "",
+            vendorName: product.vendor?.name || product.sellerName || "সেলার",
+            vendorId: product.vendor?.id || product.sellerId || "",
+          }}
+        />
+      )}
     </main>
   );
 }

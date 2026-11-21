@@ -11,6 +11,7 @@ import {
   Store,
   Star,
   BarChart3,
+  MessageSquare,
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase-client";
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { label: "Earnings/Payout", href: "/vendor/earnings", icon: Wallet },
   { label: "Store settings", href: "/vendor/store", icon: Store },
   { label: "Reviews", href: "/vendor/reviews", icon: Star },
+  { label: "Messages & Support", href: "/vendor/messages", icon: MessageSquare },
   { label: "Reports", href: "/vendor/reports", icon: BarChart3 },
 ];
 

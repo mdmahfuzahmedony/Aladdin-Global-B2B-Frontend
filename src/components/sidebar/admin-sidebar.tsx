@@ -17,6 +17,7 @@ import {
   Link2,
   Truck,
   LifeBuoy,
+  MessageSquare,
   X,
 } from "lucide-react";
 import { useDashboardNavigation } from "@/components/dashboard/dashboard-navigation";
@@ -38,6 +39,7 @@ const NAV_ITEMS = [
   { label: "Affiliates", href: "/admin/affiliates", icon: Link2 },
   { label: "Logistics", href: "/admin/logistics", icon: Truck },
   { label: "Support", href: "/admin/support", icon: LifeBuoy },
+  { label: "Live Messages", href: "/admin/messages", icon: MessageSquare },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 

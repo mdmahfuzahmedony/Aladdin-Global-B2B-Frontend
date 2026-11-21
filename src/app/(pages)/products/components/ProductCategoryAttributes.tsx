@@ -42,6 +42,10 @@ import {
   Trophy,
   Dumbbell,
   Medal,
+  Baby,
+  Gamepad2,
+  Brain,
+  AlertTriangle,
 } from "lucide-react";
 import type { ProductDetails, ProductAttributes } from "../types";
 
@@ -70,6 +74,7 @@ export type CategoryDomain =
   | "ELECTRICAL_APPLIANCES"
   | "FITNESS_GYM"
   | "SPORTS_OUTDOOR"
+  | "TOYS_GAMES"
   | "GENERAL";
 
 export interface HighlightItem {
@@ -249,7 +254,7 @@ const KNOWN_LABELS: Record<string, string> = {
   // Home & Living / Furniture
   material: "Material",
   dimensions: "Dimensions",
-  primaryMaterial: "Primary Material",
+  primaryMaterial: "Primary Material / মূল উপাদান",
   secondaryMaterial: "Secondary Material / Frame",
   finishType: "Color & Finish",
   width: "Width / Depth",
@@ -342,6 +347,29 @@ const KNOWN_LABELS: Record<string, string> = {
   materialWoodType: "Wood / মূল উপাদান",
   weightBalance: "Weight & Balance / ওজন ব্যালেন্স",
   tournamentApproval: "Approval / টুর্নামেন্ট অনুমোদন",
+
+  // Unified Grocery & Food
+  groceryItemType: "Item Type / পণ্যের ধরণ",
+  productVariant: "Variant / ভ্যারিয়েন্ট ও গ্রেড",
+  packagingType: "Packaging / প্যাকেজিং এর ধরণ",
+  servingUnit: "Serving Units / প্যাকের পিস সংখ্যা",
+  foodCertification: "Certification / খাদ্যমান সনদ",
+  dietaryTags: "Dietary Info / বিশেষ বৈশিষ্ট্য",
+  ingredients: "Key Ingredients / মূল উপাদানসমূহ",
+  manufacturerDetails: "Manufacturer / প্রস্তুতকারক",
+
+  // Toys & Games
+  toyItemType: "Item Type / খেলনার ধরণ",
+  modelCharacter: "Model / Character / সিরিজ",
+  recommendedAge: "Recommended Age / বয়স শ্রেণী",
+  safetyCertifications: "Safety Standard / সুরক্ষা সনদ",
+  chokingHazardWarning: "Choking Hazard / সতর্কতা",
+  dimensionsWeight: "Dimensions & Weight / পরিমাপ ও ওজন",
+  batteryPowerType: "Power / ব্যাটারি সিস্টেম",
+  educationalSkillFocus: "Skill Focus / স্কিল ডেভেলপমেন্ট",
+  interactiveFeatures: "Features / বিশেষ ফিচারসমূহ",
+  piecesCount: "Pieces Count / পিস সংখ্যা",
+  inTheBoxContents: "In-the-Box / বক্সের ভেতরের পণ্য",
 };
 
 // Ignore internal or already handled properties
@@ -481,9 +509,14 @@ export function detectCategoryDomain(
     return "DAIRY_EGGS";
   }
 
-  // 5. Cooking & Essentials
+  // 5. Cooking & Essentials / Unified Grocery
   if (
     combined.includes("cooking") ||
+    combined.includes("grocery") ||
+    combined.includes("groceries") ||
+    combined.includes("food") ||
+    combined.includes("মুদি") ||
+    combined.includes("খাদ্য") ||
     combined.includes("rice") ||
     combined.includes("dal") ||
     combined.includes("oil") ||
@@ -492,6 +525,9 @@ export function detectCategoryDomain(
     combined.includes("spice") ||
     combined.includes("salt") ||
     combined.includes("masala") ||
+    keys.includes("groceryitemtype") ||
+    keys.includes("netweightvolume") ||
+    keys.includes("foodcertification") ||
     keys.includes("ricetype") ||
     keys.includes("oiltype") ||
     keys.includes("spicetype")
@@ -810,6 +846,30 @@ export function detectCategoryDomain(
     return "SPORTS_OUTDOOR";
   }
 
+  // 19. Toys & Games
+  if (
+    combined.includes("toy") ||
+    combined.includes("game") ||
+    combined.includes("puzzle") ||
+    combined.includes("lego") ||
+    combined.includes("doll") ||
+    combined.includes("action figure") ||
+    combined.includes("plush") ||
+    combined.includes("board game") ||
+    combined.includes("rattle") ||
+    combined.includes("teether") ||
+    combined.includes("খেলনা") ||
+    combined.includes("পুতুল") ||
+    combined.includes("পাজল") ||
+    keys.includes("toyitemtype") ||
+    keys.includes("recommendedage") ||
+    keys.includes("chokinghazardwarning") ||
+    keys.includes("educationalskillfocus") ||
+    keys.includes("piecescount")
+  ) {
+    return "TOYS_GAMES";
+  }
+
   return "GENERAL";
 }
 
@@ -895,13 +955,13 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
     }
 
     case "COOKING_ESSENTIALS": {
-      const type = getVal("riceType") || getVal("dalType") || getVal("oilType") || getVal("flourType") || getVal("spiceType");
+      const type = getVal("groceryItemType") || getVal("riceType") || getVal("dalType") || getVal("oilType") || getVal("flourType") || getVal("spiceType");
       if (type) highlights.push({ id: "type", label: "Type", value: type, icon: <Sparkles size={13} />, variant: "amber" });
 
-      const purity = getVal("purity") || getVal("extractionMethod") || getVal("processing");
-      if (purity) highlights.push({ id: "purity", label: "Grade", value: purity, icon: <ShieldCheck size={13} />, variant: "emerald" });
+      const purity = getVal("foodCertification") || getVal("purity") || getVal("extractionMethod") || getVal("processing");
+      if (purity) highlights.push({ id: "purity", label: "Grade / Cert", value: purity, icon: <ShieldCheck size={13} />, variant: "emerald" });
 
-      const weight = getVal("netWeight") || getVal("volume");
+      const weight = getVal("netWeightVolume") || getVal("netWeight") || getVal("volume");
       if (weight) highlights.push({ id: "weight", label: "Net Qty", value: weight, icon: <Scale size={13} />, variant: "blue" });
 
       const shelf = getVal("shelfLife");
@@ -1537,6 +1597,81 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
       break;
     }
 
+    case "TOYS_GAMES": {
+      // 1. Toy Item Type
+      const itemType = getVal("toyItemType");
+      if (itemType) {
+        highlights.push({
+          id: "toyItemType",
+          label: "Toy Type",
+          value: itemType,
+          icon: <Baby size={13} />,
+          variant: "rose",
+        });
+      }
+
+      // 2. Recommended Age Group
+      const ageGroup = getVal("recommendedAge");
+      if (ageGroup) {
+        highlights.push({
+          id: "recommendedAge",
+          label: "Age Group",
+          value: ageGroup,
+          icon: <Clock size={13} />,
+          variant: "amber",
+        });
+      }
+
+      // 3. Primary Material
+      const material = getVal("primaryMaterial");
+      if (material) {
+        highlights.push({
+          id: "primaryMaterial",
+          label: "Material",
+          value: material,
+          icon: <Layers size={13} />,
+          variant: "slate",
+        });
+      }
+
+      // 4. Safety Certifications / Choking Hazard
+      const safety = getVal("safetyCertifications");
+      if (safety) {
+        highlights.push({
+          id: "safetyCertifications",
+          label: "Safety Cert",
+          value: safety,
+          icon: <ShieldCheck size={13} />,
+          variant: "emerald",
+        });
+      }
+
+      // 5. Battery & Power System
+      const power = getVal("batteryPowerType");
+      if (power) {
+        highlights.push({
+          id: "batteryPowerType",
+          label: "Power",
+          value: power,
+          icon: <BatteryCharging size={13} />,
+          variant: "blue",
+        });
+      }
+
+      // 6. Educational Skill Focus
+      const skill = getVal("educationalSkillFocus");
+      if (skill) {
+        highlights.push({
+          id: "educationalSkillFocus",
+          label: "Skill Focus",
+          value: skill,
+          icon: <Brain size={13} />,
+          variant: "indigo",
+        });
+      }
+      break;
+    }
+
     default:
       break;
   }
@@ -1749,23 +1884,63 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
       });
     }
   } else if (domain === "COOKING_ESSENTIALS") {
-    const cookRows = buildRows(["riceType", "grainSize", "dalType", "flourType", "oilType", "spiceType", "saltType", "purity", "extractionMethod", "processing", "aroma", "brokenPercentage", "fortified", "form"]);
+    const cookRows = buildRows([
+      "groceryItemType",
+      "productVariant",
+      "riceType",
+      "grainSize",
+      "dalType",
+      "flourType",
+      "oilType",
+      "spiceType",
+      "saltType",
+      "purity",
+      "extractionMethod",
+      "processing",
+      "aroma",
+      "brokenPercentage",
+      "fortified",
+      "form",
+      "manufacturerDetails",
+    ]);
     if (cookRows.length > 0) {
       groups.push({
         id: "cooking-specs",
-        title: "Essential Quality & Processing",
+        title: "পণ্যের ধরণ ও বৈশিষ্ট্য (Item & Processing Specs)",
         icon: <Sparkles size={16} className="text-amber-600" />,
         rows: cookRows,
       });
     }
 
-    const cookStorage = buildRows(["netWeight", "volume", "origin", "shelfLife", "storageCondition"]);
+    const cookStorage = buildRows([
+      "netWeightVolume",
+      "netWeight",
+      "volume",
+      "packagingType",
+      "servingUnit",
+      "origin",
+      "countryOfOrigin",
+      "shelfLife",
+      "storageCondition",
+      "foodCertification",
+      "dietaryTags",
+    ]);
     if (cookStorage.length > 0) {
       groups.push({
         id: "cooking-storage",
-        title: "Quantity & Shelf Life",
+        title: "পরিমাণ, মান ও সংরক্ষণ (Quantity, Certification & Storage)",
         icon: <Scale size={16} className="text-blue-600" />,
         rows: cookStorage,
+      });
+    }
+
+    const ingredientRows = buildRows(["ingredients"]);
+    if (ingredientRows.length > 0) {
+      groups.push({
+        id: "cooking-ingredients",
+        title: "মূল উপাদানসমূহ (Key Ingredients)",
+        icon: <Layers size={16} className="text-emerald-600" />,
+        rows: ingredientRows,
       });
     }
   } else if (domain === "DAIRY_EGGS") {
@@ -2172,6 +2347,80 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
         rows: sportWarranty,
       });
     }
+  } else if (domain === "TOYS_GAMES") {
+    // 1. Item, Series & Basic Info
+    const toyBasic = buildRows([
+      "toyItemType",
+      "brand",
+      "modelCharacter",
+      "piecesCount",
+      "countryOfOrigin",
+      "origin",
+    ]);
+    if (toyBasic.length > 0) {
+      groups.push({
+        id: "toy-basic",
+        title: "Item & Series Specifications",
+        icon: <Baby size={16} className="text-pink-600" />,
+        rows: toyBasic,
+      });
+    }
+
+    // 2. Child Safety & Age Group
+    const toySafety = buildRows([
+      "recommendedAge",
+      "safetyCertifications",
+      "chokingHazardWarning",
+    ]);
+    if (toySafety.length > 0) {
+      groups.push({
+        id: "toy-safety",
+        title: "Child Safety & Age Recommendations",
+        icon: <ShieldCheck size={16} className="text-amber-600" />,
+        rows: toySafety,
+      });
+    }
+
+    // 3. Build Material, Dimensions & Power
+    const toyBuild = buildRows([
+      "primaryMaterial",
+      "dimensionsWeight",
+      "batteryPowerType",
+      "interactiveFeatures",
+    ]);
+    if (toyBuild.length > 0) {
+      groups.push({
+        id: "toy-build",
+        title: "Material, Power & Features",
+        icon: <Gamepad2 size={16} className="text-indigo-600" />,
+        rows: toyBuild,
+      });
+    }
+
+    // 4. Learning & Skill Focus
+    const toySkills = buildRows(["educationalSkillFocus"]);
+    if (toySkills.length > 0) {
+      groups.push({
+        id: "toy-skills",
+        title: "Learning & Skill Development Focus",
+        icon: <Brain size={16} className="text-purple-600" />,
+        rows: toySkills,
+      });
+    }
+
+    // 5. Packaging & In-The-Box
+    const toyPackage = buildRows([
+      "packagingType",
+      "inTheBoxContents",
+    ]);
+    if (toyPackage.length > 0) {
+      groups.push({
+        id: "toy-package",
+        title: "Packaging & Box Contents",
+        icon: <Box size={16} className="text-emerald-600" />,
+        rows: toyPackage,
+      });
+    }
   }
 
   // Handle custom dynamic specifications
@@ -2351,6 +2600,8 @@ export function ProductCategorySpecs({ product }: { product: ProductDetails }) {
         return "Gym & Fitness Standards";
       case "SPORTS_OUTDOOR":
         return "Sports & Athletic Standards";
+      case "TOYS_GAMES":
+        return "Toys, Games & Child Safety Standards";
       default:
         return "Verified Product Specifications";
     }
