@@ -19,6 +19,9 @@ import { createClient } from "@/lib/supabase-client";
 import {
   sendChatMessage,
   getStoredConversations,
+  fetchLiveConversations,
+  findConversationForProduct,
+  markConversationAsReadForCustomer,
   ChatConversation,
 } from "@/lib/chat-store";
 
@@ -61,6 +64,7 @@ export default function ProductChatModal({
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
+  const [currentConvId, setCurrentConvId] = useState<string | null>(null);
 
   // Sync mode if initialMode changes
   useEffect(() => {
@@ -97,31 +101,114 @@ export default function ProductChatModal({
     };
   }, [isOpen]);
 
-  // Load starter greeting based on mode
+  // Load conversation & messages
   useEffect(() => {
     if (!isOpen) return;
 
-    if (mode === "VENDOR") {
-      setMessages([
-        {
-          id: "m_welcome_vendor",
-          sender: "OTHER",
-          text: `হ্যালো! "${product.name}" সম্পর্কে আপনার কী জানার আছে? পাইকারি অর্ডার বা স্পেসিফিকেশন নিয়ে প্রশ্ন করতে পারেন।`,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
-    } else {
-      setMessages([
-        {
-          id: "m_welcome_admin",
-          sender: "OTHER",
-          text: `আসসালামু আলাইকুম। Aladdin B2B সাপোর্ট ও কমপ্লেইন ডেস্ক। প্রোডাক্ট কোড [${product.sku || product.id}] ও ভেন্ডর "${product.vendorName || "বিক্রেতা"}" সম্পর্কিত আপনার অভিযোগ বা সমস্যাটি বিস্তারিত লিখুন।`,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          isComplaint: true,
-        },
-      ]);
-    }
-  }, [isOpen, mode, product]);
+    const userName =
+      session?.user?.user_metadata?.fullName ||
+      session?.user?.user_metadata?.name ||
+      session?.user?.email?.split("@")[0] ||
+      "";
+
+    const load = () => {
+      const found = findConversationForProduct({
+        productId: product.id,
+        productSku: product.sku,
+        customerId: session?.user?.id,
+        customerName: userName,
+        isComplaint: mode === "ADMIN",
+      });
+
+      if (found && found.messages && found.messages.length > 0) {
+        setCurrentConvId(found.id);
+        markConversationAsReadForCustomer(found.id);
+        setMessages(
+          found.messages.map((m: any) => ({
+            id: m.id,
+            sender: m.senderRole === "CUSTOMER" ? "USER" : "OTHER",
+            text: m.text,
+            time:
+              m.timeFormatted ||
+              new Date(m.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            isComplaint: m.isComplaint,
+          }))
+        );
+      } else {
+        setCurrentConvId(null);
+        if (mode === "VENDOR") {
+          setMessages([
+            {
+              id: "m_welcome_vendor",
+              sender: "OTHER",
+              text: `হ্যালো! "${product.name}" সম্পর্কে আপনার কী জানার আছে? পাইকারি অর্ডার বা স্পেসিফিকেশন নিয়ে প্রশ্ন করতে পারেন।`,
+              time: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            },
+          ]);
+        } else {
+          setMessages([
+            {
+              id: "m_welcome_admin",
+              sender: "OTHER",
+              text: `আসসালামু আলাইকুম। Aladdin B2B সাপোর্ট ও কমপ্লেইন ডেস্ক। প্রোডাক্ট কোড [${
+                product.sku || product.id
+              }] ও ভেন্ডর "${
+                product.vendorName || "বিক্রেতা"
+              }" সম্পর্কিত আপনার অভিযোগ বা সমস্যাটি বিস্তারিত লিখুন।`,
+              time: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              isComplaint: true,
+            },
+          ]);
+        }
+      }
+    };
+
+    load();
+
+    // Also fetch live from Supabase
+    void fetchLiveConversations({
+      role: "CUSTOMER",
+      userId: session?.user?.id,
+    }).then(() => load());
+
+    const handleUpdate = () => {
+      load();
+    };
+
+    window.addEventListener("aladdin_chat_update", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    // Realtime channel
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`chat_modal_${product.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_messages" },
+        () => {
+          void fetchLiveConversations({
+            role: "CUSTOMER",
+            userId: session?.user?.id,
+          }).then(() => load());
+        }
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("aladdin_chat_update", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+      void supabase.removeChannel(channel);
+    };
+  }, [isOpen, mode, product, session]);
 
   if (!isOpen) return null;
 
@@ -140,8 +227,10 @@ export default function ProductChatModal({
 
     // Perform security inspection & persistence into shared store
     const { conversation, securityResult } = sendChatMessage({
+      conversationId: currentConvId || undefined,
       senderRole: "CUSTOMER",
       senderName: userName,
+      senderId: session?.user?.id,
       text,
       productContext: {
         id: product.id,
@@ -154,6 +243,10 @@ export default function ProductChatModal({
       },
       isComplaint: mode === "ADMIN",
     });
+
+    if (conversation?.id) {
+      setCurrentConvId(conversation.id);
+    }
 
     if (securityResult.hasSensitiveData && securityResult.warningMessage) {
       setSecurityWarning(securityResult.warningMessage);

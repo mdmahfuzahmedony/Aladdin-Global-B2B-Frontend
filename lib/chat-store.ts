@@ -196,11 +196,18 @@ export function sendChatMessage({
   const now = new Date();
   const timeFormatted = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-  let targetConv = convs.find(
-    (c) =>
-      c.id === conversationId ||
-      (productContext?.sku && c.product?.sku === productContext.sku && c.customerName === senderName)
-  );
+  let targetConv = convs.find((c) => {
+    if (conversationId && c.id === conversationId) return true;
+    if (productContext?.id && c.product?.id === productContext.id) {
+      if (senderId && c.customerId === senderId) return true;
+      if (senderName && c.customerName.toLowerCase() === senderName.toLowerCase()) return true;
+    }
+    if (productContext?.sku && c.product?.sku === productContext.sku) {
+      if (senderId && c.customerId === senderId) return true;
+      if (senderName && c.customerName.toLowerCase() === senderName.toLowerCase()) return true;
+    }
+    return false;
+  });
 
   const newMsg: ChatMessage = {
     id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -341,6 +348,25 @@ export function sendChatMessage({
             isComplaint,
             createdAt: now.toISOString(),
           });
+
+          // If vendor replied, trigger a customer notification in Supabase
+          if (senderRole === "VENDOR" && targetConv?.customerId) {
+            try {
+              await supabase.from("Notification").insert({
+                userId: targetConv.customerId,
+                type: "CHAT_MESSAGE",
+                title: `${senderName || "ভেন্ডর"} থেকে নতুন মেসেজ`,
+                message: securityResult.filteredText.slice(0, 100),
+                entityId: dbConvId,
+                entityType: "CHAT_CONVERSATION",
+                isRead: false,
+                createdAt: now.toISOString(),
+                updatedAt: now.toISOString(),
+              });
+            } catch (err) {
+              // non-blocking
+            }
+          }
         }
       } catch (e) {
         console.warn("Direct Supabase message insert deferred:", e);
@@ -406,3 +432,66 @@ export async function sendAdminWarningAction({
     console.warn("Admin warning DB sync deferred:", e);
   }
 }
+
+/**
+ * Find existing conversation for product & customer
+ */
+export function findConversationForProduct(params: {
+  productId?: string;
+  productSku?: string | null;
+  customerId?: string;
+  customerName?: string;
+  isComplaint?: boolean;
+}): ChatConversation | undefined {
+  const convs = getStoredConversations();
+  return convs.find((c) => {
+    if (params.isComplaint && c.type !== "CUSTOMER_ADMIN_COMPLAINT") return false;
+    if (!params.isComplaint && c.type !== "CUSTOMER_VENDOR") return false;
+
+    if (params.productId && c.product?.id === params.productId) {
+      if (params.customerId && c.customerId === params.customerId) return true;
+      if (params.customerName && c.customerName.toLowerCase() === params.customerName.toLowerCase()) return true;
+      return true;
+    }
+
+    if (params.productSku && c.product?.sku === params.productSku) {
+      if (params.customerId && c.customerId === params.customerId) return true;
+      if (params.customerName && c.customerName.toLowerCase() === params.customerName.toLowerCase()) return true;
+      return true;
+    }
+
+    return false;
+  });
+}
+
+/**
+ * Mark conversation as read for customer
+ */
+export function markConversationAsReadForCustomer(conversationId: string) {
+  const convs = getStoredConversations();
+  const target = convs.find((c) => c.id === conversationId);
+  if (target && target.unreadForCustomer > 0) {
+    target.unreadForCustomer = 0;
+    saveStoredConversations(convs);
+  }
+}
+
+/**
+ * Calculate total unread messages for customer
+ */
+export function getCustomerUnreadCount(userId?: string, customerName?: string): number {
+  const convs = getStoredConversations();
+  return convs.reduce((sum, c) => {
+    const isMine =
+      !userId && !customerName
+        ? true
+        : (userId && c.customerId === userId) ||
+          (customerName && c.customerName.toLowerCase() === customerName.toLowerCase());
+
+    if (isMine) {
+      return sum + (c.unreadForCustomer || 0);
+    }
+    return sum;
+  }, 0);
+}
+

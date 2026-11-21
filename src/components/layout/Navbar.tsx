@@ -25,6 +25,7 @@ import { LanguageDropdown } from "../header/navbar/language-dropdown";
 import { AccountDropdown } from "./../header/navbar/account-dropdown";
 import { AllCategoriesMenu } from "../header/navbar/AllCategoriesMenu";
 import { NavbarSearch } from "../header/navbar/NavbarSearch";
+import { getCustomerUnreadCount } from "@/lib/chat-store";
 
 import { useSiteSettings } from "../../context/SiteSettingsContext";
 import { useCompare } from "../../context/CompareContext";
@@ -73,6 +74,21 @@ export default function MainNavbar() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [topBanners, setTopBanners] = useState<TopBanner[]>([]);
   const [currentTopBanner, setCurrentTopBanner] = useState(0);
+  const [unreadCustomerCount, setUnreadCustomerCount] = useState(0);
+
+  // Sync unread chat / notifications
+  useEffect(() => {
+    const updateUnread = () => {
+      setUnreadCustomerCount(getCustomerUnreadCount());
+    };
+    updateUnread();
+    window.addEventListener("aladdin_chat_update", updateUnread);
+    window.addEventListener("storage", updateUnread);
+    return () => {
+      window.removeEventListener("aladdin_chat_update", updateUnread);
+      window.removeEventListener("storage", updateUnread);
+    };
+  }, []);
 
   const [supabase] = useState(() => createClient());
 
@@ -491,7 +507,14 @@ export default function MainNavbar() {
                 aria-expanded={accountOpen}
                 className="flex flex-col items-center text-white transition hover:text-[#D6A419]"
               >
-                <User size={22} />
+                <div className="relative">
+                  <User size={22} />
+                  {unreadCustomerCount > 0 && (
+                    <span className="absolute -right-2 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white shadow-xs animate-pulse">
+                      {unreadCustomerCount > 9 ? "9+" : unreadCustomerCount}
+                    </span>
+                  )}
+                </div>
                 <span className="mt-1 text-[11px] font-semibold">
                   {t("account")}
                 </span>
@@ -675,9 +698,12 @@ export default function MainNavbar() {
                 onClick={handleAccountToggle}
                 aria-label={t("openAccount")}
                 aria-expanded={accountOpen}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
+                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
               >
                 <User size={21} />
+                {unreadCustomerCount > 0 && (
+                  <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#0B1527] animate-pulse" />
+                )}
               </button>
 
               {/* COMPARE */}
