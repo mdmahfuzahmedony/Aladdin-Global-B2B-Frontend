@@ -22,6 +22,7 @@ import {
   fetchLiveConversations,
   findConversationForProduct,
   markConversationAsReadForCustomer,
+  formatChatTime,
   ChatConversation,
 } from "@/lib/chat-store";
 
@@ -111,14 +112,35 @@ export default function ProductChatModal({
       session?.user?.email?.split("@")[0] ||
       "";
 
-    const load = () => {
-      const found = findConversationForProduct({
+    const load = async () => {
+      let found = findConversationForProduct({
         productId: product.id,
         productSku: product.sku,
+        productName: product.name,
         customerId: session?.user?.id,
         customerName: userName,
         isComplaint: mode === "ADMIN",
       });
+
+      if (!found) {
+        try {
+          await fetchLiveConversations({
+            role: "CUSTOMER",
+            userId: session?.user?.id,
+            customerName: userName,
+          });
+          found = findConversationForProduct({
+            productId: product.id,
+            productSku: product.sku,
+            productName: product.name,
+            customerId: session?.user?.id,
+            customerName: userName,
+            isComplaint: mode === "ADMIN",
+          });
+        } catch {
+          // ignore
+        }
+      }
 
       if (found && found.messages && found.messages.length > 0) {
         setCurrentConvId(found.id);
@@ -128,12 +150,7 @@ export default function ProductChatModal({
             id: m.id,
             sender: m.senderRole === "CUSTOMER" ? "USER" : "OTHER",
             text: m.text,
-            time:
-              m.timeFormatted ||
-              new Date(m.createdAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
+            time: formatChatTime(m.createdAt || m.timeFormatted),
             isComplaint: m.isComplaint,
           }))
         );
@@ -145,10 +162,7 @@ export default function ProductChatModal({
               id: "m_welcome_vendor",
               sender: "OTHER",
               text: `হ্যালো! "${product.name}" সম্পর্কে আপনার কী জানার আছে? পাইকারি অর্ডার বা স্পেসিফিকেশন নিয়ে প্রশ্ন করতে পারেন।`,
-              time: new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
+              time: formatChatTime(new Date()),
             },
           ]);
         } else {
@@ -161,10 +175,7 @@ export default function ProductChatModal({
               }] ও ভেন্ডর "${
                 product.vendorName || "বিক্রেতা"
               }" সম্পর্কিত আপনার অভিযোগ বা সমস্যাটি বিস্তারিত লিখুন।`,
-              time: new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
+              time: formatChatTime(new Date()),
               isComplaint: true,
             },
           ]);
@@ -256,7 +267,7 @@ export default function ProductChatModal({
       id: `msg_${Date.now()}`,
       sender: "USER",
       text: securityResult.filteredText,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      time: formatChatTime(new Date()),
       isComplaint: mode === "ADMIN",
     };
 

@@ -26,6 +26,7 @@ import { useLanguage } from "../../../context/LanguageContext";
 import {
   getStoredConversations,
   getCustomerUnreadCount,
+  formatConversationTime,
   ChatConversation,
 } from "@/lib/chat-store";
 
@@ -519,7 +520,7 @@ export const AccountDropdown: React.FC<AccountDropdownProps> = ({
               "{latestVendorReply.lastMessageText}"
             </p>
             <div className="mt-1.5 flex items-center justify-between text-[10px]">
-              <span className="text-slate-400">{latestVendorReply.lastMessageTime}</span>
+              <span className="text-slate-400">{formatConversationTime(latestVendorReply.lastMessageTime)}</span>
               <span className="font-bold text-emerald-700 hover:underline">
                 উত্তর দেখুন &rarr;
               </span>

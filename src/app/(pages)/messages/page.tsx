@@ -24,6 +24,8 @@ import {
   fetchLiveConversations,
   sendChatMessage,
   markConversationAsReadForCustomer,
+  formatChatTime,
+  formatConversationTime,
   ChatConversation,
   ChatMessage,
 } from "@/lib/chat-store";
@@ -77,9 +79,16 @@ export default function CustomerMessagesPage() {
       setLoading(false);
 
       try {
+        const userName =
+          session?.user?.user_metadata?.fullName ||
+          session?.user?.user_metadata?.name ||
+          session?.user?.email?.split("@")[0] ||
+          "";
+
         const live = await fetchLiveConversations({
           role: "CUSTOMER",
           userId: session?.user?.id,
+          customerName: userName,
         });
         if (live && live.length > 0) {
           setConversations(live);
@@ -330,7 +339,7 @@ export default function CustomerMessagesPage() {
                                 : c.vendorName || "ভেন্ডর স্টোর"}
                             </h4>
                             <span className="text-[10px] text-slate-400 shrink-0">
-                              {c.lastMessageTime}
+                              {formatConversationTime(c.lastMessageTime)}
                             </span>
                           </div>
 
@@ -402,6 +411,7 @@ export default function CustomerMessagesPage() {
                                 src={selectedConv.product.image}
                                 alt={selectedConv.product.name}
                                 fill
+                                unoptimized
                                 className="object-cover"
                               />
                             </div>
@@ -456,7 +466,7 @@ export default function CustomerMessagesPage() {
                             </p>
                             <p className="mt-1">{m.text}</p>
                             <span className="mt-1 block text-[10px] text-red-500">
-                              {m.timeFormatted}
+                              {formatChatTime(m.timeFormatted || m.createdAt)}
                             </span>
                           </div>
                         );
@@ -506,7 +516,7 @@ export default function CustomerMessagesPage() {
                                     isCustomer ? "text-slate-300" : "text-slate-400"
                                   }`}
                                 >
-                                  {m.timeFormatted}
+                                  {formatChatTime(m.timeFormatted || m.createdAt)}
                                 </span>
                               </div>
                               <p className="leading-relaxed whitespace-pre-wrap">

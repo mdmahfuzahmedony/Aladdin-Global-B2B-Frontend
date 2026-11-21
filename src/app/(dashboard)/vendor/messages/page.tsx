@@ -18,6 +18,8 @@ import {
   getStoredConversations,
   fetchLiveConversations,
   sendChatMessage,
+  formatChatTime,
+  formatConversationTime,
   ChatConversation,
   ChatMessage,
 } from "@/lib/chat-store";
@@ -256,7 +258,7 @@ export default function VendorMessagesPage() {
                         <h4 className="text-xs font-bold text-slate-900 truncate">
                           {isAdmin ? "Aladdin Admin Support" : c.customerName}
                         </h4>
-                        <span className="text-[10px] text-slate-400 shrink-0">{c.lastMessageTime}</span>
+                        <span className="text-[10px] text-slate-400 shrink-0">{formatConversationTime(c.lastMessageTime)}</span>
                       </div>
 
                       <p className="text-[11px] text-slate-500 truncate mt-0.5">
@@ -358,7 +360,7 @@ export default function VendorMessagesPage() {
                       {m.text}
                     </div>
                     <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400 px-1">
-                      <span>{m.timeFormatted}</span>
+                      <span>{formatChatTime(m.timeFormatted || m.createdAt)}</span>
                       {isMe && <CheckCheck size={12} className="text-sky-500" />}
                     </div>
                   </div>

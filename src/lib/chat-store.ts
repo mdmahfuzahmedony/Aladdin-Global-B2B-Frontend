@@ -44,6 +44,108 @@ export interface ChatConversation {
 
 const STORAGE_KEY = "aladdin_chat_conversations_v1";
 
+let chatBroadcast: BroadcastChannel | null = null;
+if (typeof window !== "undefined" && typeof BroadcastChannel !== "undefined") {
+  try {
+    chatBroadcast = new BroadcastChannel("aladdin_b2b_chat_sync");
+    chatBroadcast.onmessage = (event) => {
+      if (event.data?.type === "CHAT_UPDATE") {
+        window.dispatchEvent(new Event("aladdin_chat_update"));
+      }
+    };
+  } catch {
+    // BroadcastChannel unsupported or blocked
+  }
+}
+
+export function notifyChatUpdate() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("aladdin_chat_update"));
+    try {
+      chatBroadcast?.postMessage({ type: "CHAT_UPDATE", timestamp: Date.now() });
+    } catch {
+      // ignore
+    }
+  }
+}
+
+/**
+ * Format timestamp in local 12-hour time (e.g. "1:48 PM")
+ * Handles ISO strings with or without 'Z' timezone suffix
+ */
+export function formatChatTime(dateInput?: string | Date | null): string {
+  if (!dateInput) return "এইমাত্র";
+  try {
+    let dateStr = typeof dateInput === "string" ? dateInput.trim() : dateInput.toISOString();
+    if (typeof dateInput === "string" && !dateStr.endsWith("Z") && !/[+-]\d{2}(:\d{2})?$/.test(dateStr)) {
+      dateStr += "Z";
+    }
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) {
+      if (typeof dateInput === "string") return dateInput;
+      return "এইমাত্র";
+    }
+
+    return d.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return "এইমাত্র";
+  }
+}
+
+/**
+ * Format conversation preview timestamp (e.g. "1:48 PM", "Yesterday", "Nov 21")
+ */
+export function formatConversationTime(dateInput?: string | Date | null): string {
+  if (!dateInput) return "এইমাত্র";
+  try {
+    let dateStr = typeof dateInput === "string" ? dateInput.trim() : dateInput.toISOString();
+    if (typeof dateInput === "string" && !dateStr.endsWith("Z") && !/[+-]\d{2}(:\d{2})?$/.test(dateStr)) {
+      dateStr += "Z";
+    }
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) {
+      if (typeof dateInput === "string") return dateInput;
+      return "এইমাত্র";
+    }
+
+    const now = new Date();
+    const isToday =
+      d.getDate() === now.getDate() &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear();
+
+    if (isToday) {
+      return d.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    }
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday =
+      d.getDate() === yesterday.getDate() &&
+      d.getMonth() === yesterday.getMonth() &&
+      d.getFullYear() === yesterday.getFullYear();
+
+    if (isYesterday) {
+      return "Yesterday";
+    }
+
+    return d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return "এইমাত্র";
+  }
+}
+
 export function mapDbConversationToClient(conv: any): ChatConversation {
   const msgs: ChatMessage[] = (conv.messages || conv.chat_messages || []).map((m: any) => ({
     id: m.id,
@@ -56,7 +158,7 @@ export function mapDbConversationToClient(conv: any): ChatConversation {
     isSuspicious: Boolean(m.isSuspicious),
     suspiciousReasons: m.suspiciousReasons || [],
     createdAt: m.createdAt,
-    timeFormatted: new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    timeFormatted: formatChatTime(m.createdAt),
     isComplaint: Boolean(m.isComplaint),
   }));
 
@@ -79,7 +181,7 @@ export function mapDbConversationToClient(conv: any): ChatConversation {
         }
       : undefined,
     lastMessageText: lastMsg ? lastMsg.text : "কোনো বার্তা নেই",
-    lastMessageTime: lastMsg ? lastMsg.timeFormatted : "এইমাত্র",
+    lastMessageTime: lastMsg ? formatConversationTime(lastMsg.createdAt) : "এইমাত্র",
     unreadForVendor: 0,
     unreadForAdmin: conv.hasSuspiciousActivity ? 1 : 0,
     unreadForCustomer: 0,
@@ -114,7 +216,7 @@ export function saveStoredConversations(convs: ChatConversation[]) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(convs));
-    window.dispatchEvent(new Event("aladdin_chat_update"));
+    notifyChatUpdate();
   } catch (err) {
     console.error("Failed to save chat store:", err);
   }
@@ -126,6 +228,7 @@ export function saveStoredConversations(convs: ChatConversation[]) {
 export async function fetchLiveConversations(params?: {
   role?: "CUSTOMER" | "VENDOR" | "ADMIN";
   userId?: string;
+  customerName?: string;
   storeName?: string;
   filter?: "ALL" | "SUSPICIOUS" | "COMPLAINT" | "VENDOR";
 }): Promise<ChatConversation[]> {
@@ -143,7 +246,12 @@ export async function fetchLiveConversations(params?: {
         );
       }
     } else if (params?.role === "CUSTOMER") {
-      if (params.userId) query = query.eq("customerId", params.userId);
+      const orParts: string[] = [];
+      if (params.userId) orParts.push(`customerId.eq.${params.userId}`);
+      if (params.customerName) orParts.push(`customerName.ilike.%${params.customerName}%`);
+      if (orParts.length > 0) {
+        query = query.or(orParts.join(","));
+      }
     } else if (params?.role === "ADMIN") {
       if (params.filter === "SUSPICIOUS") {
         query = query.eq("hasSuspiciousActivity", true);
@@ -153,7 +261,7 @@ export async function fetchLiveConversations(params?: {
     }
 
     const { data, error } = await query;
-    if (!error && Array.isArray(data)) {
+    if (!error && Array.isArray(data) && data.length > 0) {
       const mapped = data.map((conv: any) =>
         mapDbConversationToClient({
           ...conv,
@@ -194,7 +302,7 @@ export function sendChatMessage({
   const convs = getStoredConversations();
 
   const now = new Date();
-  const timeFormatted = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const timeFormatted = formatChatTime(now);
 
   let targetConv = convs.find((c) => {
     if (conversationId && c.id === conversationId) return true;
@@ -391,7 +499,7 @@ export async function sendAdminWarningAction({
   const conv = convs.find((c) => c.id === conversationId);
 
   const now = new Date();
-  const timeFormatted = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const timeFormatted = formatChatTime(now);
 
   const warnMsg: ChatMessage = {
     id: `warn_${Date.now()}`,
@@ -439,6 +547,7 @@ export async function sendAdminWarningAction({
 export function findConversationForProduct(params: {
   productId?: string;
   productSku?: string | null;
+  productName?: string;
   customerId?: string;
   customerName?: string;
   isComplaint?: boolean;
@@ -448,19 +557,20 @@ export function findConversationForProduct(params: {
     if (params.isComplaint && c.type !== "CUSTOMER_ADMIN_COMPLAINT") return false;
     if (!params.isComplaint && c.type !== "CUSTOMER_VENDOR") return false;
 
-    if (params.productId && c.product?.id === params.productId) {
-      if (params.customerId && c.customerId === params.customerId) return true;
-      if (params.customerName && c.customerName.toLowerCase() === params.customerName.toLowerCase()) return true;
-      return true;
-    }
+    const matchesProduct =
+      (params.productId && c.product?.id === params.productId) ||
+      (params.productSku && c.product?.sku === params.productSku) ||
+      (params.productName &&
+        c.product?.name &&
+        c.product.name.trim().toLowerCase() === params.productName.trim().toLowerCase());
 
-    if (params.productSku && c.product?.sku === params.productSku) {
-      if (params.customerId && c.customerId === params.customerId) return true;
-      if (params.customerName && c.customerName.toLowerCase() === params.customerName.toLowerCase()) return true;
-      return true;
-    }
+    if (!matchesProduct) return false;
 
-    return false;
+    if (params.customerId && c.customerId === params.customerId) return true;
+    if (params.customerName && c.customerName.toLowerCase() === params.customerName.toLowerCase()) return true;
+
+    // Matches product
+    return true;
   });
 }
 
