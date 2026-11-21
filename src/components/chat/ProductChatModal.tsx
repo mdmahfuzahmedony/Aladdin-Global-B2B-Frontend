@@ -23,6 +23,8 @@ import {
   findConversationForProduct,
   markConversationAsReadForCustomer,
   formatChatTime,
+  getGuestCustomerId,
+  getGuestCustomerName,
   ChatConversation,
 } from "@/lib/chat-store";
 
@@ -72,6 +74,14 @@ export default function ProductChatModal({
     setMode(initialMode);
   }, [initialMode]);
 
+  // Instantly clear state whenever product changes or modal is closed/opened
+  useEffect(() => {
+    setCurrentConvId(null);
+    setMessages([]);
+    setInputMessage("");
+    setSecurityWarning(null);
+  }, [product?.id, isOpen]);
+
   // Check auth status
   useEffect(() => {
     let isMounted = true;
@@ -110,14 +120,16 @@ export default function ProductChatModal({
       session?.user?.user_metadata?.fullName ||
       session?.user?.user_metadata?.name ||
       session?.user?.email?.split("@")[0] ||
-      "";
+      getGuestCustomerName();
+
+    const customerId = session?.user?.id || getGuestCustomerId();
 
     const load = async () => {
       let found = findConversationForProduct({
         productId: product.id,
         productSku: product.sku,
         productName: product.name,
-        customerId: session?.user?.id,
+        customerId,
         customerName: userName,
         isComplaint: mode === "ADMIN",
       });
@@ -126,14 +138,14 @@ export default function ProductChatModal({
         try {
           await fetchLiveConversations({
             role: "CUSTOMER",
-            userId: session?.user?.id,
+            userId: customerId,
             customerName: userName,
           });
           found = findConversationForProduct({
             productId: product.id,
             productSku: product.sku,
             productName: product.name,
-            customerId: session?.user?.id,
+            customerId,
             customerName: userName,
             isComplaint: mode === "ADMIN",
           });
@@ -188,7 +200,8 @@ export default function ProductChatModal({
     // Also fetch live from Supabase
     void fetchLiveConversations({
       role: "CUSTOMER",
-      userId: session?.user?.id,
+      userId: customerId,
+      customerName: userName,
     }).then(() => load());
 
     const handleUpdate = () => {
@@ -208,7 +221,8 @@ export default function ProductChatModal({
         () => {
           void fetchLiveConversations({
             role: "CUSTOMER",
-            userId: session?.user?.id,
+            userId: customerId,
+            customerName: userName,
           }).then(() => load());
         }
       )
@@ -234,14 +248,16 @@ export default function ProductChatModal({
       session?.user?.user_metadata?.fullName ||
       session?.user?.user_metadata?.name ||
       session?.user?.email?.split("@")[0] ||
-      "ক্রেতা";
+      getGuestCustomerName();
+
+    const customerId = session?.user?.id || getGuestCustomerId();
 
     // Perform security inspection & persistence into shared store
     const { conversation, securityResult } = sendChatMessage({
       conversationId: currentConvId || undefined,
       senderRole: "CUSTOMER",
       senderName: userName,
-      senderId: session?.user?.id,
+      senderId: customerId,
       text,
       productContext: {
         id: product.id,

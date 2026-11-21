@@ -1047,6 +1047,7 @@ export default function ProductDetailsPage({ params }: Props) {
       {/* PRODUCT CHAT & COMPLAINT MODAL (WITH AUTH GATE) */}
       {product && (
         <ProductChatModal
+          key={`${product.id}_${chatMode}`}
           isOpen={chatModalOpen}
           onClose={() => setChatModalOpen(false)}
           initialMode={chatMode}

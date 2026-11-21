@@ -26,6 +26,8 @@ import {
   markConversationAsReadForCustomer,
   formatChatTime,
   formatConversationTime,
+  getGuestCustomerId,
+  getGuestCustomerName,
   ChatConversation,
   ChatMessage,
 } from "@/lib/chat-store";
@@ -83,16 +85,18 @@ export default function CustomerMessagesPage() {
           session?.user?.user_metadata?.fullName ||
           session?.user?.user_metadata?.name ||
           session?.user?.email?.split("@")[0] ||
-          "";
+          getGuestCustomerName();
+
+        const customerId = session?.user?.id || getGuestCustomerId();
 
         const live = await fetchLiveConversations({
           role: "CUSTOMER",
-          userId: session?.user?.id,
+          userId: customerId,
           customerName: userName,
         });
         if (live && live.length > 0) {
           setConversations(live);
-          if (!selectedConvId) {
+          if (!selectedConvId || !live.some((c) => c.id === selectedConvId)) {
             setSelectedConvId(live[0].id);
             markConversationAsReadForCustomer(live[0].id);
           }
@@ -181,13 +185,15 @@ export default function CustomerMessagesPage() {
       session?.user?.user_metadata?.name ||
       session?.user?.email?.split("@")[0] ||
       selectedConv.customerName ||
-      "ক্রেতা";
+      getGuestCustomerName();
+
+    const customerId = session?.user?.id || selectedConv.customerId || getGuestCustomerId();
 
     const { securityResult } = sendChatMessage({
       conversationId: selectedConv.id,
       senderRole: "CUSTOMER",
       senderName: userName,
-      senderId: session?.user?.id,
+      senderId: customerId,
       text,
       productContext: selectedConv.product,
       isComplaint: selectedConv.type === "CUSTOMER_ADMIN_COMPLAINT",

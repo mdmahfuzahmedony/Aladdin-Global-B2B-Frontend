@@ -44,6 +44,37 @@ export interface ChatConversation {
 
 const STORAGE_KEY = "aladdin_chat_conversations_v1";
 
+export function generateUUID(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+export function getGuestCustomerId(): string {
+  if (typeof window === "undefined") return "guest_user";
+  let guestId = localStorage.getItem("aladdin_guest_customer_id");
+  if (!guestId) {
+    guestId = `guest_${generateUUID().substring(0, 8)}`;
+    localStorage.setItem("aladdin_guest_customer_id", guestId);
+  }
+  return guestId;
+}
+
+export function getGuestCustomerName(): string {
+  if (typeof window === "undefined") return "ক্রেতা (Customer)";
+  let guestName = localStorage.getItem("aladdin_guest_customer_name");
+  if (!guestName) {
+    guestName = "ক্রেতা (Customer)";
+    localStorage.setItem("aladdin_guest_customer_name", guestName);
+  }
+  return guestName;
+}
+
 let chatBroadcast: BroadcastChannel | null = null;
 if (typeof window !== "undefined" && typeof BroadcastChannel !== "undefined") {
   try {
@@ -222,6 +253,49 @@ export function saveStoredConversations(convs: ChatConversation[]) {
   }
 }
 
+export function mergeConversations(
+  localConvs: ChatConversation[],
+  dbConvs: ChatConversation[]
+): ChatConversation[] {
+  const map = new Map<string, ChatConversation>();
+
+  for (const c of dbConvs) {
+    map.set(c.id, { ...c });
+  }
+
+  for (const loc of localConvs) {
+    if (map.has(loc.id)) {
+      const existing = map.get(loc.id)!;
+      const msgMap = new Map<string, ChatMessage>();
+      for (const m of existing.messages) {
+        msgMap.set(m.id, m);
+      }
+      for (const m of loc.messages) {
+        if (!msgMap.has(m.id)) {
+          msgMap.set(m.id, m);
+        }
+      }
+      const combinedMsgs = Array.from(msgMap.values()).sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      existing.messages = combinedMsgs;
+      const last = combinedMsgs[combinedMsgs.length - 1];
+      if (last) {
+        existing.lastMessageText = last.text;
+        existing.lastMessageTime = formatConversationTime(last.createdAt);
+      }
+    } else {
+      map.set(loc.id, loc);
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) => {
+    const tA = a.messages.length > 0 ? new Date(a.messages[a.messages.length - 1].createdAt).getTime() : 0;
+    const tB = b.messages.length > 0 ? new Date(b.messages[b.messages.length - 1].createdAt).getTime() : 0;
+    return tB - tA;
+  });
+}
+
 /**
  * Fetch live conversations directly from Supabase PostgreSQL database
  */
@@ -261,15 +335,18 @@ export async function fetchLiveConversations(params?: {
     }
 
     const { data, error } = await query;
-    if (!error && Array.isArray(data) && data.length > 0) {
+    if (!error && Array.isArray(data)) {
       const mapped = data.map((conv: any) =>
         mapDbConversationToClient({
           ...conv,
-          messages: conv.chat_messages || [],
+          messages: (conv.chat_messages || []).sort(
+            (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          ),
         })
       );
-      saveStoredConversations(mapped);
-      return mapped;
+      const merged = mergeConversations(getStoredConversations(), mapped);
+      saveStoredConversations(merged);
+      return merged;
     }
   } catch (err) {
     console.warn("Direct Supabase fetch error, using cache:", err);
@@ -305,34 +382,55 @@ export function sendChatMessage({
   const timeFormatted = formatChatTime(now);
 
   let targetConv = convs.find((c) => {
-    if (conversationId && c.id === conversationId) return true;
+    // If conversationId is provided AND matches, check if productContext also aligns
+    if (conversationId && c.id === conversationId) {
+      if (!productContext?.id || !c.product?.id || c.product.id === productContext.id) {
+        return true;
+      }
+    }
+    // Match by product id & customer
     if (productContext?.id && c.product?.id === productContext.id) {
       if (senderId && c.customerId === senderId) return true;
       if (senderName && c.customerName.toLowerCase() === senderName.toLowerCase()) return true;
+      if (!senderId && !senderName) return true;
     }
+    // Match by product sku & customer
     if (productContext?.sku && c.product?.sku === productContext.sku) {
       if (senderId && c.customerId === senderId) return true;
       if (senderName && c.customerName.toLowerCase() === senderName.toLowerCase()) return true;
+      if (!senderId && !senderName) return true;
+    }
+    // Match by product name & customer
+    if (
+      productContext?.name &&
+      c.product?.name &&
+      c.product.name.trim().toLowerCase() === productContext.name.trim().toLowerCase()
+    ) {
+      if (senderId && c.customerId === senderId) return true;
+      if (senderName && c.customerName.toLowerCase() === senderName.toLowerCase()) return true;
+      if (!senderId && !senderName) return true;
     }
     return false;
   });
 
-  const newMsg: ChatMessage = {
-    id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-    conversationId: targetConv?.id || `conv_${Date.now()}`,
-    senderRole,
-    senderName,
-    text: securityResult.filteredText,
-    rawText: securityResult.hasSensitiveData ? securityResult.originalText : undefined,
-    hasSensitiveData: securityResult.hasSensitiveData,
-    isSuspicious: securityResult.isSuspicious,
-    suspiciousReasons: securityResult.suspiciousReasons,
-    createdAt: now.toISOString(),
-    timeFormatted,
-    isComplaint,
-  };
+  const newMsgId = generateUUID();
 
   if (targetConv) {
+    const newMsg: ChatMessage = {
+      id: newMsgId,
+      conversationId: targetConv.id,
+      senderRole,
+      senderName,
+      text: securityResult.filteredText,
+      rawText: securityResult.hasSensitiveData ? securityResult.originalText : undefined,
+      hasSensitiveData: securityResult.hasSensitiveData,
+      isSuspicious: securityResult.isSuspicious,
+      suspiciousReasons: securityResult.suspiciousReasons,
+      createdAt: now.toISOString(),
+      timeFormatted,
+      isComplaint,
+    };
+
     targetConv.messages.push(newMsg);
     targetConv.lastMessageText = newMsg.text;
     targetConv.lastMessageTime = timeFormatted;
@@ -350,14 +448,32 @@ export function sendChatMessage({
       targetConv.unreadForCustomer = (targetConv.unreadForCustomer || 0) + 1;
     }
   } else {
-    const newConvId = `conv_${Date.now()}`;
-    newMsg.conversationId = newConvId;
+    // Generate valid standard UUID for new conversation immediately
+    const newConvId =
+      conversationId && conversationId.includes("-") && conversationId.length > 25
+        ? conversationId
+        : generateUUID();
+
+    const newMsg: ChatMessage = {
+      id: newMsgId,
+      conversationId: newConvId,
+      senderRole,
+      senderName,
+      text: securityResult.filteredText,
+      rawText: securityResult.hasSensitiveData ? securityResult.originalText : undefined,
+      hasSensitiveData: securityResult.hasSensitiveData,
+      isSuspicious: securityResult.isSuspicious,
+      suspiciousReasons: securityResult.suspiciousReasons,
+      createdAt: now.toISOString(),
+      timeFormatted,
+      isComplaint,
+    };
 
     targetConv = {
       id: newConvId,
       type: isComplaint ? "CUSTOMER_ADMIN_COMPLAINT" : "CUSTOMER_VENDOR",
       customerName: senderName || "ক্রেতা",
-      customerId: senderId || `cust_${Date.now()}`,
+      customerId: senderId || getGuestCustomerId(),
       vendorName: productContext?.vendorName || "ভেন্ডর",
       vendorId: productContext?.vendorId || undefined,
       product: productContext
@@ -384,53 +500,38 @@ export function sendChatMessage({
 
   saveStoredConversations(convs);
 
-  // Background direct push to Supabase PostgreSQL
+  // Background direct push to Supabase PostgreSQL with matching UUIDs
   if (typeof window !== "undefined") {
     (async () => {
       try {
         const supabase = createClient();
-        let dbConvId = targetConv?.id;
-        const isDbUuid = dbConvId && dbConvId.includes("-") && dbConvId.length > 25;
+        const convId = targetConv!.id;
 
-        if (!isDbUuid) {
-          // Check if already in DB
-          const { data: existing } = await supabase
-            .from("chat_conversations")
-            .select("id")
-            .eq("customerName", targetConv?.customerName || "Customer")
-            .eq("vendorName", targetConv?.vendorName || "Vendor")
-            .limit(1)
-            .maybeSingle();
+        // 1. Check if conversation row already exists in Supabase
+        const { data: existing } = await supabase
+          .from("chat_conversations")
+          .select("id")
+          .eq("id", convId)
+          .maybeSingle();
 
-          if (existing?.id) {
-            dbConvId = existing.id;
-            if (targetConv) targetConv.id = existing.id;
-          } else {
-            const { data: created, error: createErr } = await supabase
-              .from("chat_conversations")
-              .insert({
-                type: targetConv?.type || "CUSTOMER_VENDOR",
-                customerId: targetConv?.customerId || null,
-                customerName: targetConv?.customerName || "ক্রেতা",
-                vendorId: targetConv?.vendorId || null,
-                vendorName: targetConv?.vendorName || "ভেন্ডর",
-                productId: targetConv?.product?.id || null,
-                productTitle: targetConv?.product?.name || null,
-                productSku: targetConv?.product?.sku || null,
-                productPrice: targetConv?.product?.price ? String(targetConv.product.price) : null,
-                productImage: targetConv?.product?.image || null,
-                hasSuspiciousActivity: securityResult.isSuspicious,
-                lastMessageAt: now.toISOString(),
-                updatedAt: now.toISOString(),
-              })
-              .select("id")
-              .single();
-
-            if (!createErr && created?.id) {
-              dbConvId = created.id;
-              if (targetConv) targetConv.id = created.id;
-            }
-          }
+        if (!existing?.id) {
+          await supabase.from("chat_conversations").insert({
+            id: convId,
+            type: targetConv?.type || "CUSTOMER_VENDOR",
+            customerId: targetConv?.customerId || null,
+            customerName: targetConv?.customerName || "ক্রেতা",
+            vendorId: targetConv?.vendorId || null,
+            vendorName: targetConv?.vendorName || "ভেন্ডর",
+            productId: targetConv?.product?.id || null,
+            productTitle: targetConv?.product?.name || null,
+            productSku: targetConv?.product?.sku || null,
+            productPrice: targetConv?.product?.price ? String(targetConv.product.price) : null,
+            productImage: targetConv?.product?.image || null,
+            hasSuspiciousActivity: Boolean(securityResult.isSuspicious),
+            lastMessageAt: now.toISOString(),
+            createdAt: now.toISOString(),
+            updatedAt: now.toISOString(),
+          });
         } else {
           await supabase
             .from("chat_conversations")
@@ -439,41 +540,41 @@ export function sendChatMessage({
               updatedAt: now.toISOString(),
               ...(securityResult.isSuspicious ? { hasSuspiciousActivity: true } : {}),
             })
-            .eq("id", dbConvId);
+            .eq("id", convId);
         }
 
-        if (dbConvId) {
-          await supabase.from("chat_messages").insert({
-            conversationId: dbConvId,
-            senderId: senderId || null,
-            senderRole,
-            senderName,
-            text: securityResult.filteredText,
-            rawText: securityResult.hasSensitiveData ? securityResult.originalText : null,
-            hasSensitiveData: securityResult.hasSensitiveData,
-            isSuspicious: securityResult.isSuspicious,
-            suspiciousReasons: securityResult.suspiciousReasons,
-            isComplaint,
-            createdAt: now.toISOString(),
-          });
+        // 2. Insert chat message
+        await supabase.from("chat_messages").insert({
+          id: newMsgId,
+          conversationId: convId,
+          senderId: senderId || null,
+          senderRole,
+          senderName,
+          text: securityResult.filteredText,
+          rawText: securityResult.hasSensitiveData ? securityResult.originalText : null,
+          hasSensitiveData: securityResult.hasSensitiveData,
+          isSuspicious: securityResult.isSuspicious,
+          suspiciousReasons: securityResult.suspiciousReasons,
+          isComplaint,
+          createdAt: now.toISOString(),
+        });
 
-          // If vendor replied, trigger a customer notification in Supabase
-          if (senderRole === "VENDOR" && targetConv?.customerId) {
-            try {
-              await supabase.from("Notification").insert({
-                userId: targetConv.customerId,
-                type: "CHAT_MESSAGE",
-                title: `${senderName || "ভেন্ডর"} থেকে নতুন মেসেজ`,
-                message: securityResult.filteredText.slice(0, 100),
-                entityId: dbConvId,
-                entityType: "CHAT_CONVERSATION",
-                isRead: false,
-                createdAt: now.toISOString(),
-                updatedAt: now.toISOString(),
-              });
-            } catch (err) {
-              // non-blocking
-            }
+        // 3. If vendor replied, trigger a customer notification in Supabase
+        if (senderRole === "VENDOR" && targetConv?.customerId) {
+          try {
+            await supabase.from("Notification").insert({
+              userId: targetConv.customerId,
+              type: "CHAT_MESSAGE",
+              title: `${senderName || "ভেন্ডর"} থেকে নতুন মেসেজ`,
+              message: securityResult.filteredText.slice(0, 100),
+              entityId: convId,
+              entityType: "CHAT_CONVERSATION",
+              isRead: false,
+              createdAt: now.toISOString(),
+              updatedAt: now.toISOString(),
+            });
+          } catch (err) {
+            // non-blocking
           }
         }
       } catch (e) {
@@ -501,8 +602,9 @@ export async function sendAdminWarningAction({
   const now = new Date();
   const timeFormatted = formatChatTime(now);
 
+  const warnMsgId = generateUUID();
   const warnMsg: ChatMessage = {
-    id: `warn_${Date.now()}`,
+    id: warnMsgId,
     conversationId,
     senderRole: "ADMIN",
     senderName: "Aladdin Security Team",
@@ -522,6 +624,7 @@ export async function sendAdminWarningAction({
   try {
     const supabase = createClient();
     await supabase.from("chat_messages").insert({
+      id: warnMsgId,
       conversationId,
       senderRole: "ADMIN",
       senderName: "Aladdin Security Team",
@@ -566,11 +669,18 @@ export function findConversationForProduct(params: {
 
     if (!matchesProduct) return false;
 
-    if (params.customerId && c.customerId === params.customerId) return true;
-    if (params.customerName && c.customerName.toLowerCase() === params.customerName.toLowerCase()) return true;
+    if (params.customerId && c.customerId) {
+      if (c.customerId === params.customerId) return true;
+    }
+    if (params.customerName && c.customerName) {
+      if (c.customerName.toLowerCase() === params.customerName.toLowerCase()) return true;
+    }
 
-    // Matches product
-    return true;
+    if (!params.customerId && !params.customerName) {
+      return true;
+    }
+
+    return false;
   });
 }
 
@@ -604,4 +714,3 @@ export function getCustomerUnreadCount(userId?: string, customerName?: string): 
     return sum;
   }, 0);
 }
-

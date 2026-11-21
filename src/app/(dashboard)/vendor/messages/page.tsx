@@ -261,9 +261,18 @@ export default function VendorMessagesPage() {
                         <span className="text-[10px] text-slate-400 shrink-0">{formatConversationTime(c.lastMessageTime)}</span>
                       </div>
 
-                      <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                        {c.product ? c.product.name : c.vendorName}
-                      </p>
+                      {c.product ? (
+                        <div className="mt-1 flex items-center gap-1.5 overflow-hidden">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200/80 px-2 py-0.5 text-[10px] font-semibold text-amber-800 truncate">
+                            <Tag size={10} className="shrink-0 text-amber-600" />
+                            <span className="truncate">{c.product.name}</span>
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                          {c.vendorName}
+                        </p>
+                      )}
 
                       <p className="text-[11px] text-slate-700 truncate mt-1 font-medium">
                         {c.lastMessageText}
@@ -318,7 +327,7 @@ export default function VendorMessagesPage() {
               </div>
 
               {selectedConv.product && (
-                <div className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-2xs max-w-[220px] sm:max-w-xs">
                   {selectedConv.product.image && (
                     <img
                       src={selectedConv.product.image}
@@ -326,8 +335,8 @@ export default function VendorMessagesPage() {
                       className="h-8 w-8 rounded-md object-cover border border-slate-200 shrink-0"
                     />
                   )}
-                  <div className="text-right">
-                    <p className="text-[11px] font-bold text-slate-800 truncate max-w-[180px]">
+                  <div className="text-right min-w-0">
+                    <p className="text-[11px] font-bold text-slate-800 truncate">
                       {selectedConv.product.name}
                     </p>
                     <p className="text-[10px] text-slate-500 font-mono">
