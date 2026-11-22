@@ -527,34 +527,97 @@ export default function AdminMessagesAuditPage() {
               })}
             </div>
 
-            {/* Admin Intervention Reply Bar */}
-            <form
-              onSubmit={handleSendAdminIntervention}
-              className="border-t border-slate-200 p-3.5 bg-white space-y-2 shrink-0"
-            >
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="এই চ্যাটে অফিসিয়াল অ্যাডমিন নির্দেশনা বা বার্তা লিখুন..."
-                  value={adminReplyText}
-                  onChange={(e) => setAdminReplyText(e.target.value)}
-                  className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#12233f] focus:bg-white"
-                />
+            {/* Admin Action Bar: Read-Only Audit with Notice Option for Customer-Vendor, Direct Chat for Complaint */}
+            {selectedConv.type === "CUSTOMER_VENDOR" ? (
+              <div className="border-t border-purple-200 p-4 bg-purple-50/60 space-y-3 shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-purple-700">
+                      <ShieldCheck size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-purple-950">
+                        লাইভ অডিট মোড (Read-Only)
+                      </h4>
+                      <p className="text-[11px] text-purple-800">
+                        মূল আলাপ ক্রেতা ({selectedConv.customerName}) ও বিক্রেতা ({selectedConv.vendorName}) এর মধ্যে। স্বাভাবিক আলাপের মাঝে অ্যাডমিন সাধারণ চ্যাট করবেন না।
+                      </p>
+                    </div>
+                  </div>
 
-                <button
-                  type="submit"
-                  disabled={!adminReplyText.trim()}
-                  className="flex items-center gap-1.5 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40 shrink-0"
-                >
-                  <Send size={14} />
-                  <span>অ্যাডমিন হিসেবে পাঠান</span>
-                </button>
+                  <span className="rounded-full bg-purple-200/80 px-2.5 py-0.5 text-[10px] font-black text-purple-900 shrink-0 self-start sm:self-auto">
+                    পর্যবেক্ষণকারী
+                  </span>
+                </div>
+
+                {/* Send Official Personal Notice Form */}
+                <form onSubmit={handleSendAdminIntervention} className="space-y-2 pt-1 border-t border-purple-200/70">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <AlertTriangle size={13} className="text-red-600" />
+                      <span>অনিয়ম বা পলিসি লঙ্ঘনের ক্ষেত্রে অফিশিয়াল সতর্কবার্তা দিন:</span>
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={handleIssueWarning}
+                      className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-2xs hover:bg-red-700 transition"
+                    >
+                      <Ban size={12} />
+                      <span>স্ট্যান্ডার্ড পলিসি ওয়ার্নিং দিন</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="কাস্টমার বা ভেন্ডরকে পার্সোনাল অফিশিয়াল সতর্কবার্তা বা নির্দেশনা লিখুন..."
+                      value={adminReplyText}
+                      onChange={(e) => setAdminReplyText(e.target.value)}
+                      className="flex-1 rounded-xl border border-purple-200 bg-white px-4 py-2 text-xs text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-purple-600"
+                    />
+
+                    <button
+                      type="submit"
+                      disabled={!adminReplyText.trim()}
+                      className="flex items-center gap-1.5 rounded-xl bg-purple-900 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-purple-950 disabled:cursor-not-allowed disabled:opacity-40 shrink-0"
+                    >
+                      <Send size={14} />
+                      <span>নোটিশ জারি করুন</span>
+                    </button>
+                  </div>
+                </form>
               </div>
+            ) : (
+              /* Direct Support Complaint Resolution Chat */
+              <form
+                onSubmit={handleSendAdminIntervention}
+                className="border-t border-slate-200 p-3.5 bg-white space-y-2 shrink-0"
+              >
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="সাপোর্ট টিকিট ও কমপ্লেইনের সরাসরি উত্তর লিখুন..."
+                    value={adminReplyText}
+                    onChange={(e) => setAdminReplyText(e.target.value)}
+                    className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#12233f] focus:bg-white"
+                  />
 
-              <p className="text-[11px] text-slate-400">
-                🔒 আপনার পাঠানো বার্তাটি ক্রেতা ও বিক্রেতা উভয়ের চ্যাট স্ক্রিনে অফিশিয়াল নোটিশ হিসেবে প্রদর্শিত হবে।
-              </p>
-            </form>
+                  <button
+                    type="submit"
+                    disabled={!adminReplyText.trim()}
+                    className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40 shrink-0"
+                  >
+                    <Send size={14} />
+                    <span>উত্তর পাঠান</span>
+                  </button>
+                </div>
+
+                <p className="text-[11px] text-slate-400">
+                  💬 এটি অফিসিয়াল সাপোর্ট চ্যানেল। আপনার বার্তা সরাসরি কাস্টমারের টিকিট ইনবক্সে পৌঁছাবে।
+                </p>
+              </form>
+            )}
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50/50">

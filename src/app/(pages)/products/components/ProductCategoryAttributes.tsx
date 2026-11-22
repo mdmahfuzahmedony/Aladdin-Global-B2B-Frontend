@@ -46,6 +46,9 @@ import {
   Gamepad2,
   Brain,
   AlertTriangle,
+  Gift,
+  Heart,
+  Palette,
 } from "lucide-react";
 import type { ProductDetails, ProductAttributes } from "../types";
 
@@ -75,6 +78,7 @@ export type CategoryDomain =
   | "FITNESS_GYM"
   | "SPORTS_OUTDOOR"
   | "TOYS_GAMES"
+  | "GIFTS_CRAFTS"
   | "GENERAL";
 
 export interface HighlightItem {
@@ -868,6 +872,28 @@ export function detectCategoryDomain(
     keys.includes("piecescount")
   ) {
     return "TOYS_GAMES";
+  }
+
+  // 20. Gifts & Crafts
+  if (
+    combined.includes("gift") ||
+    combined.includes("craft") ||
+    combined.includes("উপহার") ||
+    combined.includes("হস্তশিল্প") ||
+    combined.includes("শোপিস") ||
+    combined.includes("মুন ল্যাম্প") ||
+    combined.includes("ফটো ফ্রেম") ||
+    combined.includes("ম্যাজিক মগ") ||
+    combined.includes("ক্যালিগ্রাফি") ||
+    combined.includes("হ্যান্ডিক্রাফট") ||
+    keys.includes("gifttype") ||
+    keys.includes("targetoccasion") ||
+    keys.includes("targetrecipient") ||
+    keys.includes("customizationoptions") ||
+    keys.includes("craftitemtype") ||
+    keys.includes("festivaloccasion")
+  ) {
+    return "GIFTS_CRAFTS";
   }
 
   return "GENERAL";
@@ -1672,6 +1698,79 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
       break;
     }
 
+    case "GIFTS_CRAFTS": {
+      // 1. Gift / Craft Type
+      const giftType =
+        getVal("giftType") ||
+        getVal("giftItemType") ||
+        getVal("craftItemType") ||
+        getVal("corporateItemType");
+      if (giftType) {
+        highlights.push({
+          id: "giftType",
+          label: "Gift Type",
+          value: giftType,
+          icon: <Gift size={13} />,
+          variant: "rose",
+        });
+      }
+
+      // 2. Occasion
+      const occasion =
+        getVal("occasion") ||
+        getVal("targetOccasion") ||
+        getVal("festivalOccasion");
+      if (occasion) {
+        highlights.push({
+          id: "occasion",
+          label: "Occasion",
+          value: occasion,
+          icon: <Sparkles size={13} />,
+          variant: "amber",
+        });
+      }
+
+      // 3. Recipient
+      const recipient = getVal("recipient") || getVal("targetRecipient");
+      if (recipient) {
+        highlights.push({
+          id: "recipient",
+          label: "Best For",
+          value: recipient,
+          icon: <Heart size={13} />,
+          variant: "rose",
+        });
+      }
+
+      // 4. Customization Options
+      const customOpt = getVal("customizationOptions");
+      if (customOpt) {
+        highlights.push({
+          id: "customizationOptions",
+          label: "Customization",
+          value: customOpt,
+          icon: <Palette size={13} />,
+          variant: "indigo",
+        });
+      }
+
+      // 5. Material Composition
+      const material =
+        getVal("material") ||
+        getVal("materialComposition") ||
+        getVal("materialsIncluded");
+      if (material) {
+        highlights.push({
+          id: "material",
+          label: "Material",
+          value: material,
+          icon: <Layers size={13} />,
+          variant: "slate",
+        });
+      }
+      break;
+    }
+
     default:
       break;
   }
@@ -2419,6 +2518,59 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
         title: "Packaging & Box Contents",
         icon: <Box size={16} className="text-emerald-600" />,
         rows: toyPackage,
+      });
+    }
+  } else if (domain === "GIFTS_CRAFTS") {
+    // 1. Gift & Customization Specifications
+    const giftBasic = buildRows([
+      "giftType",
+      "giftItemType",
+      "craftItemType",
+      "corporateItemType",
+      "brand",
+      "brandMaker",
+      "occasion",
+      "targetOccasion",
+      "festivalOccasion",
+      "recipient",
+      "targetRecipient",
+      "customizationOptions",
+      "itemsIncludedInSet",
+    ]);
+    if (giftBasic.length > 0) {
+      groups.push({
+        id: "gift-basic",
+        title: "Gift & Customization Specifications",
+        icon: <Gift size={16} className="text-rose-600" />,
+        rows: giftBasic,
+      });
+    }
+
+    // 2. Materials, Craftsmanship & Dimensions
+    const giftCraft = buildRows([
+      "material",
+      "materialComposition",
+      "materialsIncluded",
+      "dimensions",
+      "dimensionsSize",
+      "dimensionsWeight",
+      "artTechnique",
+      "lightingFeatures",
+      "lightingElectronics",
+      "batteryPower",
+      "packaging",
+      "packagingBoxType",
+      "packagingPresentation",
+      "boxFinishingMaterial",
+      "countryOfOrigin",
+      "origin",
+    ]);
+    if (giftCraft.length > 0) {
+      groups.push({
+        id: "gift-craft",
+        title: "Materials, Packaging & Craftsmanship",
+        icon: <Sparkles size={16} className="text-amber-600" />,
+        rows: giftCraft,
       });
     }
   }

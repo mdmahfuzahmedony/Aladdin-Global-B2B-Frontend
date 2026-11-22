@@ -1,6 +1,7 @@
 import { SellerSidebar } from "@/components/sidebar/seller-sidebar";
 import { SellerNavbar } from "@/components/header/seller-navbar";
 import { DashboardNavigationProvider } from "@/components/dashboard/dashboard-navigation";
+import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 
 export default function SellerLayout({
   children,
@@ -16,6 +17,7 @@ export default function SellerLayout({
           <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
       </div>
+      <FloatingChatWidget />
     </DashboardNavigationProvider>
   );
 }

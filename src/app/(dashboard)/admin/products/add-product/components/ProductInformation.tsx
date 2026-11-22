@@ -24,6 +24,7 @@ import ElectronicsDispatcher from "./product-field/Electronics/ElectronicsDispat
 import SportsFitnessDispatcher from "./product-field/SportsFitness/SportsFitnessDispatcher";
 import GroceryDispatcher from "./product-field/Grocery/GroceryDispatcher";
 import ToysDispatcher from "./product-field/Toys/ToysDispatcher";
+import GiftsCraftsDispatcher from "./product-field/GiftsCrafts/GiftsCraftsDispatcher";
 
 // Grocery - Beverages
 import Juice from "./product-field/Grocery/Beverages/Juice";
@@ -615,6 +616,35 @@ function findComponentForCategory(
     });
   if (isToysCategory) {
     return ToysDispatcher;
+  }
+
+  // Gifts & Crafts (Unified All-in-One Category Dispatcher)
+  const isGiftsCraftsCategory =
+    key === "gifts-and-crafts" ||
+    key === "gifts-crafts" ||
+    key === "gifts-crafts-d1y5y" ||
+    key === "gift-items" ||
+    key.includes("gift") ||
+    key.includes("craft") ||
+    rawLower.includes("gift") ||
+    rawLower.includes("craft") ||
+    rawLower.includes("উপহার") ||
+    rawLower.includes("হস্তশিল্প") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return (
+        pKey === "gifts-and-crafts" ||
+        pKey === "gifts-crafts" ||
+        pKey.includes("gift") ||
+        pKey.includes("craft") ||
+        name.toLowerCase().includes("gift") ||
+        name.toLowerCase().includes("craft") ||
+        name.toLowerCase().includes("উপহার") ||
+        name.toLowerCase().includes("হস্তশিল্প")
+      );
+    });
+  if (isGiftsCraftsCategory) {
+    return GiftsCraftsDispatcher;
   }
 
   // Fashion

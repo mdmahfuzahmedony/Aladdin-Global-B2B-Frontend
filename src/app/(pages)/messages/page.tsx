@@ -77,7 +77,6 @@ export default function CustomerMessagesPage() {
       setSelectedConvId((prev) => {
         if (prev && cached.some((c) => c.id === prev)) return prev;
         if (cached.length > 0) {
-          markConversationAsReadForCustomer(cached[0].id);
           return cached[0].id;
         }
         return prev;
@@ -102,7 +101,6 @@ export default function CustomerMessagesPage() {
           setConversations(live);
           setSelectedConvId((prev) => {
             if (prev && live.some((c) => c.id === prev)) return prev;
-            markConversationAsReadForCustomer(live[0].id);
             return live[0].id;
           });
         }

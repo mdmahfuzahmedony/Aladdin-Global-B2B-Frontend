@@ -43,6 +43,66 @@ export interface ChatConversation {
 }
 
 const STORAGE_KEY = "aladdin_chat_conversations_v1";
+const ADMIN_READ_KEY = "aladdin_chat_admin_reads";
+const CUSTOMER_READ_KEY = "aladdin_chat_customer_reads";
+const VENDOR_READ_KEY = "aladdin_chat_vendor_reads";
+
+export function getAdminReadMap(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(ADMIN_READ_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function setAdminRead(convId: string, timestamp = Date.now()) {
+  if (typeof window === "undefined") return;
+  try {
+    const map = getAdminReadMap();
+    map[convId] = timestamp;
+    localStorage.setItem(ADMIN_READ_KEY, JSON.stringify(map));
+  } catch {}
+}
+
+export function getCustomerReadMap(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(CUSTOMER_READ_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function setCustomerRead(convId: string, timestamp = Date.now()) {
+  if (typeof window === "undefined") return;
+  try {
+    const map = getCustomerReadMap();
+    map[convId] = timestamp;
+    localStorage.setItem(CUSTOMER_READ_KEY, JSON.stringify(map));
+  } catch {}
+}
+
+export function getVendorReadMap(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(VENDOR_READ_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function setVendorRead(convId: string, timestamp = Date.now()) {
+  if (typeof window === "undefined") return;
+  try {
+    const map = getVendorReadMap();
+    map[convId] = timestamp;
+    localStorage.setItem(VENDOR_READ_KEY, JSON.stringify(map));
+  } catch {}
+}
 
 export function generateUUID(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -194,6 +254,47 @@ export function mapDbConversationToClient(conv: any): ChatConversation {
   }));
 
   const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+  const lastMsgTime = lastMsg ? new Date(lastMsg.createdAt).getTime() : 0;
+
+  const adminReads = getAdminReadMap();
+  const lastAdminReadAt = adminReads[conv.id] || 0;
+
+  const customerReads = getCustomerReadMap();
+  const lastCustomerReadAt = customerReads[conv.id] || 0;
+
+  const vendorReads = getVendorReadMap();
+  const lastVendorReadAt = vendorReads[conv.id] || 0;
+
+  let unreadForAdmin = 0;
+  let unreadForCustomer = 0;
+  let unreadForVendor = 0;
+
+  if (lastMsg) {
+    if (lastMsg.senderRole === "CUSTOMER") {
+      if (lastMsgTime > lastVendorReadAt) {
+        unreadForVendor = 1;
+      }
+      if (lastMsgTime > lastAdminReadAt && (conv.type === "CUSTOMER_ADMIN_COMPLAINT" || conv.hasSuspiciousActivity)) {
+        unreadForAdmin = 1;
+      }
+    } else if (lastMsg.senderRole === "VENDOR") {
+      if (lastMsgTime > lastCustomerReadAt) {
+        unreadForCustomer = 1;
+      }
+      if (lastMsgTime > lastAdminReadAt && (conv.type === "CUSTOMER_ADMIN_COMPLAINT" || conv.hasSuspiciousActivity)) {
+        unreadForAdmin = 1;
+      }
+    } else if (lastMsg.senderRole === "ADMIN") {
+      if (lastMsgTime > lastCustomerReadAt) {
+        unreadForCustomer = 1;
+      }
+      if (lastMsgTime > lastVendorReadAt && conv.type !== "CUSTOMER_ADMIN_COMPLAINT") {
+        unreadForVendor = 1;
+      }
+    }
+  } else if (conv.hasSuspiciousActivity && !lastAdminReadAt) {
+    unreadForAdmin = 1;
+  }
 
   return {
     id: conv.id,
@@ -213,9 +314,9 @@ export function mapDbConversationToClient(conv: any): ChatConversation {
       : undefined,
     lastMessageText: lastMsg ? lastMsg.text : "কোনো বার্তা নেই",
     lastMessageTime: lastMsg ? formatConversationTime(lastMsg.createdAt) : "এইমাত্র",
-    unreadForVendor: 0,
-    unreadForAdmin: conv.hasSuspiciousActivity ? 1 : 0,
-    unreadForCustomer: 0,
+    unreadForVendor,
+    unreadForAdmin,
+    unreadForCustomer,
     isSuspicious: Boolean(conv.hasSuspiciousActivity),
     suspiciousReasons: [],
     messages: msgs,
@@ -258,6 +359,9 @@ export function mergeConversations(
   dbConvs: ChatConversation[]
 ): ChatConversation[] {
   const map = new Map<string, ChatConversation>();
+  const adminReads = getAdminReadMap();
+  const customerReads = getCustomerReadMap();
+  const vendorReads = getVendorReadMap();
 
   for (const c of dbConvs) {
     map.set(c.id, { ...c });
@@ -284,6 +388,26 @@ export function mergeConversations(
         existing.lastMessageText = last.text;
         existing.lastMessageTime = formatConversationTime(last.createdAt);
       }
+
+      const lastMsgTime = last ? new Date(last.createdAt).getTime() : 0;
+      const adminReadAt = adminReads[existing.id] || 0;
+      const customerReadAt = customerReads[existing.id] || 0;
+      const vendorReadAt = vendorReads[existing.id] || 0;
+
+      // Preserve Admin read state
+      if (last?.senderRole === "ADMIN" || adminReadAt >= lastMsgTime) {
+        existing.unreadForAdmin = 0;
+      }
+
+      // Preserve Customer read state
+      if (last?.senderRole === "CUSTOMER" || customerReadAt >= lastMsgTime) {
+        existing.unreadForCustomer = 0;
+      }
+
+      // Preserve Vendor read state
+      if (last?.senderRole === "VENDOR" || vendorReadAt >= lastMsgTime) {
+        existing.unreadForVendor = 0;
+      }
     } else {
       map.set(loc.id, loc);
     }
@@ -302,6 +426,7 @@ export function mergeConversations(
 export async function fetchLiveConversations(params?: {
   role?: "CUSTOMER" | "VENDOR" | "ADMIN";
   userId?: string;
+  vendorId?: string;
   customerName?: string;
   storeName?: string;
   filter?: "ALL" | "SUSPICIOUS" | "COMPLAINT" | "VENDOR";
@@ -315,10 +440,13 @@ export async function fetchLiveConversations(params?: {
 
     if (params?.role === "VENDOR") {
       const orParts: string[] = [];
+      if (params.vendorId) {
+        orParts.push(`vendorId.eq.${params.vendorId}`);
+      }
       if (params.userId) {
         orParts.push(`vendorId.eq.${params.userId}`);
       }
-      if (params.storeName) {
+      if (params.storeName && params.storeName.trim() && params.storeName !== "আমার স্টোর") {
         const safeStore = params.storeName.replace(/[^\p{L}\p{N}\s]/gu, "").trim();
         if (safeStore) {
           orParts.push(`vendorName.ilike."%${safeStore}%"`);
@@ -463,8 +591,18 @@ export function sendChatMessage({
     if (senderRole === "CUSTOMER") {
       targetConv.unreadForVendor = (targetConv.unreadForVendor || 0) + 1;
       targetConv.unreadForAdmin = (targetConv.unreadForAdmin || 0) + (isComplaint ? 1 : 0);
+      targetConv.unreadForCustomer = 0;
+      setCustomerRead(targetConv.id, now.getTime());
     } else if (senderRole === "VENDOR") {
       targetConv.unreadForCustomer = (targetConv.unreadForCustomer || 0) + 1;
+      targetConv.unreadForAdmin = (targetConv.unreadForAdmin || 0) + (isComplaint ? 1 : 0);
+      targetConv.unreadForVendor = 0;
+      setVendorRead(targetConv.id, now.getTime());
+    } else if (senderRole === "ADMIN") {
+      targetConv.unreadForCustomer = (targetConv.unreadForCustomer || 0) + 1;
+      targetConv.unreadForVendor = (targetConv.unreadForVendor || 0) + 1;
+      targetConv.unreadForAdmin = 0;
+      setAdminRead(targetConv.id, now.getTime());
     }
   } else {
     // Generate valid standard UUID for new conversation immediately
@@ -508,11 +646,15 @@ export function sendChatMessage({
       lastMessageTime: timeFormatted,
       unreadForVendor: senderRole === "CUSTOMER" ? 1 : 0,
       unreadForAdmin: isComplaint || securityResult.isSuspicious ? 1 : 0,
-      unreadForCustomer: 0,
+      unreadForCustomer: senderRole === "VENDOR" || senderRole === "ADMIN" ? 1 : 0,
       isSuspicious: securityResult.isSuspicious,
       suspiciousReasons: securityResult.suspiciousReasons,
       messages: [newMsg],
     };
+
+    if (senderRole === "CUSTOMER") setCustomerRead(newConvId, now.getTime());
+    if (senderRole === "VENDOR") setVendorRead(newConvId, now.getTime());
+    if (senderRole === "ADMIN") setAdminRead(newConvId, now.getTime());
 
     convs.unshift(targetConv);
   }
@@ -728,9 +870,10 @@ export function findConversationForProduct(params: {
  * Mark conversation as read for customer
  */
 export function markConversationAsReadForCustomer(conversationId: string) {
+  setCustomerRead(conversationId, Date.now());
   const convs = getStoredConversations();
   const target = convs.find((c) => c.id === conversationId);
-  if (target && target.unreadForCustomer > 0) {
+  if (target) {
     target.unreadForCustomer = 0;
     saveStoredConversations(convs);
   }
@@ -741,6 +884,7 @@ export function markConversationAsReadForCustomer(conversationId: string) {
  */
 export function getCustomerUnreadCount(userId?: string, customerName?: string): number {
   const convs = getStoredConversations();
+  const customerReads = getCustomerReadMap();
   return convs.reduce((sum, c) => {
     const isMine =
       !userId && !customerName
@@ -749,6 +893,12 @@ export function getCustomerUnreadCount(userId?: string, customerName?: string): 
           (customerName && c.customerName.toLowerCase() === customerName.toLowerCase());
 
     if (isMine) {
+      const lastMsg = c.messages.length > 0 ? c.messages[c.messages.length - 1] : null;
+      const lastMsgTime = lastMsg ? new Date(lastMsg.createdAt).getTime() : 0;
+      const readAt = customerReads[c.id] || 0;
+      if (readAt >= lastMsgTime || (lastMsg && lastMsg.senderRole === "CUSTOMER")) {
+        return sum;
+      }
       return sum + (c.unreadForCustomer || 0);
     }
     return sum;
@@ -758,17 +908,39 @@ export function getCustomerUnreadCount(userId?: string, customerName?: string): 
 /**
  * Calculate total unread messages for vendor
  */
-export function getVendorUnreadCount(vendorId?: string, storeName?: string): number {
+export function getVendorUnreadCount(
+  vendorId?: string,
+  storeName?: string,
+  userId?: string
+): number {
   const convs = getStoredConversations();
+  const vendorReads = getVendorReadMap();
+  const cleanStore = (storeName || "").trim().toLowerCase();
+
   return convs.reduce((sum, c) => {
     if (c.type !== "CUSTOMER_VENDOR") return sum;
-    const isMine =
-      !vendorId && !storeName
-        ? true
-        : (vendorId && c.vendorId === vendorId) ||
-          (storeName && c.vendorName.toLowerCase() === storeName.toLowerCase());
+
+    let isMine = false;
+    if (!vendorId && !storeName && !userId) {
+      isMine = true;
+    } else {
+      if (vendorId && c.vendorId && c.vendorId === vendorId) isMine = true;
+      if (userId && c.vendorId && c.vendorId === userId) isMine = true;
+      if (cleanStore && cleanStore !== "আমার স্টোর" && c.vendorName) {
+        const cStore = c.vendorName.trim().toLowerCase();
+        if (cStore === cleanStore || cStore.includes(cleanStore) || cleanStore.includes(cStore)) {
+          isMine = true;
+        }
+      }
+    }
 
     if (isMine) {
+      const lastMsg = c.messages.length > 0 ? c.messages[c.messages.length - 1] : null;
+      const lastMsgTime = lastMsg ? new Date(lastMsg.createdAt).getTime() : 0;
+      const readAt = vendorReads[c.id] || 0;
+      if (readAt >= lastMsgTime || (lastMsg && lastMsg.senderRole === "VENDOR")) {
+        return sum;
+      }
       return sum + (c.unreadForVendor || 0);
     }
     return sum;
@@ -779,9 +951,10 @@ export function getVendorUnreadCount(vendorId?: string, storeName?: string): num
  * Mark conversation as read for vendor
  */
 export function markConversationAsReadForVendor(conversationId: string) {
+  setVendorRead(conversationId, Date.now());
   const convs = getStoredConversations();
   const target = convs.find((c) => c.id === conversationId);
-  if (target && (target.unreadForVendor || 0) > 0) {
+  if (target) {
     target.unreadForVendor = 0;
     saveStoredConversations(convs);
   }
@@ -792,7 +965,14 @@ export function markConversationAsReadForVendor(conversationId: string) {
  */
 export function getAdminUnreadCount(): number {
   const convs = getStoredConversations();
+  const adminReads = getAdminReadMap();
   return convs.reduce((sum, c) => {
+    const lastMsg = c.messages.length > 0 ? c.messages[c.messages.length - 1] : null;
+    const lastMsgTime = lastMsg ? new Date(lastMsg.createdAt).getTime() : 0;
+    const readAt = adminReads[c.id] || 0;
+    if (readAt >= lastMsgTime || (lastMsg && lastMsg.senderRole === "ADMIN")) {
+      return sum;
+    }
     return sum + (c.unreadForAdmin || 0);
   }, 0);
 }
@@ -801,10 +981,21 @@ export function getAdminUnreadCount(): number {
  * Mark conversation as read for admin
  */
 export function markConversationAsReadForAdmin(conversationId: string) {
+  setAdminRead(conversationId, Date.now());
   const convs = getStoredConversations();
   const target = convs.find((c) => c.id === conversationId);
-  if (target && (target.unreadForAdmin || 0) > 0) {
+  if (target) {
     target.unreadForAdmin = 0;
     saveStoredConversations(convs);
+  }
+  // Sync to database in background
+  if (typeof window !== "undefined") {
+    try {
+      const supabase = createClient();
+      void supabase
+        .from("chat_messages")
+        .update({ isRead: true })
+        .eq("conversationId", conversationId);
+    } catch {}
   }
 }

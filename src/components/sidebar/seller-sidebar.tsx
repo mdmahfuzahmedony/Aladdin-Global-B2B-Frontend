@@ -41,6 +41,7 @@ export function SellerSidebar() {
 
   const [storeName, setStoreName] = useState("");
   const [vendorName, setVendorName] = useState("");
+  const [vendorId, setVendorId] = useState("");
   const [email, setEmail] = useState("");
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -48,15 +49,16 @@ export function SellerSidebar() {
   // Sync unread messages count for vendor
   useEffect(() => {
     const syncUnread = async () => {
-      const count = getVendorUnreadCount(undefined, storeName || vendorName);
+      const count = getVendorUnreadCount(vendorId || undefined, storeName || vendorName);
       setUnreadMessages(count);
 
       try {
         await fetchLiveConversations({
           role: "VENDOR",
+          vendorId: vendorId || undefined,
           storeName: storeName || vendorName || undefined,
         });
-        const updated = getVendorUnreadCount(undefined, storeName || vendorName);
+        const updated = getVendorUnreadCount(vendorId || undefined, storeName || vendorName);
         setUnreadMessages(updated);
       } catch {
         // ignore
@@ -66,7 +68,7 @@ export function SellerSidebar() {
     void syncUnread();
 
     const handleUpdate = () => {
-      const count = getVendorUnreadCount(undefined, storeName || vendorName);
+      const count = getVendorUnreadCount(vendorId || undefined, storeName || vendorName);
       setUnreadMessages(count);
     };
 
@@ -136,6 +138,7 @@ export function SellerSidebar() {
           const data = payload?.data;
           if (isMounted && data) {
             if (data.storeName) setStoreName(data.storeName);
+            if (data.id || data.vendorId) setVendorId(String(data.id || data.vendorId));
             const resolvedName = data.vendorName || data.fullName || metaName;
             if (resolvedName) setVendorName(resolvedName);
             if (data.email) setEmail(data.email);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -48,13 +48,42 @@ export default function FloatingChatWidget() {
   const [session, setSession] = useState<any>(null);
   const [userRole, setUserRole] = useState<ActiveRole>("CUSTOMER");
   const [storeName, setStoreName] = useState<string>("");
+  const [vendorProfileId, setVendorProfileId] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"PRIMARY" | "SECONDARY">("PRIMARY");
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [dismissedMsgId, setDismissedMsgId] = useState<string | null>(null);
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
+  const [showAdminNoticeBox, setShowAdminNoticeBox] = useState(false);
+  const [adminNoticeTarget, setAdminNoticeTarget] = useState<"VENDOR" | "CUSTOMER">("VENDOR");
+  const [adminNoticeText, setAdminNoticeText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const prevUnreadCountRef = useRef<number>(0);
+
+  // Messenger-style subtle pop sound for new incoming unread messages
+  const playMessengerPopSound = () => {
+    if (typeof window === "undefined") return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.09, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.12);
+    } catch {
+      // ignore
+    }
+  };
 
   // Detect session and role dynamically (Customer vs Vendor vs Admin)
   useEffect(() => {
@@ -103,14 +132,14 @@ export default function FloatingChatWidget() {
           // ignore API check error, metadata is sufficient
         }
 
-        // 3. If Vendor, load store name
+        // 3. If Vendor, load store name and vendor profile ID
         if (detectedRole === "VENDOR") {
           const metaStore =
             session.user.user_metadata?.storeName ||
             session.user.user_metadata?.store_name ||
-            session.user.user_metadata?.fullName ||
-            "আমার স্টোর";
-          setStoreName(metaStore);
+            session.user.user_metadata?.shopName ||
+            "";
+          if (metaStore) setStoreName(metaStore);
 
           try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
@@ -119,7 +148,11 @@ export default function FloatingChatWidget() {
             });
             if (sRes.ok) {
               const sData = await sRes.json();
-              if (sData?.storeName) setStoreName(sData.storeName);
+              const storeData = sData?.data || sData;
+              if (storeData?.storeName) setStoreName(storeData.storeName);
+              if (storeData?.vendorId || storeData?.id) {
+                setVendorProfileId(String(storeData.vendorId || storeData.id));
+              }
             }
           } catch {
             // ignore
@@ -164,7 +197,7 @@ export default function FloatingChatWidget() {
 
       // Update unread count according to active role
       if (userRole === "VENDOR") {
-        setUnreadCount(getVendorUnreadCount(session?.user?.id, storeName));
+        setUnreadCount(getVendorUnreadCount(vendorProfileId || undefined, storeName, session?.user?.id));
       } else if (userRole === "ADMIN") {
         setUnreadCount(getAdminUnreadCount());
       } else {
@@ -177,6 +210,7 @@ export default function FloatingChatWidget() {
           live = await fetchLiveConversations({
             role: "VENDOR",
             userId: session?.user?.id,
+            vendorId: vendorProfileId || undefined,
             storeName: storeName || undefined,
           });
         } else if (userRole === "ADMIN") {
@@ -193,14 +227,41 @@ export default function FloatingChatWidget() {
 
         if (live && live.length > 0) {
           setConversations(live);
+        }
+
+        // If the user already has a conversation open and active, auto-mark it as read
+        if (isOpen && selectedConvId) {
           if (userRole === "VENDOR") {
-            setUnreadCount(getVendorUnreadCount(session?.user?.id, storeName));
+            markConversationAsReadForVendor(selectedConvId);
           } else if (userRole === "ADMIN") {
-            setUnreadCount(getAdminUnreadCount());
+            markConversationAsReadForAdmin(selectedConvId);
           } else {
-            setUnreadCount(getCustomerUnreadCount(customerId, userName));
+            markConversationAsReadForCustomer(selectedConvId);
           }
         }
+
+        let currentUnread = 0;
+        if (userRole === "VENDOR") {
+          currentUnread = getVendorUnreadCount(vendorProfileId || undefined, storeName, session?.user?.id);
+        } else if (userRole === "ADMIN") {
+          currentUnread = getAdminUnreadCount();
+        } else {
+          currentUnread = getCustomerUnreadCount(customerId, userName);
+        }
+
+        if (currentUnread > prevUnreadCountRef.current) {
+          playMessengerPopSound();
+          if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+            try {
+              new Notification("Aladdin নতুন চ্যাট বার্তা", {
+                body: "আপনার ইনবক্সে একটি নতুন মেসেজ এসেছে!",
+                icon: "/favicon.ico",
+              });
+            } catch {}
+          }
+        }
+        prevUnreadCountRef.current = currentUnread;
+        setUnreadCount(currentUnread);
       } catch (e) {
         console.warn("Live chat fetch:", e);
       }
@@ -276,19 +337,88 @@ export default function FloatingChatWidget() {
     return c.type === "CUSTOMER_ADMIN_COMPLAINT" || c.type === "VENDOR_ADMIN";
   });
 
+  // Calculate unread counts per tab
+  const primaryUnreadCount = useMemo(() => {
+    return primaryConvs.reduce((sum, c) => {
+      if (userRole === "VENDOR") return sum + (c.unreadForVendor || 0);
+      if (userRole === "ADMIN") return sum + (c.unreadForAdmin || 0);
+      return sum + (c.unreadForCustomer || 0);
+    }, 0);
+  }, [primaryConvs, userRole]);
+
+  const secondaryUnreadCount = useMemo(() => {
+    return secondaryConvs.reduce((sum, c) => {
+      if (userRole === "VENDOR") return sum + (c.unreadForVendor || 0);
+      if (userRole === "ADMIN") return sum + (c.unreadForAdmin || 0);
+      return sum + (c.unreadForCustomer || 0);
+    }, 0);
+  }, [secondaryConvs, userRole]);
+
+  // If chat is open on list view and current tab has 0 unread but other has >0, auto switch tab
+  useEffect(() => {
+    if (isOpen && !selectedConvId) {
+      if (activeTab === "PRIMARY" && primaryUnreadCount === 0 && secondaryUnreadCount > 0) {
+        setActiveTab("SECONDARY");
+      } else if (activeTab === "SECONDARY" && secondaryUnreadCount === 0 && primaryUnreadCount > 0) {
+        setActiveTab("PRIMARY");
+      }
+    }
+  }, [isOpen, primaryUnreadCount, secondaryUnreadCount, activeTab, selectedConvId]);
+
   const displayedConversations =
     activeTab === "PRIMARY" ? primaryConvs : secondaryConvs;
+
+  // Find the most recent conversation with unread messages for the active role (for Messenger-style popup)
+  const latestUnreadConv = useMemo(() => {
+    return conversations.find((c) => {
+      if (userRole === "VENDOR") return (c.unreadForVendor || 0) > 0;
+      if (userRole === "ADMIN") return (c.unreadForAdmin || 0) > 0;
+      return (c.unreadForCustomer || 0) > 0;
+    });
+  }, [conversations, userRole]);
 
   const handleOpenConversation = (convId: string) => {
     setSelectedConvId(convId);
     setSecurityWarning(null);
 
+    const targetConvObj = conversations.find((c) => c.id === convId);
+    if (targetConvObj) {
+      const targetLastMsg = targetConvObj.messages[targetConvObj.messages.length - 1];
+      if (targetLastMsg) {
+        setDismissedMsgId(targetLastMsg.id);
+      }
+      if (userRole === "ADMIN") {
+        setActiveTab(targetConvObj.type === "CUSTOMER_VENDOR" ? "SECONDARY" : "PRIMARY");
+      } else {
+        setActiveTab(targetConvObj.type === "CUSTOMER_VENDOR" ? "PRIMARY" : "SECONDARY");
+      }
+    }
+
+    // Immediately clear unread status in local state for instant UI update
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.id === convId) {
+          return {
+            ...c,
+            unreadForCustomer: 0,
+            unreadForVendor: 0,
+            unreadForAdmin: 0,
+          };
+        }
+        return c;
+      })
+    );
+
     if (userRole === "VENDOR") {
       markConversationAsReadForVendor(convId);
-      setUnreadCount(getVendorUnreadCount(session?.user?.id, storeName));
+      const updatedCount = getVendorUnreadCount(vendorProfileId || undefined, storeName, session?.user?.id);
+      setUnreadCount(updatedCount);
+      prevUnreadCountRef.current = updatedCount;
     } else if (userRole === "ADMIN") {
       markConversationAsReadForAdmin(convId);
-      setUnreadCount(getAdminUnreadCount());
+      const updatedCount = getAdminUnreadCount();
+      setUnreadCount(updatedCount);
+      prevUnreadCountRef.current = updatedCount;
     } else {
       markConversationAsReadForCustomer(convId);
       const userName =
@@ -297,13 +427,17 @@ export default function FloatingChatWidget() {
         session?.user?.email?.split("@")[0] ||
         getGuestCustomerName();
       const customerId = session?.user?.id || getGuestCustomerId();
-      setUnreadCount(getCustomerUnreadCount(customerId, userName));
+      const updatedCount = getCustomerUnreadCount(customerId, userName);
+      setUnreadCount(updatedCount);
+      prevUnreadCountRef.current = updatedCount;
     }
   };
 
   const handleBackToList = () => {
     setSelectedConvId(null);
     setSecurityWarning(null);
+    setShowAdminNoticeBox(false);
+    setAdminNoticeText("");
   };
 
   const handleQuickChip = (chipText: string) => {
@@ -504,6 +638,11 @@ export default function FloatingChatWidget() {
                     ? `কাস্টমার ইনকোয়ারি (${primaryConvs.length})`
                     : `ভেন্ডর চ্যাট (${primaryConvs.length})`}
                 </span>
+                {primaryUnreadCount > 0 && (
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-black text-white shadow-2xs animate-pulse">
+                    {primaryUnreadCount}
+                  </span>
+                )}
               </button>
 
               <button
@@ -531,6 +670,11 @@ export default function FloatingChatWidget() {
                     ? `সকল লাইভ চ্যাট (${secondaryConvs.length})`
                     : `অ্যাডমিন সাপোর্ট (${secondaryConvs.length})`}
                 </span>
+                {secondaryUnreadCount > 0 && (
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-black text-white shadow-2xs animate-pulse">
+                    {secondaryUnreadCount}
+                  </span>
+                )}
               </button>
             </div>
           )}
@@ -653,19 +797,21 @@ export default function FloatingChatWidget() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Quick Inquiry / Response Chips */}
-              <div className="flex items-center gap-1.5 overflow-x-auto border-t border-slate-200/70 bg-white px-2.5 py-1.5 text-[10px] shrink-0 no-scrollbar">
-                {quickChips.map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => handleQuickChip(chip)}
-                    className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 hover:text-amber-900"
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
+              {/* Quick Inquiry / Response Chips (Only for normal participants or direct support) */}
+              {!(userRole === "ADMIN" && selectedConv.type === "CUSTOMER_VENDOR") && (
+                <div className="flex items-center gap-1.5 overflow-x-auto border-t border-slate-200/70 bg-white px-2.5 py-1.5 text-[10px] shrink-0 no-scrollbar">
+                  {quickChips.map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={() => handleQuickChip(chip)}
+                      className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 hover:text-amber-900"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Security Warning */}
               {securityWarning && (
@@ -684,32 +830,154 @@ export default function FloatingChatWidget() {
                 </div>
               )}
 
-              {/* Chat Reply Input Form */}
-              <form
-                onSubmit={handleSend}
-                className="border-t border-slate-200 bg-white p-2.5 flex items-center gap-2 shrink-0"
-              >
-                <input
-                  type="text"
-                  placeholder={
-                    userRole === "VENDOR"
-                      ? "কাস্টমারকে উত্তর লিখুন বা কোটেশন জানান..."
-                      : userRole === "ADMIN"
-                      ? "অ্যাডমিন উত্তর বা অফিশিয়াল নোট লিখুন..."
-                      : "মেসেজ লিখুন..."
-                  }
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#12233f] focus:bg-white transition"
-                />
-                <button
-                  type="submit"
-                  disabled={!inputText.trim()}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#12233f] text-white shadow-xs transition hover:bg-[#1b3155] disabled:cursor-not-allowed disabled:opacity-40 shrink-0"
+              {/* Chat Reply Input Form OR Admin Observer Panel */}
+              {userRole === "ADMIN" && selectedConv.type === "CUSTOMER_VENDOR" ? (
+                /* READ-ONLY AUDIT BAR FOR ADMIN IN CUSTOMER_VENDOR CHATS */
+                <div className="border-t border-purple-200 bg-purple-50/90 p-2.5 flex flex-col gap-1.5 shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-purple-950 font-bold text-[11px]">
+                      <ShieldCheck size={14} className="text-purple-600 shrink-0" />
+                      <span>লাইভ অডিট মোড: ক্রেতা ↔ বিক্রেতা ডিল</span>
+                    </div>
+                    <span className="rounded-full bg-purple-200/70 px-2 py-0.5 text-[9px] font-black text-purple-800">
+                      কেবল পর্যবেক্ষণ
+                    </span>
+                  </div>
+
+                  <p className="text-[10px] text-purple-800 leading-snug">
+                    মূল চ্যাট ক্রেতা ও বিক্রেতার মাঝে। অ্যাডমিন সরাসরি সাধারণ মেসেজ দিতে পারবেন না। কোনো অনিয়ম দেখলে নিচে থেকে অফিশিয়াল নোটিশ দিন।
+                  </p>
+
+                  {!showAdminNoticeBox ? (
+                    <div className="flex items-center gap-1.5 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAdminNoticeTarget("VENDOR");
+                          setShowAdminNoticeBox(true);
+                        }}
+                        className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-red-600 py-1.5 px-2 text-[10px] font-bold text-white shadow-2xs hover:bg-red-700 transition"
+                      >
+                        <AlertTriangle size={12} />
+                        <span>ভেন্ডরকে পার্সোনাল নোটিশ</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAdminNoticeTarget("CUSTOMER");
+                          setShowAdminNoticeBox(true);
+                        }}
+                        className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-amber-600 py-1.5 px-2 text-[10px] font-bold text-white shadow-2xs hover:bg-amber-700 transition"
+                      >
+                        <ShieldAlert size={12} />
+                        <span>ক্রেতাকে সতর্কবার্তা</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-xl p-2 border border-purple-200 shadow-xs space-y-1.5 animate-in fade-in duration-150">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-800 flex items-center gap-1">
+                          <ShieldAlert size={12} className="text-red-600" />
+                          <span>
+                            {adminNoticeTarget === "VENDOR"
+                              ? `ভেন্ডর (${selectedConv.vendorName})-কে নোটিশ`
+                              : `ক্রেতা (${selectedConv.customerName})-কে নোটিশ`}
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowAdminNoticeBox(false)}
+                          className="text-slate-400 hover:text-slate-700 text-xs font-bold"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <input
+                        type="text"
+                        placeholder={
+                          adminNoticeTarget === "VENDOR"
+                            ? "উদা: প্ল্যাটফর্মের বাইরে লেনদেন বা নম্বর দেওয়া নিষিদ্ধ..."
+                            : "উদা: সুরক্ষার স্বার্থে প্ল্যাটফর্মের বাইরে লেনদেন করবেন না..."
+                        }
+                        value={adminNoticeText}
+                        onChange={(e) => setAdminNoticeText(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11px] text-slate-800 outline-none focus:border-red-500 bg-slate-50"
+                      />
+
+                      <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAdminNoticeText("প্ল্যাটফর্মের বাইরে ব্যক্তিগত যোগাযোগ বা লেনদেন করা পলিসি লঙ্ঘন।")
+                            }
+                            className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] text-slate-600 hover:bg-slate-200"
+                          >
+                            পলিসি লঙ্ঘন
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAdminNoticeText("সরাসরি প্ল্যাটফর্মের মাধ্যমে নিরাপদ পেমেন্ট সম্পন্ন করুন।")
+                            }
+                            className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] text-slate-600 hover:bg-slate-200"
+                          >
+                            নিরাপদ পেমেন্ট
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={!adminNoticeText.trim()}
+                          onClick={() => {
+                            if (!adminNoticeText.trim()) return;
+                            sendChatMessage({
+                              conversationId: selectedConv.id,
+                              senderRole: "ADMIN",
+                              senderName: "Aladdin কমপ্লায়েন্স টিম",
+                              text: `⚠️ [অফিসিয়াল সতর্কবার্তা - ${adminNoticeTarget === "VENDOR" ? selectedConv.vendorName : selectedConv.customerName}]: ${adminNoticeText.trim()}`,
+                            });
+                            setAdminNoticeText("");
+                            setShowAdminNoticeBox(false);
+                          }}
+                          className="rounded-lg bg-red-600 px-3 py-1 text-[10px] font-bold text-white shadow-2xs hover:bg-red-700 transition disabled:opacity-40"
+                        >
+                          নোটিশ পাঠান
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Chat Reply Input Form for Normal Participants or Direct Admin Tickets */
+                <form
+                  onSubmit={handleSend}
+                  className="border-t border-slate-200 bg-white p-2.5 flex items-center gap-2 shrink-0"
                 >
-                  <Send size={15} />
-                </button>
-              </form>
+                  <input
+                    type="text"
+                    placeholder={
+                      userRole === "VENDOR"
+                        ? "কাস্টমারকে উত্তর লিখুন বা কোটেশন জানান..."
+                        : userRole === "ADMIN"
+                        ? "কাস্টমারের সাপোর্ট টিকেটের উত্তর লিখুন..."
+                        : "মেসেজ লিখুন..."
+                    }
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#12233f] focus:bg-white transition"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!inputText.trim()}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#12233f] text-white shadow-xs transition hover:bg-[#1b3155] disabled:cursor-not-allowed disabled:opacity-40 shrink-0"
+                  >
+                    <Send size={15} />
+                  </button>
+                </form>
+              )}
             </div>
           ) : (
             /* CONVERSATION LIST FOR SELECTED TAB */
@@ -823,12 +1091,22 @@ export default function FloatingChatWidget() {
                       key={c.id}
                       type="button"
                       onClick={() => handleOpenConversation(c.id)}
-                      className="w-full text-left p-3 transition flex gap-3 items-start hover:bg-slate-100/80 bg-white"
+                      className={`w-full text-left p-3 transition flex gap-3 items-start ${
+                        hasUnread
+                          ? "bg-blue-50/80 border-l-4 border-l-blue-600 hover:bg-blue-100/70"
+                          : "bg-white hover:bg-slate-100/80"
+                      }`}
                     >
                       {/* Product Thumbnail or Avatar */}
                       <div className="relative shrink-0">
                         {c.product?.image ? (
-                          <div className="relative h-11 w-11 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-2xs">
+                          <div
+                            className={`relative h-11 w-11 overflow-hidden rounded-xl border bg-slate-50 shadow-2xs ${
+                              hasUnread
+                                ? "border-blue-400 ring-2 ring-blue-200"
+                                : "border-slate-200"
+                            }`}
+                          >
                             <Image
                               src={c.product.image}
                               alt={c.product.name}
@@ -842,6 +1120,8 @@ export default function FloatingChatWidget() {
                             className={`flex h-11 w-11 items-center justify-center rounded-xl text-base font-bold shadow-2xs ${
                               isComplaint
                                 ? "bg-red-50 text-red-600 border border-red-200"
+                                : hasUnread
+                                ? "bg-blue-100 text-blue-700 border border-blue-300"
                                 : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                             }`}
                           >
@@ -867,22 +1147,46 @@ export default function FloatingChatWidget() {
                       <div className="min-w-0 flex-1">
                         {/* Header Name & Time */}
                         <div className="flex items-center justify-between gap-1 mb-0.5">
-                          <h4 className="text-xs font-bold text-slate-900 truncate flex items-center gap-1">
+                          <h4 className="text-xs truncate flex items-center gap-1.5">
                             {userRole === "VENDOR" ? (
-                              <span className="text-slate-900 font-bold">
+                              <span
+                                className={
+                                  hasUnread
+                                    ? "text-slate-950 font-extrabold"
+                                    : "text-slate-800 font-bold"
+                                }
+                              >
                                 {isComplaint ? "Aladdin Admin Support" : c.customerName}
                               </span>
                             ) : userRole === "ADMIN" ? (
-                              <span className="text-slate-900 font-bold">
+                              <span
+                                className={
+                                  hasUnread
+                                    ? "text-slate-950 font-extrabold"
+                                    : "text-slate-800 font-bold"
+                                }
+                              >
                                 {isComplaint ? `কমপ্লেইন: ${c.customerName}` : `${c.customerName} ↔ ${c.vendorName}`}
                               </span>
                             ) : (
-                              <span className="text-slate-800">
+                              <span
+                                className={
+                                  hasUnread
+                                    ? "text-slate-950 font-extrabold"
+                                    : "text-slate-800 font-semibold"
+                                }
+                              >
                                 {isComplaint ? "Aladdin সাপোর্ট ডেস্ক" : c.vendorName || "ভেন্ডর স্টোর"}
                               </span>
                             )}
                           </h4>
-                          <span className="text-[10px] text-slate-400 shrink-0">
+                          <span
+                            className={`text-[10px] shrink-0 ${
+                              hasUnread
+                                ? "text-blue-600 font-extrabold"
+                                : "text-slate-400"
+                            }`}
+                          >
                             {formatConversationTime(c.lastMessageTime)}
                           </span>
                         </div>
@@ -899,14 +1203,28 @@ export default function FloatingChatWidget() {
                         )}
 
                         {/* Last Message Preview */}
-                        <p className="truncate text-[11px] text-slate-500 mt-0.5">
+                        <p
+                          className={`truncate mt-0.5 ${
+                            hasUnread
+                              ? "text-xs font-bold text-slate-900"
+                              : "text-[11px] text-slate-500"
+                          }`}
+                        >
                           {c.lastMessageText || "কোনো বার্তা নেই"}
                         </p>
                       </div>
 
-                      {/* Unread indicator dot */}
+                      {/* Messenger style unread badge */}
                       {hasUnread && (
-                        <span className="h-2.5 w-2.5 rounded-full bg-red-600 shrink-0 animate-pulse mt-1" />
+                        <div className="flex flex-col items-end gap-1 shrink-0 mt-1">
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 text-[10px] font-black text-white shadow-xs animate-pulse">
+                            {userRole === "VENDOR"
+                              ? c.unreadForVendor || 1
+                              : userRole === "ADMIN"
+                              ? c.unreadForAdmin || 1
+                              : c.unreadForCustomer || 1}
+                          </span>
+                        </div>
                       )}
                     </button>
                   );
@@ -928,17 +1246,128 @@ export default function FloatingChatWidget() {
         </div>
       )}
 
+      {/* MESSENGER STYLE POPUP BUBBLE PREVIEW (Shown when chat is closed and there is an unread message) */}
+      {!isOpen && unreadCount > 0 && latestUnreadConv && (() => {
+        const latestMsg = latestUnreadConv.messages[latestUnreadConv.messages.length - 1];
+        if (latestMsg && dismissedMsgId === latestMsg.id) return false;
+        return true;
+      })() && (
+        <div className="pointer-events-auto mb-3 w-[290px] sm:w-[330px] animate-in fade-in slide-in-from-bottom-3 duration-300">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              setIsOpen(true);
+              const latestMsg = latestUnreadConv.messages[latestUnreadConv.messages.length - 1];
+              if (latestMsg) setDismissedMsgId(latestMsg.id);
+              handleOpenConversation(latestUnreadConv.id);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                setIsOpen(true);
+                const latestMsg = latestUnreadConv.messages[latestUnreadConv.messages.length - 1];
+                if (latestMsg) setDismissedMsgId(latestMsg.id);
+                handleOpenConversation(latestUnreadConv.id);
+              }
+            }}
+            className="group relative cursor-pointer rounded-2xl bg-white p-3.5 shadow-2xl border border-slate-200/90 hover:border-blue-500 hover:shadow-blue-500/20 transition-all text-left"
+          >
+            {/* Dismiss 'X' Button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const latestMsg = latestUnreadConv.messages[latestUnreadConv.messages.length - 1];
+                if (latestMsg) setDismissedMsgId(latestMsg.id);
+              }}
+              className="absolute top-2.5 right-2.5 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition z-10"
+              title="নোটিফিকেশন বন্ধ করুন"
+            >
+              <X size={12} />
+            </button>
+
+            <div className="flex items-start gap-3">
+              {/* Avatar with Online/Active Dot */}
+              <div className="relative shrink-0">
+                {latestUnreadConv.product?.image ? (
+                  <div className="relative h-11 w-11 overflow-hidden rounded-full border-2 border-blue-500 bg-slate-50 shadow-xs">
+                    <Image
+                      src={latestUnreadConv.product.image}
+                      alt={latestUnreadConv.product.name}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-sm shadow-xs border-2 border-white">
+                    {userRole === "VENDOR"
+                      ? latestUnreadConv.customerName?.charAt(0) || "C"
+                      : latestUnreadConv.vendorName?.charAt(0) || "V"}
+                  </div>
+                )}
+                <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-2xs animate-pulse" />
+              </div>
+
+              {/* Message preview details */}
+              <div className="min-w-0 flex-1 pr-3">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <h4 className="text-xs font-black text-slate-900 truncate">
+                    {userRole === "VENDOR"
+                      ? latestUnreadConv.customerName
+                      : userRole === "ADMIN"
+                      ? `কমপ্লেইন: ${latestUnreadConv.customerName}`
+                      : latestUnreadConv.vendorName || "Aladdin ভেন্ডর"}
+                  </h4>
+                  <span className="shrink-0 rounded-full bg-blue-100 px-1.5 py-0.2 text-[9px] font-extrabold text-blue-700">
+                    নতুন বার্তা
+                  </span>
+                </div>
+
+                {/* Product context badge if any */}
+                {latestUnreadConv.product && (
+                  <div className="my-1 flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200/60 truncate">
+                    <Package size={10} className="shrink-0 text-amber-600" />
+                    <span className="truncate">{latestUnreadConv.product.name}</span>
+                  </div>
+                )}
+
+                {/* Message snippet */}
+                <p className="text-xs font-bold text-slate-800 line-clamp-2 leading-relaxed">
+                  &ldquo;{latestUnreadConv.lastMessageText || "একটি নতুন বার্তা পাঠিয়েছেন"}&rdquo;
+                </p>
+
+                <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{formatConversationTime(latestUnreadConv.lastMessageTime)}</span>
+                  <span className="font-extrabold text-blue-600 group-hover:underline flex items-center gap-0.5">
+                    উত্তর দিন &rarr;
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Speech bubble tail pointing towards the floating button */}
+            <div className="absolute -bottom-1.5 right-6 h-3 w-3 rotate-45 border-r border-b border-slate-200 bg-white" />
+          </div>
+        </div>
+      )}
+
       {/* FLOATING TRIGGER BUTTON */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+            void Notification.requestPermission();
+          }
+          setIsOpen(!isOpen);
+        }}
         className={`pointer-events-auto relative flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 ${
           userRole === "ADMIN"
             ? "bg-[#1E1233] hover:bg-[#2C1B4D] focus:ring-purple-400/40"
             : userRole === "VENDOR"
             ? "bg-[#0F2A1D] hover:bg-[#194530] focus:ring-emerald-400/40"
             : "bg-[#12233f] hover:bg-[#1b3155] focus:ring-amber-400/40"
-        }`}
+        } ${unreadCount > 0 && !isOpen ? "ring-4 ring-blue-500/40 shadow-blue-500/30" : ""}`}
         title="মেসেজ ও লাইভ চ্যাট"
         aria-label="মেসেজ ও লাইভ চ্যাট উইন্ডো খুলুন"
       >
@@ -954,9 +1383,12 @@ export default function FloatingChatWidget() {
               <MessageSquare size={26} />
             )}
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white shadow-md animate-bounce">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
+              <>
+                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-black text-white shadow-md border-2 border-white animate-bounce">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 animate-ping opacity-60" />
+              </>
             )}
           </>
         )}

@@ -1,6 +1,7 @@
 import { AdminNavbar } from "@/components/header/admin-navbar";
 import { AdminSidebar } from "@/components/sidebar/admin-sidebar";
 import { DashboardNavigationProvider } from "@/components/dashboard/dashboard-navigation";
+import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 
 export default function AdminLayout({
   children,
@@ -20,6 +21,7 @@ export default function AdminLayout({
           </main>
         </div>
       </div>
+      <FloatingChatWidget />
     </DashboardNavigationProvider>
   );
 }

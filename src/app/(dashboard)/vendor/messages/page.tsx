@@ -34,6 +34,31 @@ export default function VendorMessagesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [inputText, setInputText] = useState("");
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
+  const [storeName, setStoreName] = useState("");
+  const [vendorId, setVendorId] = useState("");
+
+  useEffect(() => {
+    async function loadVendorProfile() {
+      try {
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) return;
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
+        const res = await fetch(`${API_URL}/api/vendors/store/settings`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (res.ok) {
+          const payload = await res.json();
+          const d = payload?.data || payload;
+          if (d?.storeName) setStoreName(d.storeName);
+          if (d?.vendorId || d?.id) setVendorId(String(d.vendorId || d.id));
+        }
+      } catch {}
+    }
+    void loadVendorProfile();
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -45,7 +70,11 @@ export default function VendorMessagesPage() {
       });
 
       try {
-        const live = await fetchLiveConversations({ role: "VENDOR" });
+        const live = await fetchLiveConversations({
+          role: "VENDOR",
+          vendorId: vendorId || undefined,
+          storeName: storeName || undefined,
+        });
         if (live && live.length > 0) {
           setConversations(live);
           setSelectedConvId((prev) => {
@@ -130,7 +159,8 @@ export default function VendorMessagesPage() {
     const { securityResult } = sendChatMessage({
       conversationId: selectedConv.id,
       senderRole: "VENDOR",
-      senderName: selectedConv.vendorName || "আমার স্টোর",
+      senderName: storeName || selectedConv.vendorName || "আমার স্টোর",
+      senderId: vendorId || undefined,
       text,
     });
 
