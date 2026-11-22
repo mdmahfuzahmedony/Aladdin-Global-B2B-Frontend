@@ -10,6 +10,7 @@ import { useSiteSettings } from "@/context/SiteSettingsContext";
 
 import { createClient } from "../../../lib/supabase-client";
 import LocationModal from "./set-location/LocationModal";
+import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 
 const supabase = createClient();
 
@@ -251,6 +252,9 @@ export default function StoreLayout({
           onSaved={handleLocationSaved}
         />
       )}
+
+      {/* FLOATING LIVE CHAT WIDGET */}
+      <FloatingChatWidget />
     </div>
   );
 }

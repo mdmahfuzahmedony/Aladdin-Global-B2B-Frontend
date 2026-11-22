@@ -17,18 +17,9 @@ import {
   UsersRound,
   BadgeDollarSign,
   Coins,
-  MessageSquare,
-  Bell,
-  Sparkles,
 } from "lucide-react";
 import { createClient } from "../../../../lib/supabase-client";
 import { useLanguage } from "../../../context/LanguageContext";
-import {
-  getStoredConversations,
-  getCustomerUnreadCount,
-  formatConversationTime,
-  ChatConversation,
-} from "@/lib/chat-store";
 
 type UserRole =
   | "SUPER_ADMIN"
@@ -69,33 +60,6 @@ export const AccountDropdown: React.FC<AccountDropdownProps> = ({
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
-  const [unreadChatCount, setUnreadChatCount] = useState(0);
-  const [latestVendorReply, setLatestVendorReply] = useState<ChatConversation | null>(null);
-
-  // Sync unread messages & latest reply
-  useEffect(() => {
-    const syncChat = () => {
-      const count = getCustomerUnreadCount(userData?.id, userData?.fullName);
-      setUnreadChatCount(count);
-
-      const convs = getStoredConversations();
-      // Find latest conversation with vendor reply
-      const vendorReply = convs.find((c) => {
-        const lastMsg = c.messages?.[c.messages.length - 1];
-        return lastMsg && lastMsg.senderRole === "VENDOR" && (c.unreadForCustomer > 0 || count > 0);
-      }) || (convs.length > 0 && convs[0].messages?.some(m => m.senderRole === "VENDOR") ? convs[0] : null);
-
-      setLatestVendorReply(vendorReply || null);
-    };
-
-    syncChat();
-    window.addEventListener("aladdin_chat_update", syncChat);
-    window.addEventListener("storage", syncChat);
-    return () => {
-      window.removeEventListener("aladdin_chat_update", syncChat);
-      window.removeEventListener("storage", syncChat);
-    };
-  }, [userData?.id, userData?.fullName]);
 
   useEffect(() => {
     let mounted = true;
@@ -287,26 +251,6 @@ export const AccountDropdown: React.FC<AccountDropdownProps> = ({
             {t("myOrders")}
           </Link>
 
-          {/* Messages & Live Chat */}
-          <Link
-            href="/messages"
-            onClick={onClose}
-            className="flex items-center justify-between rounded-lg p-2.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
-          >
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-emerald-600" />
-              <span>Messages & Inquiries (মেসেজ)</span>
-            </div>
-            {unreadChatCount > 0 ? (
-              <span className="flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-xs animate-pulse">
-                <Bell className="h-3 w-3" />
-                {unreadChatCount} new
-              </span>
-            ) : (
-              <span className="text-[10px] text-slate-400">চ্যাট</span>
-            )}
-          </Link>
-
           <Link
             href="/my-points"
             onClick={onClose}
@@ -496,37 +440,6 @@ export const AccountDropdown: React.FC<AccountDropdownProps> = ({
             Finance
           </Link>
         </>
-      )}
-
-      {/* Latest Vendor Reply Notification Card */}
-      {userData && latestVendorReply && (
-        <div className="mt-2 border-t border-slate-100 pt-2">
-          <Link
-            href="/messages"
-            onClick={onClose}
-            className="block rounded-xl border border-emerald-200/90 bg-gradient-to-r from-emerald-50/80 via-emerald-50/40 to-teal-50/60 p-2.5 transition hover:border-emerald-300 hover:shadow-xs"
-          >
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-900">
-                <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
-                {latestVendorReply.vendorName} থেকে ফিরতি বার্তা
-              </span>
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-            </div>
-            <p className="mt-1 line-clamp-1 text-[11px] text-slate-600">
-              "{latestVendorReply.lastMessageText}"
-            </p>
-            <div className="mt-1.5 flex items-center justify-between text-[10px]">
-              <span className="text-slate-400">{formatConversationTime(latestVendorReply.lastMessageTime)}</span>
-              <span className="font-bold text-emerald-700 hover:underline">
-                উত্তর দেখুন &rarr;
-              </span>
-            </div>
-          </Link>
-        </div>
       )}
 
       {/* Account Settings */}

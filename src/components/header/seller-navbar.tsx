@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Search,
   Bell,
@@ -11,9 +12,14 @@ import {
   Loader2,
   Store,
   Menu,
+  MessageSquare,
 } from "lucide-react";
 import { createClient } from "../../../lib/supabase-client";
 import { useDashboardNavigation } from "@/components/dashboard/dashboard-navigation";
+import {
+  getVendorUnreadCount,
+  fetchLiveConversations,
+} from "@/lib/chat-store";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
@@ -98,6 +104,59 @@ export function SellerNavbar() {
   const [vendorName, setVendorName] = useState("ভেন্ডর");
   const [email, setEmail] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  // Sync unread messages for vendor in navbar
+  useEffect(() => {
+    const syncUnread = async () => {
+      const count = getVendorUnreadCount(undefined, storeName || vendorName);
+      setUnreadMessages(count);
+
+      try {
+        await fetchLiveConversations({
+          role: "VENDOR",
+          storeName: storeName || vendorName || undefined,
+        });
+        const updated = getVendorUnreadCount(undefined, storeName || vendorName);
+        setUnreadMessages(updated);
+      } catch {
+        // ignore
+      }
+    };
+
+    void syncUnread();
+
+    const handleUpdate = () => {
+      const count = getVendorUnreadCount(undefined, storeName || vendorName);
+      setUnreadMessages(count);
+    };
+
+    window.addEventListener("aladdin_chat_update", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    const interval = setInterval(() => {
+      void syncUnread();
+    }, 4000);
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel("vendor_navbar_chat_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_messages" },
+        () => {
+          void syncUnread();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("aladdin_chat_update", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+      void supabase.removeChannel(channel);
+    };
+  }, [storeName, vendorName]);
 
   const loadVendorInfo = useCallback(async () => {
     setLoading(true);
@@ -229,7 +288,22 @@ export function SellerNavbar() {
       </div>
 
       {/* Right section */}
-      <div className="flex shrink-0 items-center gap-2 sm:gap-5">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+        {/* Messages icon with live unread counter badge */}
+        <Link
+          href="/vendor/messages"
+          aria-label="Messages & Support"
+          className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition"
+          title="কাস্টমার ইনকোয়ারি ও লাইভ মেসেজ"
+        >
+          <MessageSquare size={19} />
+          {unreadMessages > 0 && (
+            <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold text-white shadow-xs animate-pulse">
+              {unreadMessages > 9 ? "9+" : unreadMessages}
+            </span>
+          )}
+        </Link>
+
         <button
           type="button"
           aria-label="Notifications"

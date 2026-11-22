@@ -74,10 +74,14 @@ export default function CustomerMessagesPage() {
       const cached = getStoredConversations();
       // Only keep customer-relevant conversations
       setConversations(cached);
-      if (!selectedConvId && cached.length > 0) {
-        setSelectedConvId(cached[0].id);
-        markConversationAsReadForCustomer(cached[0].id);
-      }
+      setSelectedConvId((prev) => {
+        if (prev && cached.some((c) => c.id === prev)) return prev;
+        if (cached.length > 0) {
+          markConversationAsReadForCustomer(cached[0].id);
+          return cached[0].id;
+        }
+        return prev;
+      });
       setLoading(false);
 
       try {
@@ -96,10 +100,11 @@ export default function CustomerMessagesPage() {
         });
         if (live && live.length > 0) {
           setConversations(live);
-          if (!selectedConvId || !live.some((c) => c.id === selectedConvId)) {
-            setSelectedConvId(live[0].id);
+          setSelectedConvId((prev) => {
+            if (prev && live.some((c) => c.id === prev)) return prev;
             markConversationAsReadForCustomer(live[0].id);
-          }
+            return live[0].id;
+          });
         }
       } catch (err) {
         console.warn("Live fetch conversations:", err);
@@ -115,6 +120,11 @@ export default function CustomerMessagesPage() {
 
     window.addEventListener("aladdin_chat_update", handleUpdate);
     window.addEventListener("storage", handleUpdate);
+
+    // Guaranteed interval poll every 3 seconds for instant vendor responses
+    const pollInterval = setInterval(() => {
+      void load();
+    }, 3000);
 
     // Realtime Supabase listener
     const supabase = createClient();
@@ -137,11 +147,12 @@ export default function CustomerMessagesPage() {
       .subscribe();
 
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener("aladdin_chat_update", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
       void supabase.removeChannel(channel);
     };
-  }, [session, selectedConvId]);
+  }, [session]);
 
   // Scroll to bottom when messages change
   useEffect(() => {

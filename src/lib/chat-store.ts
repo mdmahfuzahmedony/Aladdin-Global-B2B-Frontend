@@ -314,15 +314,34 @@ export async function fetchLiveConversations(params?: {
       .order("lastMessageAt", { ascending: false });
 
     if (params?.role === "VENDOR") {
-      if (params.userId || params.storeName) {
-        query = query.or(
-          `vendorId.eq.${params.userId || ""},vendorName.eq.${params.storeName || ""}`
-        );
+      const orParts: string[] = [];
+      if (params.userId) {
+        orParts.push(`vendorId.eq.${params.userId}`);
+      }
+      if (params.storeName) {
+        const safeStore = params.storeName.replace(/[^\p{L}\p{N}\s]/gu, "").trim();
+        if (safeStore) {
+          orParts.push(`vendorName.ilike."%${safeStore}%"`);
+        }
+      }
+      if (orParts.length > 0) {
+        query = query.or(orParts.join(","));
       }
     } else if (params?.role === "CUSTOMER") {
       const orParts: string[] = [];
-      if (params.userId) orParts.push(`customerId.eq.${params.userId}`);
-      if (params.customerName) orParts.push(`customerName.ilike.%${params.customerName}%`);
+      if (params.userId) {
+        orParts.push(`customerId.eq.${params.userId}`);
+      }
+      const guestId = getGuestCustomerId();
+      if (guestId && guestId !== params.userId) {
+        orParts.push(`customerId.eq.${guestId}`);
+      }
+      if (params.customerName && !params.customerName.includes("(") && params.customerName.trim().length > 1) {
+        const safeName = params.customerName.replace(/[^\p{L}\p{N}\s]/gu, "").trim();
+        if (safeName) {
+          orParts.push(`customerName.ilike."%${safeName}%"`);
+        }
+      }
       if (orParts.length > 0) {
         query = query.or(orParts.join(","));
       }
@@ -656,27 +675,48 @@ export function findConversationForProduct(params: {
   isComplaint?: boolean;
 }): ChatConversation | undefined {
   const convs = getStoredConversations();
+  const guestId = getGuestCustomerId();
+
   return convs.find((c) => {
     if (params.isComplaint && c.type !== "CUSTOMER_ADMIN_COMPLAINT") return false;
     if (!params.isComplaint && c.type !== "CUSTOMER_VENDOR") return false;
 
+    // Check product matching (by ID, SKU, or Name)
     const matchesProduct =
       (params.productId && c.product?.id === params.productId) ||
-      (params.productSku && c.product?.sku === params.productSku) ||
+      (params.productSku && c.product?.sku && c.product.sku === params.productSku) ||
       (params.productName &&
         c.product?.name &&
-        c.product.name.trim().toLowerCase() === params.productName.trim().toLowerCase());
+        (c.product.name.trim().toLowerCase() === params.productName.trim().toLowerCase() ||
+          c.product.name.trim().toLowerCase().includes(params.productName.trim().toLowerCase()) ||
+          params.productName.trim().toLowerCase().includes(c.product.name.trim().toLowerCase())));
 
     if (!matchesProduct) return false;
 
-    if (params.customerId && c.customerId) {
-      if (c.customerId === params.customerId) return true;
+    // Customer matching:
+    // 1. Direct match by customerId
+    if (params.customerId && c.customerId && c.customerId === params.customerId) {
+      return true;
     }
+    // 2. Match with guest ID on this browser
+    if (guestId && c.customerId && c.customerId === guestId) {
+      return true;
+    }
+    // 3. Match by customer name (exact or substring)
     if (params.customerName && c.customerName) {
-      if (c.customerName.toLowerCase() === params.customerName.toLowerCase()) return true;
+      const pName = params.customerName.trim().toLowerCase();
+      const cName = c.customerName.trim().toLowerCase();
+      if (pName === cName || pName.includes(cName) || cName.includes(pName)) {
+        return true;
+      }
+    }
+    // 4. If no customer info specified
+    if (!params.customerId && !params.customerName) {
+      return true;
     }
 
-    if (!params.customerId && !params.customerName) {
+    // 5. Fallback: If this browser has a conversation for this exact product and it's customer-vendor, return it
+    if (c.type === "CUSTOMER_VENDOR" && !params.isComplaint) {
       return true;
     }
 
@@ -713,4 +753,58 @@ export function getCustomerUnreadCount(userId?: string, customerName?: string): 
     }
     return sum;
   }, 0);
+}
+
+/**
+ * Calculate total unread messages for vendor
+ */
+export function getVendorUnreadCount(vendorId?: string, storeName?: string): number {
+  const convs = getStoredConversations();
+  return convs.reduce((sum, c) => {
+    if (c.type !== "CUSTOMER_VENDOR") return sum;
+    const isMine =
+      !vendorId && !storeName
+        ? true
+        : (vendorId && c.vendorId === vendorId) ||
+          (storeName && c.vendorName.toLowerCase() === storeName.toLowerCase());
+
+    if (isMine) {
+      return sum + (c.unreadForVendor || 0);
+    }
+    return sum;
+  }, 0);
+}
+
+/**
+ * Mark conversation as read for vendor
+ */
+export function markConversationAsReadForVendor(conversationId: string) {
+  const convs = getStoredConversations();
+  const target = convs.find((c) => c.id === conversationId);
+  if (target && (target.unreadForVendor || 0) > 0) {
+    target.unreadForVendor = 0;
+    saveStoredConversations(convs);
+  }
+}
+
+/**
+ * Calculate total unread complaints for admin
+ */
+export function getAdminUnreadCount(): number {
+  const convs = getStoredConversations();
+  return convs.reduce((sum, c) => {
+    return sum + (c.unreadForAdmin || 0);
+  }, 0);
+}
+
+/**
+ * Mark conversation as read for admin
+ */
+export function markConversationAsReadForAdmin(conversationId: string) {
+  const convs = getStoredConversations();
+  const target = convs.find((c) => c.id === conversationId);
+  if (target && (target.unreadForAdmin || 0) > 0) {
+    target.unreadForAdmin = 0;
+    saveStoredConversations(convs);
+  }
 }

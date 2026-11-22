@@ -18,6 +18,7 @@ import {
   getStoredConversations,
   fetchLiveConversations,
   sendChatMessage,
+  markConversationAsReadForVendor,
   formatChatTime,
   formatConversationTime,
   ChatConversation,
@@ -38,17 +39,19 @@ export default function VendorMessagesPage() {
     const load = async () => {
       const cached = getStoredConversations();
       setConversations(cached);
-      if (!selectedConvId && cached.length > 0) {
-        setSelectedConvId(cached[0].id);
-      }
+      setSelectedConvId((prev) => {
+        if (prev && cached.some((c) => c.id === prev)) return prev;
+        return cached.length > 0 ? cached[0].id : prev;
+      });
 
       try {
         const live = await fetchLiveConversations({ role: "VENDOR" });
         if (live && live.length > 0) {
           setConversations(live);
-          if (!selectedConvId) {
-            setSelectedConvId(live[0].id);
-          }
+          setSelectedConvId((prev) => {
+            if (prev && live.some((c) => c.id === prev)) return prev;
+            return live[0].id;
+          });
         }
       } catch (e) {
         console.warn("Live conversations fetch:", e);
@@ -60,13 +63,15 @@ export default function VendorMessagesPage() {
     const handleUpdate = () => {
       const data = getStoredConversations();
       setConversations(data);
-      if (!selectedConvId && data.length > 0) {
-        setSelectedConvId(data[0].id);
-      }
     };
 
     window.addEventListener("aladdin_chat_update", handleUpdate);
     window.addEventListener("storage", handleUpdate);
+
+    // Guaranteed polling interval every 3 seconds for instant customer inquiries
+    const pollInterval = setInterval(() => {
+      void load();
+    }, 3000);
 
     // Realtime Supabase Database listener
     const supabase = createClient();
@@ -89,11 +94,12 @@ export default function VendorMessagesPage() {
       .subscribe();
 
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener("aladdin_chat_update", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
       void supabase.removeChannel(channel);
     };
-  }, [selectedConvId]);
+  }, []);
 
   const filteredConversations = conversations.filter((c) => {
     if (activeTab === "CUSTOMER" && c.type !== "CUSTOMER_VENDOR") return false;
@@ -237,6 +243,7 @@ export default function VendorMessagesPage() {
                     type="button"
                     onClick={() => {
                       setSelectedConvId(c.id);
+                      markConversationAsReadForVendor(c.id);
                       setSecurityWarning(null);
                     }}
                     className={`w-full text-left p-3.5 transition flex items-start gap-3 ${

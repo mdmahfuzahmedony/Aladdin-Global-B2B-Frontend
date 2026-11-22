@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -21,6 +21,8 @@ import {
   X,
 } from "lucide-react";
 import { useDashboardNavigation } from "@/components/dashboard/dashboard-navigation";
+import { getAdminUnreadCount } from "@/lib/chat-store";
+import { createClient } from "@/lib/supabase-client";
 
 const NAV_ITEMS = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
@@ -46,6 +48,37 @@ const NAV_ITEMS = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const { isMenuOpen, closeMenu } = useDashboardNavigation();
+  const [adminUnread, setAdminUnread] = useState(0);
+
+  useEffect(() => {
+    const syncCount = () => {
+      setAdminUnread(getAdminUnreadCount());
+    };
+    syncCount();
+    window.addEventListener("aladdin_chat_update", syncCount);
+    window.addEventListener("storage", syncCount);
+
+    const interval = setInterval(syncCount, 4000);
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel("admin_sidebar_chat_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_messages" },
+        () => {
+          syncCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("aladdin_chat_update", syncCount);
+      window.removeEventListener("storage", syncCount);
+      void supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <>
@@ -130,6 +163,12 @@ export function AdminSidebar() {
               <span className={isMenuOpen ? "inline" : "hidden lg:inline"}>
                 {label}
               </span>
+
+              {href === "/admin/messages" && adminUnread > 0 && (
+                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-extrabold text-white shadow-xs animate-pulse">
+                  {adminUnread}
+                </span>
+              )}
             </Link>
           );
         })}

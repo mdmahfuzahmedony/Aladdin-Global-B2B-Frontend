@@ -27,6 +27,7 @@ import {
   ChatConversation,
   ChatMessage,
   sendChatMessage,
+  markConversationAsReadForAdmin,
 } from "@/lib/chat-store";
 import { createClient } from "@/lib/supabase-client";
 import { toast } from "react-toastify";
@@ -321,6 +322,7 @@ export default function AdminMessagesAuditPage() {
                     type="button"
                     onClick={() => {
                       setSelectedConvId(c.id);
+                      markConversationAsReadForAdmin(c.id);
                       setRevealRawText(false);
                     }}
                     className={`w-full text-left p-3.5 transition flex items-start gap-3 ${

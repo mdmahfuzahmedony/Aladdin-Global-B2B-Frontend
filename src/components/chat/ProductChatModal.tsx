@@ -48,6 +48,7 @@ type Props = {
 type MessageItem = {
   id: string;
   sender: "USER" | "OTHER";
+  senderName?: string;
   text: string;
   time: string;
   isComplaint?: boolean;
@@ -73,14 +74,6 @@ export default function ProductChatModal({
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode]);
-
-  // Instantly clear state whenever product changes or modal is closed/opened
-  useEffect(() => {
-    setCurrentConvId(null);
-    setMessages([]);
-    setInputMessage("");
-    setSecurityWarning(null);
-  }, [product?.id, isOpen]);
 
   // Check auth status
   useEffect(() => {
@@ -161,6 +154,7 @@ export default function ProductChatModal({
           found.messages.map((m: any) => ({
             id: m.id,
             sender: m.senderRole === "CUSTOMER" ? "USER" : "OTHER",
+            senderName: m.senderName,
             text: m.text,
             time: formatChatTime(m.createdAt || m.timeFormatted),
             isComplaint: m.isComplaint,
@@ -173,6 +167,7 @@ export default function ProductChatModal({
             {
               id: "m_welcome_vendor",
               sender: "OTHER",
+              senderName: product.vendorName || "বিক্রেতা",
               text: `হ্যালো! "${product.name}" সম্পর্কে আপনার কী জানার আছে? পাইকারি অর্ডার বা স্পেসিফিকেশন নিয়ে প্রশ্ন করতে পারেন।`,
               time: formatChatTime(new Date()),
             },
@@ -182,6 +177,7 @@ export default function ProductChatModal({
             {
               id: "m_welcome_admin",
               sender: "OTHER",
+              senderName: "Aladdin সাপোর্ট টিম",
               text: `আসসালামু আলাইকুম। Aladdin B2B সাপোর্ট ও কমপ্লেইন ডেস্ক। প্রোডাক্ট কোড [${
                 product.sku || product.id
               }] ও ভেন্ডর "${
@@ -195,21 +191,26 @@ export default function ProductChatModal({
       }
     };
 
-    load();
+    void load();
 
     // Also fetch live from Supabase
     void fetchLiveConversations({
       role: "CUSTOMER",
       userId: customerId,
       customerName: userName,
-    }).then(() => load());
+    }).then(() => void load());
 
     const handleUpdate = () => {
-      load();
+      void load();
     };
 
     window.addEventListener("aladdin_chat_update", handleUpdate);
     window.addEventListener("storage", handleUpdate);
+
+    // Polling fallback to guarantee instant receipt of vendor replies even if websocket drops
+    const pollInterval = setInterval(() => {
+      void load();
+    }, 3000);
 
     // Realtime channel
     const supabase = createClient();
@@ -223,17 +224,18 @@ export default function ProductChatModal({
             role: "CUSTOMER",
             userId: customerId,
             customerName: userName,
-          }).then(() => load());
+          }).then(() => void load());
         }
       )
       .subscribe();
 
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener("aladdin_chat_update", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
       void supabase.removeChannel(channel);
     };
-  }, [isOpen, mode, product, session]);
+  }, [isOpen, mode, product.id, product.name, product.sku, session]);
 
   if (!isOpen) return null;
 
@@ -470,7 +472,17 @@ export default function ProductChatModal({
                         : "bg-white text-slate-800 border border-slate-200 rounded-bl-xs"
                     }`}
                   >
-                    {m.text}
+                    {m.sender === "OTHER" && (
+                      <div className="flex items-center gap-1.5 mb-1 font-bold text-[10px] text-emerald-700">
+                        {m.isComplaint ? (
+                          <ShieldAlert size={12} className="text-red-600" />
+                        ) : (
+                          <Store size={12} className="text-emerald-600" />
+                        )}
+                        <span>{m.senderName || product.vendorName || "বিক্রেতা"}</span>
+                      </div>
+                    )}
+                    <p className="whitespace-pre-wrap">{m.text}</p>
                   </div>
                   <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400 px-1">
                     <span>{m.time}</span>

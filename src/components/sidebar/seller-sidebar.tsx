@@ -16,6 +16,10 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase-client";
 import { useDashboardNavigation } from "@/components/dashboard/dashboard-navigation";
+import {
+  getVendorUnreadCount,
+  fetchLiveConversations,
+} from "@/lib/chat-store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
@@ -39,6 +43,59 @@ export function SellerSidebar() {
   const [vendorName, setVendorName] = useState("");
   const [email, setEmail] = useState("");
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  // Sync unread messages count for vendor
+  useEffect(() => {
+    const syncUnread = async () => {
+      const count = getVendorUnreadCount(undefined, storeName || vendorName);
+      setUnreadMessages(count);
+
+      try {
+        await fetchLiveConversations({
+          role: "VENDOR",
+          storeName: storeName || vendorName || undefined,
+        });
+        const updated = getVendorUnreadCount(undefined, storeName || vendorName);
+        setUnreadMessages(updated);
+      } catch {
+        // ignore
+      }
+    };
+
+    void syncUnread();
+
+    const handleUpdate = () => {
+      const count = getVendorUnreadCount(undefined, storeName || vendorName);
+      setUnreadMessages(count);
+    };
+
+    window.addEventListener("aladdin_chat_update", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    const interval = setInterval(() => {
+      void syncUnread();
+    }, 4000);
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel("vendor_sidebar_chat_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_messages" },
+        () => {
+          void syncUnread();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("aladdin_chat_update", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+      void supabase.removeChannel(channel);
+    };
+  }, [storeName, vendorName]);
 
   useEffect(() => {
     let isMounted = true;
@@ -176,6 +233,12 @@ export function SellerSidebar() {
                 <span className="whitespace-nowrap">
                   {label}
                 </span>
+
+                {href === "/vendor/messages" && unreadMessages > 0 && (
+                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-extrabold text-white shadow-xs animate-pulse">
+                    {unreadMessages > 9 ? "9+" : unreadMessages}
+                  </span>
+                )}
               </Link>
 
               {/* Mobile tooltip: sidebar width stays unchanged */}
