@@ -19,6 +19,8 @@ import {
   Tag,
   Info,
   ArrowRight,
+  User,
+  ShieldCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase-client";
 import {
@@ -28,50 +30,117 @@ import {
   fetchLiveConversations,
   sendChatMessage,
   markConversationAsReadForCustomer,
+  markConversationAsReadForVendor,
+  markConversationAsReadForAdmin,
   formatChatTime,
   formatConversationTime,
   getGuestCustomerId,
   getGuestCustomerName,
   getCustomerUnreadCount,
+  getVendorUnreadCount,
+  getAdminUnreadCount,
 } from "@/lib/chat-store";
+
+type ActiveRole = "CUSTOMER" | "VENDOR" | "ADMIN";
 
 export default function FloatingChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"VENDOR" | "ADMIN">("VENDOR");
+  const [session, setSession] = useState<any>(null);
+  const [userRole, setUserRole] = useState<ActiveRole>("CUSTOMER");
+  const [storeName, setStoreName] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"PRIMARY" | "SECONDARY">("PRIMARY");
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
-  const [session, setSession] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Check auth session
+  // Detect session and role dynamically (Customer vs Vendor vs Admin)
   useEffect(() => {
     let mounted = true;
-    async function checkAuth() {
+    async function checkAuthAndRole() {
       try {
         const supabase = createClient();
         const {
           data: { session },
         } = await supabase.auth.getSession();
+        if (!mounted) return;
+        setSession(session);
+
+        if (!session?.access_token) {
+          setUserRole("CUSTOMER");
+          setStoreName("");
+          return;
+        }
+
+        // 1. Check metadata
+        const metaRole = (session.user.user_metadata?.role as string | undefined)?.toUpperCase();
+        let detectedRole: ActiveRole = "CUSTOMER";
+
+        if (metaRole === "SUPER_ADMIN" || metaRole === "ADMIN" || metaRole === "MANAGER") {
+          detectedRole = "ADMIN";
+        } else if (metaRole === "VENDOR" || metaRole === "SELLER") {
+          detectedRole = "VENDOR";
+        }
+
+        // 2. Also check backend API for strict role verification
+        try {
+          const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
+          const res = await fetch(`${API_URL}/api/users/me`, {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const apiRole = ((data?.user?.role || data?.role || "") as string).toUpperCase();
+            if (apiRole === "SUPER_ADMIN" || apiRole === "ADMIN" || apiRole === "MANAGER") {
+              detectedRole = "ADMIN";
+            } else if (apiRole === "VENDOR" || apiRole === "SELLER") {
+              detectedRole = "VENDOR";
+            }
+          }
+        } catch {
+          // ignore API check error, metadata is sufficient
+        }
+
+        // 3. If Vendor, load store name
+        if (detectedRole === "VENDOR") {
+          const metaStore =
+            session.user.user_metadata?.storeName ||
+            session.user.user_metadata?.store_name ||
+            session.user.user_metadata?.fullName ||
+            "আমার স্টোর";
+          setStoreName(metaStore);
+
+          try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
+            const sRes = await fetch(`${API_URL}/api/vendors/store/settings`, {
+              headers: { Authorization: `Bearer ${session.access_token}` },
+            });
+            if (sRes.ok) {
+              const sData = await sRes.json();
+              if (sData?.storeName) setStoreName(sData.storeName);
+            }
+          } catch {
+            // ignore
+          }
+        }
+
         if (mounted) {
-          setSession(session);
+          setUserRole(detectedRole);
         }
       } catch (err) {
-        console.warn("Floating chat auth check:", err);
+        console.warn("Floating chat auth/role check:", err);
       }
     }
 
-    void checkAuth();
+    void checkAuthAndRole();
 
     const supabase = createClient();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      if (mounted) {
-        setSession(newSession);
-      }
+    } = supabase.auth.onAuthStateChange(() => {
+      void checkAuthAndRole();
     });
 
     return () => {
@@ -80,7 +149,7 @@ export default function FloatingChatWidget() {
     };
   }, []);
 
-  // Load conversations & sync unread count
+  // Load conversations & sync unread count based on detected role
   useEffect(() => {
     const load = async () => {
       const cached = getStoredConversations();
@@ -93,18 +162,44 @@ export default function FloatingChatWidget() {
         getGuestCustomerName();
       const customerId = session?.user?.id || getGuestCustomerId();
 
-      setUnreadCount(getCustomerUnreadCount(customerId, userName));
+      // Update unread count according to active role
+      if (userRole === "VENDOR") {
+        setUnreadCount(getVendorUnreadCount(session?.user?.id, storeName));
+      } else if (userRole === "ADMIN") {
+        setUnreadCount(getAdminUnreadCount());
+      } else {
+        setUnreadCount(getCustomerUnreadCount(customerId, userName));
+      }
 
       try {
-        const live = await fetchLiveConversations({
-          role: "CUSTOMER",
-          userId: customerId,
-          customerName: userName,
-        });
+        let live: ChatConversation[] = [];
+        if (userRole === "VENDOR") {
+          live = await fetchLiveConversations({
+            role: "VENDOR",
+            userId: session?.user?.id,
+            storeName: storeName || undefined,
+          });
+        } else if (userRole === "ADMIN") {
+          live = await fetchLiveConversations({
+            role: "ADMIN",
+          });
+        } else {
+          live = await fetchLiveConversations({
+            role: "CUSTOMER",
+            userId: customerId,
+            customerName: userName,
+          });
+        }
 
         if (live && live.length > 0) {
           setConversations(live);
-          setUnreadCount(getCustomerUnreadCount(customerId, userName));
+          if (userRole === "VENDOR") {
+            setUnreadCount(getVendorUnreadCount(session?.user?.id, storeName));
+          } else if (userRole === "ADMIN") {
+            setUnreadCount(getAdminUnreadCount());
+          } else {
+            setUnreadCount(getCustomerUnreadCount(customerId, userName));
+          }
         }
       } catch (e) {
         console.warn("Live chat fetch:", e);
@@ -128,7 +223,7 @@ export default function FloatingChatWidget() {
     // Supabase Realtime channel
     const supabase = createClient();
     const channel = supabase
-      .channel("floating_chat_realtime")
+      .channel(`floating_chat_${userRole.toLowerCase()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "chat_messages" },
@@ -151,7 +246,7 @@ export default function FloatingChatWidget() {
       window.removeEventListener("storage", handleUpdate);
       void supabase.removeChannel(channel);
     };
-  }, [session]);
+  }, [session, userRole, storeName]);
 
   // Scroll to bottom when viewing messages
   useEffect(() => {
@@ -163,28 +258,47 @@ export default function FloatingChatWidget() {
   // Active selected conversation
   const selectedConv = conversations.find((c) => c.id === selectedConvId);
 
-  // Filter conversations by Tab (Vendor vs Admin)
-  const vendorConvs = conversations.filter(
-    (c) => c.type === "CUSTOMER_VENDOR"
-  );
-  const adminConvs = conversations.filter(
-    (c) => c.type === "CUSTOMER_ADMIN_COMPLAINT" || c.type === "VENDOR_ADMIN"
-  );
+  // Segment conversations based on Role and active Tab
+  // CUSTOMER: PRIMARY = Vendor chats, SECONDARY = Admin complaints
+  // VENDOR:   PRIMARY = Customer inquiries, SECONDARY = Admin chats
+  // ADMIN:    PRIMARY = Customer complaints, SECONDARY = All vendor chats
+  const primaryConvs = conversations.filter((c) => {
+    if (userRole === "ADMIN") {
+      return c.type === "CUSTOMER_ADMIN_COMPLAINT";
+    }
+    return c.type === "CUSTOMER_VENDOR";
+  });
+
+  const secondaryConvs = conversations.filter((c) => {
+    if (userRole === "ADMIN") {
+      return c.type === "CUSTOMER_VENDOR";
+    }
+    return c.type === "CUSTOMER_ADMIN_COMPLAINT" || c.type === "VENDOR_ADMIN";
+  });
+
   const displayedConversations =
-    activeTab === "VENDOR" ? vendorConvs : adminConvs;
+    activeTab === "PRIMARY" ? primaryConvs : secondaryConvs;
 
   const handleOpenConversation = (convId: string) => {
     setSelectedConvId(convId);
-    markConversationAsReadForCustomer(convId);
     setSecurityWarning(null);
 
-    const userName =
-      session?.user?.user_metadata?.fullName ||
-      session?.user?.user_metadata?.name ||
-      session?.user?.email?.split("@")[0] ||
-      getGuestCustomerName();
-    const customerId = session?.user?.id || getGuestCustomerId();
-    setUnreadCount(getCustomerUnreadCount(customerId, userName));
+    if (userRole === "VENDOR") {
+      markConversationAsReadForVendor(convId);
+      setUnreadCount(getVendorUnreadCount(session?.user?.id, storeName));
+    } else if (userRole === "ADMIN") {
+      markConversationAsReadForAdmin(convId);
+      setUnreadCount(getAdminUnreadCount());
+    } else {
+      markConversationAsReadForCustomer(convId);
+      const userName =
+        session?.user?.user_metadata?.fullName ||
+        session?.user?.user_metadata?.name ||
+        session?.user?.email?.split("@")[0] ||
+        getGuestCustomerName();
+      const customerId = session?.user?.id || getGuestCustomerId();
+      setUnreadCount(getCustomerUnreadCount(customerId, userName));
+    }
   };
 
   const handleBackToList = () => {
@@ -203,21 +317,34 @@ export default function FloatingChatWidget() {
 
     setSecurityWarning(null);
 
-    const userName =
-      session?.user?.user_metadata?.fullName ||
-      session?.user?.user_metadata?.name ||
-      session?.user?.email?.split("@")[0] ||
-      selectedConv.customerName ||
-      getGuestCustomerName();
+    let senderRole: "CUSTOMER" | "VENDOR" | "ADMIN" = userRole;
+    let senderName = "";
 
-    const customerId =
-      session?.user?.id || selectedConv.customerId || getGuestCustomerId();
+    if (userRole === "VENDOR") {
+      senderRole = "VENDOR";
+      senderName = storeName || selectedConv.vendorName || "আমার স্টোর";
+    } else if (userRole === "ADMIN") {
+      senderRole = "ADMIN";
+      senderName = "Aladdin সাপোর্ট টিম";
+    } else {
+      senderRole = "CUSTOMER";
+      senderName =
+        session?.user?.user_metadata?.fullName ||
+        session?.user?.user_metadata?.name ||
+        session?.user?.email?.split("@")[0] ||
+        selectedConv.customerName ||
+        getGuestCustomerName();
+    }
+
+    const senderId =
+      session?.user?.id ||
+      (userRole === "CUSTOMER" ? getGuestCustomerId() : undefined);
 
     const { securityResult } = sendChatMessage({
       conversationId: selectedConv.id,
-      senderRole: "CUSTOMER",
-      senderName: userName,
-      senderId: customerId,
+      senderRole,
+      senderName,
+      senderId,
       text,
       productContext: selectedConv.product,
       isComplaint: selectedConv.type === "CUSTOMER_ADMIN_COMPLAINT",
@@ -230,13 +357,46 @@ export default function FloatingChatWidget() {
     setInputText("");
   };
 
+  // Quick Chips customized per Role
+  const quickChips =
+    userRole === "VENDOR"
+      ? [
+          "হ্যাঁ, পণ্যটি স্টকে আছে",
+          "৫০ পিস নিলে বিশেষ ছাড় দেওয়া যাবে",
+          "২-৩ দিনের মধ্যে ডেলিভারি সম্ভব",
+          "বিস্তারিত অর্ডার তথ্য পাঠান",
+        ]
+      : userRole === "ADMIN"
+      ? [
+          "অভিযোগটি গ্রহণ করা হয়েছে, দ্রুত সমাধান করছি",
+          "আপনার অর্ডার আইডি ও বিবরণ প্রদান করুন",
+          "ভেন্ডরের বিরুদ্ধে কারণ দর্শানোর নোটিশ দেওয়া হয়েছে",
+        ]
+      : [
+          "বর্তমানে কত পিস স্টক আছে?",
+          "৫০ পিস নিলে কোনো ছাড় আছে?",
+          "ডেলিভারি কবে পাব?",
+          "আসল স্যাম্পল ছবি দেখতে চাই",
+        ];
+
   return (
-    <aside aria-label="লাইভ চ্যাট উইজেট" className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-[9999] flex flex-col items-end pointer-events-none">
+    <aside
+      aria-label="লাইভ চ্যাট উইজেট"
+      className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-[9999] flex flex-col items-end pointer-events-none"
+    >
       {/* CHAT POPUP WINDOW */}
       {isOpen && (
         <div className="pointer-events-auto mb-3 w-[360px] sm:w-[410px] h-[550px] max-h-[85vh] rounded-2xl bg-white shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
           {/* HEADER */}
-          <div className="bg-[#12233f] text-white p-3 sm:p-3.5 flex items-center justify-between shrink-0 shadow-xs">
+          <div
+            className={`text-white p-3 sm:p-3.5 flex items-center justify-between shrink-0 shadow-xs ${
+              userRole === "ADMIN"
+                ? "bg-[#1E1233]"
+                : userRole === "VENDOR"
+                ? "bg-[#0F2A1D]"
+                : "bg-[#12233f]"
+            }`}
+          >
             <div className="flex items-center gap-2.5 min-w-0">
               {selectedConv ? (
                 <button
@@ -248,8 +408,22 @@ export default function FloatingChatWidget() {
                   <ChevronLeft size={20} />
                 </button>
               ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-400 text-[#12233f] font-bold shrink-0">
-                  <MessageSquare size={16} />
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-xl font-bold shrink-0 ${
+                    userRole === "ADMIN"
+                      ? "bg-red-500 text-white"
+                      : userRole === "VENDOR"
+                      ? "bg-emerald-400 text-slate-900"
+                      : "bg-amber-400 text-[#12233f]"
+                  }`}
+                >
+                  {userRole === "ADMIN" ? (
+                    <ShieldAlert size={16} />
+                  ) : userRole === "VENDOR" ? (
+                    <Store size={16} />
+                  ) : (
+                    <MessageSquare size={16} />
+                  )}
                 </div>
               )}
 
@@ -258,7 +432,13 @@ export default function FloatingChatWidget() {
                   {selectedConv
                     ? selectedConv.type === "CUSTOMER_ADMIN_COMPLAINT"
                       ? "Aladdin সাপোর্ট ডেস্ক"
+                      : userRole === "VENDOR"
+                      ? selectedConv.customerName || "কাস্টমার"
                       : selectedConv.vendorName || "ভেন্ডর স্টোর"
+                    : userRole === "ADMIN"
+                    ? "🛡️ প্ল্যাটফর্ম অডিট ও সাপোর্ট (Admin)"
+                    : userRole === "VENDOR"
+                    ? `🏪 ভেন্ডর ইনবক্স (${storeName || "আমার স্টোর"})`
                     : "মেসেজ ও লাইভ চ্যাট"}
                 </h3>
                 <p className="text-[10px] text-slate-300 truncate">
@@ -266,6 +446,10 @@ export default function FloatingChatWidget() {
                     ? selectedConv.product?.name
                       ? `পণ্য: ${selectedConv.product.name}`
                       : "সরাসরি সহায়তা"
+                    : userRole === "ADMIN"
+                    ? "লাইভ নিরাপত্তা মনিটরিং ও কাস্টমার কমপ্লেইন"
+                    : userRole === "VENDOR"
+                    ? "কাস্টমারদের পণ্যের প্রশ্ন ও ফিরতি বার্তা"
                     : "ভেন্ডর ও সাপোর্ট সেন্টারের সাথে সরাসরি বার্তা"}
                 </p>
               </div>
@@ -283,42 +467,70 @@ export default function FloatingChatWidget() {
             </div>
           </div>
 
-          {/* TOP TABS: VENDOR & ADMIN (Visible on list view) */}
+          {/* TOP TABS ACCORDING TO USER ROLE (Visible on list view) */}
           {!selectedConv && (
             <div className="bg-slate-100/90 p-1.5 flex gap-1.5 border-b border-slate-200 shrink-0">
               <button
                 type="button"
-                onClick={() => setActiveTab("VENDOR")}
+                onClick={() => setActiveTab("PRIMARY")}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold transition ${
-                  activeTab === "VENDOR"
-                    ? "bg-white text-emerald-800 shadow-2xs border border-emerald-200/60"
+                  activeTab === "PRIMARY"
+                    ? userRole === "ADMIN"
+                      ? "bg-white text-red-800 shadow-2xs border border-red-200/60"
+                      : "bg-white text-emerald-800 shadow-2xs border border-emerald-200/60"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <Store
-                  size={14}
-                  className={
-                    activeTab === "VENDOR" ? "text-emerald-600" : "text-slate-400"
-                  }
-                />
-                <span>ভেন্ডর চ্যাট ({vendorConvs.length})</span>
+                {userRole === "ADMIN" ? (
+                  <ShieldAlert
+                    size={14}
+                    className={activeTab === "PRIMARY" ? "text-red-600" : "text-slate-400"}
+                  />
+                ) : userRole === "VENDOR" ? (
+                  <User
+                    size={14}
+                    className={activeTab === "PRIMARY" ? "text-emerald-600" : "text-slate-400"}
+                  />
+                ) : (
+                  <Store
+                    size={14}
+                    className={activeTab === "PRIMARY" ? "text-emerald-600" : "text-slate-400"}
+                  />
+                )}
+                <span>
+                  {userRole === "ADMIN"
+                    ? `অভিযোগ ও টিকেট (${primaryConvs.length})`
+                    : userRole === "VENDOR"
+                    ? `কাস্টমার ইনকোয়ারি (${primaryConvs.length})`
+                    : `ভেন্ডর চ্যাট (${primaryConvs.length})`}
+                </span>
               </button>
+
               <button
                 type="button"
-                onClick={() => setActiveTab("ADMIN")}
+                onClick={() => setActiveTab("SECONDARY")}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold transition ${
-                  activeTab === "ADMIN"
-                    ? "bg-white text-red-800 shadow-2xs border border-red-200/60"
+                  activeTab === "SECONDARY"
+                    ? "bg-white text-indigo-800 shadow-2xs border border-indigo-200/60"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <ShieldAlert
-                  size={14}
-                  className={
-                    activeTab === "ADMIN" ? "text-red-600" : "text-slate-400"
-                  }
-                />
-                <span>অ্যাডমিন সাপোর্ট ({adminConvs.length})</span>
+                {userRole === "ADMIN" ? (
+                  <Store
+                    size={14}
+                    className={activeTab === "SECONDARY" ? "text-indigo-600" : "text-slate-400"}
+                  />
+                ) : (
+                  <ShieldAlert
+                    size={14}
+                    className={activeTab === "SECONDARY" ? "text-indigo-600" : "text-slate-400"}
+                  />
+                )}
+                <span>
+                  {userRole === "ADMIN"
+                    ? `সকল লাইভ চ্যাট (${secondaryConvs.length})`
+                    : `অ্যাডমিন সাপোর্ট (${secondaryConvs.length})`}
+                </span>
               </button>
             </div>
           )}
@@ -388,49 +600,42 @@ export default function FloatingChatWidget() {
                   </div>
                 ) : (
                   selectedConv.messages.map((m) => {
-                    const isCustomer = m.senderRole === "CUSTOMER";
-                    const isAdmin = m.senderRole === "ADMIN";
-
-                    if (isAdmin) {
-                      return (
-                        <div
-                          key={m.id}
-                          className="rounded-xl border border-red-200 bg-red-50/90 p-2.5 text-xs text-red-900 shadow-2xs"
-                        >
-                          <p className="font-bold flex items-center gap-1.5 text-red-700 text-[11px]">
-                            <ShieldAlert size={14} />
-                            {m.senderName}:
-                          </p>
-                          <p className="mt-1 leading-relaxed text-[11px]">
-                            {m.text}
-                          </p>
-                          <span className="mt-1 block text-[9px] text-red-500">
-                            {formatChatTime(m.timeFormatted || m.createdAt)}
-                          </span>
-                        </div>
-                      );
-                    }
+                    const isMe = m.senderRole === userRole;
 
                     return (
                       <div
                         key={m.id}
                         className={`flex flex-col ${
-                          isCustomer ? "items-end" : "items-start"
+                          isMe ? "items-end" : "items-start"
                         }`}
                       >
                         <div
                           className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs shadow-2xs leading-relaxed ${
-                            isCustomer
+                            isMe
                               ? "bg-[#12233f] text-white rounded-br-xs"
+                              : m.senderRole === "ADMIN"
+                              ? "bg-red-50 text-slate-800 border border-red-200 rounded-bl-xs"
                               : "bg-white text-slate-800 border border-slate-200/90 rounded-bl-xs"
                           }`}
                         >
-                          {!isCustomer && (
-                            <div className="flex items-center gap-1.5 mb-1 font-bold text-[10px] text-emerald-700">
-                              <Store size={12} className="text-emerald-600" />
-                              <span>
-                                {m.senderName || selectedConv.vendorName || "ভেন্ডর"}
-                              </span>
+                          {!isMe && (
+                            <div className="flex items-center gap-1.5 mb-1 font-bold text-[10px]">
+                              {m.senderRole === "ADMIN" ? (
+                                <>
+                                  <ShieldAlert size={12} className="text-red-600" />
+                                  <span className="text-red-700">{m.senderName} (অ্যাডমিন)</span>
+                                </>
+                              ) : m.senderRole === "VENDOR" ? (
+                                <>
+                                  <Store size={12} className="text-emerald-600" />
+                                  <span className="text-emerald-700">{m.senderName} (ভেন্ডর)</span>
+                                </>
+                              ) : (
+                                <>
+                                  <User size={12} className="text-blue-600" />
+                                  <span className="text-blue-700">{m.senderName} (ক্রেতা)</span>
+                                </>
+                              )}
                             </div>
                           )}
                           <p className="whitespace-pre-wrap text-[11px] leading-relaxed">
@@ -438,12 +643,8 @@ export default function FloatingChatWidget() {
                           </p>
                         </div>
                         <div className="mt-0.5 flex items-center gap-1 text-[9px] text-slate-400 px-1">
-                          <span>
-                            {formatChatTime(m.timeFormatted || m.createdAt)}
-                          </span>
-                          {isCustomer && (
-                            <CheckCheck size={11} className="text-sky-500" />
-                          )}
+                          <span>{formatChatTime(m.timeFormatted || m.createdAt)}</span>
+                          {isMe && <CheckCheck size={11} className="text-sky-500" />}
                         </div>
                       </div>
                     );
@@ -452,26 +653,19 @@ export default function FloatingChatWidget() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Quick Inquiry Chips (for Vendor chat) */}
-              {selectedConv.type === "CUSTOMER_VENDOR" && (
-                <div className="flex items-center gap-1.5 overflow-x-auto border-t border-slate-200/70 bg-white px-2.5 py-1.5 text-[10px] shrink-0 no-scrollbar">
-                  {[
-                    "বর্তমানে কত পিস স্টক আছে?",
-                    "৫০ পিস নিলে কোনো ছাড় আছে?",
-                    "ডেলিভারি কবে পাব?",
-                    "আসল স্যাম্পল ছবি দেখতে চাই",
-                  ].map((chip) => (
-                    <button
-                      key={chip}
-                      type="button"
-                      onClick={() => handleQuickChip(chip)}
-                      className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 hover:text-amber-900"
-                    >
-                      {chip}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Quick Inquiry / Response Chips */}
+              <div className="flex items-center gap-1.5 overflow-x-auto border-t border-slate-200/70 bg-white px-2.5 py-1.5 text-[10px] shrink-0 no-scrollbar">
+                {quickChips.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => handleQuickChip(chip)}
+                    className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 hover:text-amber-900"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
 
               {/* Security Warning */}
               {securityWarning && (
@@ -497,7 +691,13 @@ export default function FloatingChatWidget() {
               >
                 <input
                   type="text"
-                  placeholder="মেসেজ লিখুন..."
+                  placeholder={
+                    userRole === "VENDOR"
+                      ? "কাস্টমারকে উত্তর লিখুন বা কোটেশন জানান..."
+                      : userRole === "ADMIN"
+                      ? "অ্যাডমিন উত্তর বা অফিশিয়াল নোট লিখুন..."
+                      : "মেসেজ লিখুন..."
+                  }
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#12233f] focus:bg-white transition"
@@ -514,91 +714,108 @@ export default function FloatingChatWidget() {
           ) : (
             /* CONVERSATION LIST FOR SELECTED TAB */
             <div className="flex-1 overflow-y-auto divide-y divide-slate-100 bg-slate-50/40 flex flex-col">
-              {/* Product Guide Info Strip when conversations exist */}
-              {displayedConversations.length > 0 && activeTab === "VENDOR" && (
-                <div className="bg-amber-50/80 border-b border-amber-200/70 px-3.5 py-2 flex items-start gap-2 text-[11px] text-amber-900 shrink-0">
-                  <Info size={14} className="text-amber-700 shrink-0 mt-0.5" />
-                  <p className="min-w-0 flex-1 leading-snug">
-                    নতুন কোনো পণ্য নিয়ে কথা বলতে চান? প্রথমে সেই{" "}
-                    <span className="font-bold underline text-amber-950">
-                      পণ্যের পেজে গিয়ে "চ্যাট করুন"
-                    </span>{" "}
-                    বাটনে চাপুন।
-                  </p>
-                </div>
-              )}
+              {/* Product Guide Info Strip when customer is browsing */}
+              {displayedConversations.length > 0 &&
+                userRole === "CUSTOMER" &&
+                activeTab === "PRIMARY" && (
+                  <div className="bg-amber-50/80 border-b border-amber-200/70 px-3.5 py-2 flex items-start gap-2 text-[11px] text-amber-900 shrink-0">
+                    <Info size={14} className="text-amber-700 shrink-0 mt-0.5" />
+                    <p className="min-w-0 flex-1 leading-snug">
+                      নতুন কোনো পণ্য নিয়ে কথা বলতে চান? প্রথমে সেই{" "}
+                      <span className="font-bold underline text-amber-950">
+                        পণ্যের পেজে গিয়ে "চ্যাট করুন"
+                      </span>{" "}
+                      বাটনে চাপুন।
+                    </p>
+                  </div>
+                )}
 
               {displayedConversations.length === 0 ? (
-                /* EMPTY STATE WITH DETAILED 3-STEP GUIDE */
+                /* EMPTY STATE ADAPTED TO ROLE */
                 <div className="flex-1 flex flex-col items-center justify-center p-5 text-center">
                   <div
                     className={`flex h-14 w-14 items-center justify-center rounded-2xl mb-2.5 shadow-2xs ${
-                      activeTab === "VENDOR"
+                      userRole === "ADMIN"
+                        ? "bg-red-50 text-red-600 border border-red-200/70"
+                        : userRole === "VENDOR"
                         ? "bg-emerald-50 text-emerald-600 border border-emerald-200/70"
-                        : "bg-red-50 text-red-600 border border-red-200/70"
+                        : "bg-amber-50 text-amber-600 border border-amber-200/70"
                     }`}
                   >
-                    {activeTab === "VENDOR" ? (
+                    {userRole === "ADMIN" ? (
+                      <ShieldCheck size={26} />
+                    ) : userRole === "VENDOR" ? (
                       <Store size={26} />
                     ) : (
-                      <ShieldAlert size={26} />
+                      <MessageSquare size={26} />
                     )}
                   </div>
 
                   <h4 className="text-sm font-bold text-slate-800">
-                    {activeTab === "VENDOR"
-                      ? "ভেন্ডরের সাথে কোনো কথোপকথন নেই"
-                      : "অ্যাডমিন সাপোর্টের কোনো মেসেজ নেই"}
+                    {userRole === "VENDOR"
+                      ? "কোনো কাস্টমার ইনকোয়ারি নেই"
+                      : userRole === "ADMIN"
+                      ? "কোনো অমীমাংসিত অভিযোগ নেই"
+                      : "ভেন্ডরের সাথে কোনো কথোপকথন নেই"}
                   </h4>
 
                   <p className="mt-1 max-w-[260px] text-[11px] text-slate-500 leading-relaxed">
-                    {activeTab === "VENDOR"
-                      ? "নির্দিষ্ট কোনো পণ্য বা পাইকারি অর্ডার নিয়ে এখনো বিক্রেতার সাথে চ্যাট শুরু করেননি।"
-                      : "প্ল্যাটফর্ম সাপোর্ট বা কোনো কমপ্লেইনের হিস্ট্রি পাওয়া যায়নি।"}
+                    {userRole === "VENDOR"
+                      ? "কাস্টমাররা আপনার পণ্যের পেজ থেকে মেসেজ পাঠালে এখানে দেখতে পাবেন এবং সরাসরি উত্তর দিতে পারবেন।"
+                      : userRole === "ADMIN"
+                      ? "প্ল্যাটফর্ম সাপোর্ট ও সব কার্যক্রম সুরক্ষিত রয়েছে।"
+                      : "নির্দিষ্ট কোনো পণ্য বা পাইকারি অর্ডার নিয়ে এখনো বিক্রেতার সাথে চ্যাট শুরু করেননি।"}
                   </p>
 
-                  {/* 3-Step Instruction Box */}
-                  <div className="mt-3 w-full max-w-[310px] rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-left shadow-2xs">
-                    <p className="font-bold text-amber-950 text-xs flex items-center gap-1.5 mb-2">
-                      <Sparkles size={14} className="text-amber-600 shrink-0" />
-                      <span>কীভাবে নতুন পণ্যের চ্যাট শুরু করবেন?</span>
-                    </p>
+                  {/* 3-Step Instruction Box for Customers */}
+                  {userRole === "CUSTOMER" && (
+                    <div className="mt-3 w-full max-w-[310px] rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-left shadow-2xs">
+                      <p className="font-bold text-amber-950 text-xs flex items-center gap-1.5 mb-2">
+                        <Sparkles size={14} className="text-amber-600 shrink-0" />
+                        <span>কীভাবে নতুন পণ্যের চ্যাট শুরু করবেন?</span>
+                      </p>
 
-                    <ul className="space-y-1.5 text-[11px] text-amber-900 leading-snug">
-                      <li className="flex items-start gap-2">
-                        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-200 text-[10px] font-bold text-amber-900 mt-0.5">
-                          ১
-                        </span>
-                        <span>যে পণ্য নিয়ে কথা বলতে চান, প্রথমে সেই <b>পণ্যের পেজে</b> যান।</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-200 text-[10px] font-bold text-amber-900 mt-0.5">
-                          ২
-                        </span>
-                        <span>পণ্যের তথ্যের পাশে থাকা <b>"চ্যাট করুন"</b> বাটনটিতে চাপুন।</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-200 text-[10px] font-bold text-amber-900 mt-0.5">
-                          ৩
-                        </span>
-                        <span>ভেন্ডরের কাছে সরাসরি আপনার বার্তা পৌঁছাবে এবং এই উইজেটে হিস্ট্রি থাকবে!</span>
-                      </li>
-                    </ul>
+                      <ul className="space-y-1.5 text-[11px] text-amber-900 leading-snug">
+                        <li className="flex items-start gap-2">
+                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-200 text-[10px] font-bold text-amber-900 mt-0.5">
+                            ১
+                          </span>
+                          <span>যে পণ্য নিয়ে কথা বলতে চান, প্রথমে সেই <b>পণ্যের পেজে</b> যান।</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-200 text-[10px] font-bold text-amber-900 mt-0.5">
+                            ২
+                          </span>
+                          <span>পণ্যের তথ্যের পাশে থাকা <b>"চ্যাট করুন"</b> বাটনটিতে চাপুন।</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-200 text-[10px] font-bold text-amber-900 mt-0.5">
+                            ৩
+                          </span>
+                          <span>ভেন্ডরের কাছে সরাসরি আপনার বার্তা পৌঁছাবে এবং এখানে হিস্ট্রি থাকবে!</span>
+                        </li>
+                      </ul>
 
-                    <Link
-                      href="/"
-                      onClick={() => setIsOpen(false)}
-                      className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#12233f] py-2 px-3 text-xs font-bold text-white shadow-xs transition hover:bg-[#1b3155]"
-                    >
-                      <span>পণ্য ব্রাউজ করুন</span>
-                      <ArrowRight size={13} />
-                    </Link>
-                  </div>
+                      <Link
+                        href="/"
+                        onClick={() => setIsOpen(false)}
+                        className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#12233f] py-2 px-3 text-xs font-bold text-white shadow-xs transition hover:bg-[#1b3155]"
+                      >
+                        <span>পণ্য ব্রাউজ করুন</span>
+                        <ArrowRight size={13} />
+                      </Link>
+                    </div>
+                  )}
                 </div>
               ) : (
                 /* CONVERSATION ITEMS LIST */
                 displayedConversations.map((c) => {
-                  const hasUnread = (c.unreadForCustomer || 0) > 0;
+                  const hasUnread =
+                    userRole === "VENDOR"
+                      ? (c.unreadForVendor || 0) > 0
+                      : userRole === "ADMIN"
+                      ? (c.unreadForAdmin || 0) > 0
+                      : (c.unreadForCustomer || 0) > 0;
                   const isComplaint = c.type === "CUSTOMER_ADMIN_COMPLAINT";
 
                   return (
@@ -648,14 +865,20 @@ export default function FloatingChatWidget() {
 
                       {/* Content */}
                       <div className="min-w-0 flex-1">
-                        {/* Vendor Name & Time */}
+                        {/* Header Name & Time */}
                         <div className="flex items-center justify-between gap-1 mb-0.5">
                           <h4 className="text-xs font-bold text-slate-900 truncate flex items-center gap-1">
-                            {isComplaint ? (
-                              <span className="text-red-700">Aladdin সাপোর্ট ডেস্ক</span>
+                            {userRole === "VENDOR" ? (
+                              <span className="text-slate-900 font-bold">
+                                {isComplaint ? "Aladdin Admin Support" : c.customerName}
+                              </span>
+                            ) : userRole === "ADMIN" ? (
+                              <span className="text-slate-900 font-bold">
+                                {isComplaint ? `কমপ্লেইন: ${c.customerName}` : `${c.customerName} ↔ ${c.vendorName}`}
+                              </span>
                             ) : (
                               <span className="text-slate-800">
-                                {c.vendorName || "ভেন্ডর স্টোর"}
+                                {isComplaint ? "Aladdin সাপোর্ট ডেস্ক" : c.vendorName || "ভেন্ডর স্টোর"}
                               </span>
                             )}
                           </h4>
@@ -696,7 +919,7 @@ export default function FloatingChatWidget() {
           <div className="border-t border-slate-200 bg-white px-3.5 py-2 flex items-center justify-between text-[11px] text-slate-500 shrink-0">
             <span className="flex items-center gap-1.5 font-medium">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Aladdin লাইভ চ্যাট সাপোর্ট
+              Aladdin লাইভ চ্যাট • {userRole}
             </span>
             <span className="text-[10px] text-slate-400 font-semibold">
               তাৎক্ষণিক সহায়তা
@@ -709,7 +932,13 @@ export default function FloatingChatWidget() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="pointer-events-auto relative flex h-14 w-14 items-center justify-center rounded-full bg-[#12233f] text-white shadow-xl transition-all duration-300 hover:scale-105 hover:bg-[#1b3155] focus:outline-none focus:ring-4 focus:ring-amber-400/40"
+        className={`pointer-events-auto relative flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 ${
+          userRole === "ADMIN"
+            ? "bg-[#1E1233] hover:bg-[#2C1B4D] focus:ring-purple-400/40"
+            : userRole === "VENDOR"
+            ? "bg-[#0F2A1D] hover:bg-[#194530] focus:ring-emerald-400/40"
+            : "bg-[#12233f] hover:bg-[#1b3155] focus:ring-amber-400/40"
+        }`}
         title="মেসেজ ও লাইভ চ্যাট"
         aria-label="মেসেজ ও লাইভ চ্যাট উইন্ডো খুলুন"
       >
@@ -717,7 +946,13 @@ export default function FloatingChatWidget() {
           <X size={24} className="transition-transform duration-200 rotate-90" />
         ) : (
           <>
-            <MessageSquare size={26} />
+            {userRole === "ADMIN" ? (
+              <ShieldAlert size={26} />
+            ) : userRole === "VENDOR" ? (
+              <Store size={26} />
+            ) : (
+              <MessageSquare size={26} />
+            )}
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white shadow-md animate-bounce">
                 {unreadCount > 9 ? "9+" : unreadCount}
