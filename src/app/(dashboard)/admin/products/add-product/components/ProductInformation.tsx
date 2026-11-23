@@ -25,6 +25,7 @@ import SportsFitnessDispatcher from "./product-field/SportsFitness/SportsFitness
 import GroceryDispatcher from "./product-field/Grocery/GroceryDispatcher";
 import ToysDispatcher from "./product-field/Toys/ToysDispatcher";
 import GiftsCraftsDispatcher from "./product-field/GiftsCrafts/GiftsCraftsDispatcher";
+import AutomotiveDispatcher from "./product-field/Automotive/AutomotiveDispatcher";
 
 // Grocery - Beverages
 import Juice from "./product-field/Grocery/Beverages/Juice";
@@ -645,6 +646,33 @@ function findComponentForCategory(
     });
   if (isGiftsCraftsCategory) {
     return GiftsCraftsDispatcher;
+  }
+
+  // Automotive — Cars & Motorcycles (Unified All-in-One Category Dispatcher)
+  const isAutomotiveCategory =
+    key === "automotive-cars-motorcycles" ||
+    key === "automotive-cars-motorcycles-w8hnl" ||
+    key === "automotive" ||
+    key.includes("automotive") ||
+    key.includes("motorcycle") ||
+    rawLower.includes("automotive") ||
+    rawLower.includes("গাড়ি") ||
+    rawLower.includes("মোটরসাইকেল") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return (
+        pKey === "automotive-cars-motorcycles" ||
+        pKey === "automotive-cars-motorcycles-w8hnl" ||
+        pKey === "automotive" ||
+        pKey.includes("automotive") ||
+        pKey.includes("motorcycle") ||
+        name.toLowerCase().includes("automotive") ||
+        name.toLowerCase().includes("গাড়ি") ||
+        name.toLowerCase().includes("মোটরসাইকেল")
+      );
+    });
+  if (isAutomotiveCategory) {
+    return AutomotiveDispatcher;
   }
 
   // Fashion

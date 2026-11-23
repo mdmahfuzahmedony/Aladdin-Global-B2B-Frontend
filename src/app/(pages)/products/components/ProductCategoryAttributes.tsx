@@ -79,6 +79,7 @@ export type CategoryDomain =
   | "SPORTS_OUTDOOR"
   | "TOYS_GAMES"
   | "GIFTS_CRAFTS"
+  | "AUTOMOTIVE"
   | "GENERAL";
 
 export interface HighlightItem {
@@ -894,6 +895,39 @@ export function detectCategoryDomain(
     keys.includes("festivaloccasion")
   ) {
     return "GIFTS_CRAFTS";
+  }
+
+  // 21. Automotive — Cars & Motorcycles
+  if (
+    combined.includes("automotive") ||
+    combined.includes("motorcycle") ||
+    combined.includes("car ") ||
+    combined.includes("cars") ||
+    combined.includes("tire") ||
+    combined.includes("tyre") ||
+    combined.includes("wheel") ||
+    combined.includes("engine oil") ||
+    combined.includes("brake fluid") ||
+    combined.includes("coolant") ||
+    combined.includes("car care") ||
+    combined.includes("bike care") ||
+    combined.includes("গাড়ি") ||
+    combined.includes("টায়ার") ||
+    combined.includes("মোটরসাইকেল") ||
+    keys.includes("tirewheeltype") ||
+    keys.includes("tiresize") ||
+    keys.includes("rimdiameter") ||
+    keys.includes("oilfluidtype") ||
+    keys.includes("viscositygrade") ||
+    keys.includes("oilbaseformulation") ||
+    keys.includes("careproducttype") ||
+    keys.includes("formulationphlevel") ||
+    keys.includes("partaccessorytype") ||
+    keys.includes("vehiclemakemodel") ||
+    keys.includes("toolequipmenttype") ||
+    keys.includes("powersourceinput")
+  ) {
+    return "AUTOMOTIVE";
   }
 
   return "GENERAL";
@@ -1771,7 +1805,84 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
       break;
     }
 
-    default:
+    case "AUTOMOTIVE": {
+      // 1. Item Type
+      const autoType =
+        getVal("tireWheelType") ||
+        getVal("oilFluidType") ||
+        getVal("careProductType") ||
+        getVal("partAccessoryType") ||
+        getVal("toolEquipmentType");
+      if (autoType) {
+        highlights.push({
+          id: "autoType",
+          label: "Type",
+          value: autoType,
+          icon: <Gauge size={13} />,
+          variant: "amber",
+        });
+      }
+
+      // 2. Viscosity / Tire Size / Rating
+      const specSize =
+        getVal("viscosityGrade") ||
+        getVal("tireSize") ||
+        getVal("capacityMaxRating") ||
+        getVal("powerVoltageWatts");
+      if (specSize) {
+        highlights.push({
+          id: "specSize",
+          label: "Specification",
+          value: specSize,
+          icon: <Activity size={13} />,
+          variant: "slate",
+        });
+      }
+
+      // 3. Vehicle Fitment / Compatibility
+      const fitment =
+        getVal("vehicleCompatibility") ||
+        getVal("vehicleMakeModel") ||
+        getVal("vehicleEngineCompatibility");
+      if (fitment) {
+        highlights.push({
+          id: "fitment",
+          label: "Compatibility",
+          value: fitment,
+          icon: <Layers size={13} />,
+          variant: "blue",
+        });
+      }
+
+      // 4. Formulation / Base / Standards
+      const formulation =
+        getVal("oilBaseFormulation") ||
+        getVal("formulationPhLevel") ||
+        getVal("seasonTerrain") ||
+        getVal("apiJasoStandards");
+      if (formulation) {
+        highlights.push({
+          id: "formulation",
+          label: "Formulation",
+          value: formulation,
+          icon: <ShieldCheck size={13} />,
+          variant: "emerald",
+        });
+      }
+
+      // 5. Warranty
+      const warranty = getVal("warrantyPeriod");
+      if (warranty) {
+        highlights.push({
+          id: "warranty",
+          label: "Warranty",
+          value: warranty,
+          icon: <Award size={13} />,
+          variant: "indigo",
+        });
+      }
+      break;
+    }
       break;
   }
 
@@ -2571,6 +2682,82 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
         title: "Materials, Packaging & Craftsmanship",
         icon: <Sparkles size={16} className="text-amber-600" />,
         rows: giftCraft,
+      });
+    }
+  } else if (domain === "AUTOMOTIVE") {
+    // 1. Technical & Performance Specifications
+    const techSpecs = buildRows([
+      "tireWheelType",
+      "oilFluidType",
+      "careProductType",
+      "partAccessoryType",
+      "toolEquipmentType",
+      "brand",
+      "brandMaker",
+      "tireSize",
+      "rimDiameter",
+      "viscosityGrade",
+      "oilBaseFormulation",
+      "netVolumeQuantity",
+      "volumeNetQuantity",
+      "capacityMaxRating",
+      "powerVoltageWatts",
+      "powerSourceInput",
+      "speedRatingLoadIndex",
+      "boltPatternPCD",
+    ]);
+    if (techSpecs.length > 0) {
+      groups.push({
+        id: "auto-tech-specs",
+        title: "Technical & Performance Specifications",
+        icon: <Gauge size={16} className="text-orange-600" />,
+        rows: techSpecs,
+      });
+    }
+
+    // 2. Fitment, Compatibility & Applications
+    const fitmentSpecs = buildRows([
+      "vehicleCompatibility",
+      "vehicleMakeModel",
+      "vehicleEngineCompatibility",
+      "applicableSurfaces",
+      "seasonTerrain",
+      "installationType",
+      "applicationMethod",
+      "connectivityFeatures",
+      "displayDiagnostics",
+    ]);
+    if (fitmentSpecs.length > 0) {
+      groups.push({
+        id: "auto-fitment-specs",
+        title: "Fitment & Vehicle Compatibility",
+        icon: <Layers size={16} className="text-sky-600" />,
+        rows: fitmentSpecs,
+      });
+    }
+
+    // 3. Standards, Certifications, Materials & Warranty
+    const qualitySpecs = buildRows([
+      "apiJasoStandards",
+      "formulationPhLevel",
+      "safetyCertifications",
+      "safetyFeatures",
+      "materialComposition",
+      "materialFinish",
+      "materialDurability",
+      "scentFragrance",
+      "drainIntervalKm",
+      "longevityProtection",
+      "includedAccessoriesCase",
+      "warrantyPeriod",
+      "countryOfOrigin",
+    ]);
+    if (qualitySpecs.length > 0) {
+      groups.push({
+        id: "auto-quality-specs",
+        title: "Standards, Quality & Warranty",
+        icon: <ShieldCheck size={16} className="text-emerald-600" />,
+        rows: qualitySpecs,
       });
     }
   }
