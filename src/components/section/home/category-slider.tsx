@@ -202,7 +202,7 @@ export default function CategorySlider() {
               onMouseLeave={autoStart}
               className="
                 flex w-full min-w-0
-                gap-1.5 sm:gap-3 lg:gap-4
+                gap-1.5 sm:gap-2.5 lg:gap-3
                 overflow-x-auto overflow-y-hidden
                 pb-2 pt-1
                 scroll-smooth
@@ -219,8 +219,8 @@ export default function CategorySlider() {
                   className="
                     w-[calc((100%-18px)/4)]
                     shrink-0 snap-start
-                    sm:w-[110px]
-                    lg:w-[125px]
+                    sm:w-[98px]
+                    lg:w-[110px]
                   "
                 >
                   <CategoryCard category={category} />

@@ -561,7 +561,7 @@ export default function MainNavbar() {
 
         {/* SECTION 2 */}
         <div className="border-t border-white/10">
-          <nav className="mx-auto flex h-[55px] max-w-[1500px] items-center gap-8 px-2 sm:px-3 py-2 text-sm font-semibold text-white">
+          <nav className="mx-auto flex h-[46px] sm:h-[50px] max-w-[1500px] items-center gap-5 lg:gap-8 px-2 sm:px-3 text-xs sm:text-sm font-semibold text-white">
             {/* ALL CATEGORIES */}
             <div
               className="relative flex h-full shrink-0 items-center"
@@ -573,12 +573,12 @@ export default function MainNavbar() {
                 onClick={handleToggleCategories}
                 onMouseEnter={handleCategoryMouseEnter}
                 aria-expanded={categoryOpen}
-                className="flex h-full items-center gap-2 bg-[#D6A419] px-5 text-[#12233F] transition hover:bg-[#e2b62f]"
+                className="flex h-full items-center gap-1.5 bg-[#D6A419] px-4 text-xs sm:text-sm font-bold text-[#12233F] transition hover:bg-[#e2b62f]"
               >
-                <Tags size={17} />
+                <Tags size={15} />
                 {t("allCategories")}
                 <ChevronDown
-                  size={15}
+                  size={14}
                   className={`transition-transform duration-200 ${
                     categoryOpen ? "rotate-180" : ""
                   }`}

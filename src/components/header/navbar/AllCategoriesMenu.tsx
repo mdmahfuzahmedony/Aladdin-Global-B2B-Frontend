@@ -448,34 +448,34 @@ export function AllCategoriesMenu({
         key={category.id}
         href={getCategoryHref(category)}
         className={[
-          "flex w-full min-w-0 items-center justify-between gap-2",
-          "rounded-lg px-2 text-left transition-all duration-150 ease-out",
-          depth === 0 ? "py-2" : "py-1",
+          "flex w-full min-w-0 items-center justify-between gap-1.5",
+          "rounded-md px-2 text-left transition-all duration-150 ease-out",
+          depth === 0 ? "py-1.5" : "py-1",
           active
-            ? "bg-[#fff8e6] text-[#12233F] shadow-sm"
+            ? "bg-[#fff8e6] text-[#12233F] shadow-xs"
             : "text-slate-700 hover:bg-[#fffbf2] hover:text-[#12233F]",
         ].join(" ")}
         onMouseEnter={() => handleCategoryHover(category, depth)}
         onFocus={() => handleCategoryHover(category, depth)}
       >
-        <span className="flex min-w-0 flex-1 items-center gap-2">
+        <span className="flex min-w-0 flex-1 items-center gap-1.5">
           {depth === 0 && (
             <CategoryIcon
               icon={category.icon}
               name={category.name}
-              size={17}
+              size={15}
               className="shrink-0 text-[#d6a419]"
             />
           )}
 
-          <span className="truncate text-sm font-medium">
+          <span className="truncate text-[12.5px] font-medium leading-tight">
             {category.name}
           </span>
         </span>
 
         {hasChildren && (
           <ChevronRight
-            size={16}
+            size={14}
             className={[
               "shrink-0",
               active ? "text-[#d6a419]" : "text-slate-400",
@@ -638,7 +638,7 @@ export function AllCategoriesMenu({
 
   return (
     <div className="relative w-fit min-w-0 max-w-[90vw] overflow-hidden bg-white">
-      <div className="flex max-h-[520px] min-h-[380px] w-fit min-w-0 max-w-[90vw] overflow-hidden">
+      <div className="flex max-h-[min(440px,calc(100vh-165px))] min-h-[300px] w-fit min-w-0 max-w-[90vw] overflow-hidden">
         <div className="flex w-fit min-w-0 overflow-x-hidden">
           {Array.from(
             { length: activePath.length + 1 },
@@ -665,13 +665,13 @@ export function AllCategoriesMenu({
                 <div
                   key={`category-column-${depth}`}
                   className={[
-                    "w-[240px] min-w-0 min-h-[380px] shrink-0 overflow-y-auto p-2",
+                    "w-[215px] sm:w-[220px] min-w-0 min-h-[300px] shrink-0 overflow-y-auto p-1.5",
                     depth > 0
                       ? "border-l border-slate-100"
                       : "bg-white",
                   ].join(" ")}
                 >
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     {visibleCategories.map((category) =>
                       renderDesktopCategoryItem(category, depth)
                     )}
@@ -688,7 +688,7 @@ export function AllCategoriesMenu({
                             cancelCloseTimer();
                             setActivePath((current) => current.slice(0, depth));
                           }}
-                          className="w-full rounded-lg px-2 py-2 text-left text-xs font-semibold text-[#12233F] transition hover:bg-[#fffbf2] hover:text-[#D6A419]"
+                          className="w-full rounded-md px-2 py-1 text-left text-[11px] font-semibold text-[#12233F] transition hover:bg-[#fffbf2] hover:text-[#D6A419]"
                         >
                           {showAll ? "Show Less" : "+ More"}
                         </button>
@@ -701,20 +701,20 @@ export function AllCategoriesMenu({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-3 py-2">
         <Link
           href="/categories"
           onClick={onClose}
-          className="flex min-w-0 items-center gap-2 text-sm font-semibold text-[#12233F] transition hover:text-[#D6A419]"
+          className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-[#12233F] transition hover:text-[#D6A419]"
         >
           <span className="truncate">
             {t("browseAllCategories")}
           </span>
 
-          <ArrowRight size={15} className="shrink-0" />
+          <ArrowRight size={13} className="shrink-0" />
         </Link>
 
-        <span className="shrink-0 text-xs text-slate-400">
+        <span className="shrink-0 text-[11px] text-slate-400">
           {categories.length} {t("mainCategories")}
         </span>
       </div>
