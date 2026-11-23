@@ -7,7 +7,8 @@
 export type ProductBasicInfo = {
   title: string;
   slug: string;
- sku: string;
+  sku: string;
+  brand?: string;
   shortDescription: string;
   description: string;
 

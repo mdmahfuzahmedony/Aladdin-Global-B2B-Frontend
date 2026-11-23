@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { ComponentType, Dispatch, SetStateAction } from "react";
 
-import { ChevronDown, ChevronRight, Globe } from "lucide-react";
+import { ChevronDown, ChevronRight, Globe, Tag } from "lucide-react";
 
 import ProductDescriptionEditor from "./product-field/ProductDescriptionEditor";
 import { getFashionFieldComponent } from "./product-field/Fashion/fieldRegistry";
@@ -1401,6 +1401,22 @@ export default function ProductInformation({
     }));
   };
 
+  const currentBrand = String(
+    productAttributes?.brand ||
+      productAttributes?.brandMaker ||
+      productAttributes?.brandName ||
+      ""
+  );
+
+  const handleBrandChange = (val: string) => {
+    setProductAttributes((prev) => ({
+      ...prev,
+      brand: val,
+      brandMaker: val,
+      brandName: val,
+    }));
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -1624,23 +1640,46 @@ export default function ProductInformation({
           />
         </div>
 
-        {/* Product SKU */}
-        <div>
-          <label
-            htmlFor="product-sku"
-            className="mb-2 block text-xs font-semibold text-slate-700"
-          >
-            Product SKU
-          </label>
+        {/* Product SKU and Brand Name */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Product SKU */}
+          <div>
+            <label
+              htmlFor="product-sku"
+              className="mb-2 block text-xs font-semibold text-slate-700"
+            >
+              Product SKU
+            </label>
 
-          <input
-            id="product-sku"
-            type="text"
-            value={form.sku ?? ""}
-            onChange={(event) => onFieldChange("sku", event.target.value)}
-            placeholder="Enter product SKU"
-            className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-[#D6A419]"
-          />
+            <input
+              id="product-sku"
+              type="text"
+              value={form.sku ?? ""}
+              onChange={(event) => onFieldChange("sku", event.target.value)}
+              placeholder="Enter product SKU"
+              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-[#D6A419]"
+            />
+          </div>
+
+          {/* Product Brand */}
+          <div>
+            <label
+              htmlFor="product-brand"
+              className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-700"
+            >
+              <Tag size={14} className="text-[#D6A419]" />
+              <span>Product Brand (ব্র্যান্ডের নাম)</span>
+            </label>
+
+            <input
+              id="product-brand"
+              type="text"
+              value={currentBrand}
+              onChange={(event) => handleBrandChange(event.target.value)}
+              placeholder="যেমন: Samsung, Nike, Nestle, Michelin, Motul..."
+              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-[#D6A419]"
+            />
+          </div>
         </div>
 
         {/* Country of Origin (উৎপাদনকারী দেশ) */}
