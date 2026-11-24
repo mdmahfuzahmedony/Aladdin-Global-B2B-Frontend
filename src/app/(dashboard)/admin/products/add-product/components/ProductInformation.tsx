@@ -26,6 +26,7 @@ import GroceryDispatcher from "./product-field/Grocery/GroceryDispatcher";
 import ToysDispatcher from "./product-field/Toys/ToysDispatcher";
 import GiftsCraftsDispatcher from "./product-field/GiftsCrafts/GiftsCraftsDispatcher";
 import AutomotiveDispatcher from "./product-field/Automotive/AutomotiveDispatcher";
+import IndustrialMachineryDispatcher from "./product-field/IndustrialMachinery/IndustrialMachineryDispatcher";
 
 // Grocery - Beverages
 import Juice from "./product-field/Grocery/Beverages/Juice";
@@ -673,6 +674,32 @@ function findComponentForCategory(
     });
   if (isAutomotiveCategory) {
     return AutomotiveDispatcher;
+  }
+
+  // Industrial, Commercial Equipment & Machinery
+  const isIndustrialCategory =
+    key.includes("industrial") ||
+    key.includes("machinery") ||
+    key.includes("commercial-equipment") ||
+    rawLower.includes("industrial") ||
+    rawLower.includes("machinery") ||
+    rawLower.includes("equipment & machinery") ||
+    rawLower.includes("যন্ত্রপাতি") ||
+    rawLower.includes("ইন্ডাস্ট্রিয়াল") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return (
+        pKey.includes("industrial") ||
+        pKey.includes("machinery") ||
+        pKey.includes("commercial-equipment") ||
+        name.toLowerCase().includes("industrial") ||
+        name.toLowerCase().includes("machinery") ||
+        name.toLowerCase().includes("যন্ত্রপাতি") ||
+        name.toLowerCase().includes("ইন্ডাস্ট্রিয়াল")
+      );
+    });
+  if (isIndustrialCategory) {
+    return IndustrialMachineryDispatcher;
   }
 
   // Fashion

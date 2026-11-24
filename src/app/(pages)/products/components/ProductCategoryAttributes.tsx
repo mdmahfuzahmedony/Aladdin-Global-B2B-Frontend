@@ -80,6 +80,7 @@ export type CategoryDomain =
   | "TOYS_GAMES"
   | "GIFTS_CRAFTS"
   | "AUTOMOTIVE"
+  | "INDUSTRIAL_MACHINERY"
   | "GENERAL";
 
 export interface HighlightItem {
@@ -928,6 +929,33 @@ export function detectCategoryDomain(
     keys.includes("powersourceinput")
   ) {
     return "AUTOMOTIVE";
+  }
+
+  // 22. Industrial, Commercial Equipment & Machinery
+  if (
+    combined.includes("industrial") ||
+    combined.includes("machinery") ||
+    combined.includes("commercial equipment") ||
+    combined.includes("woodworking") ||
+    combined.includes("fabrication") ||
+    combined.includes("lathe") ||
+    combined.includes("metal") ||
+    combined.includes("packaging & publishing") ||
+    combined.includes("textile & garment") ||
+    combined.includes("agricultural machinery") ||
+    combined.includes("food processing") ||
+    combined.includes("medical & laboratory") ||
+    combined.includes("hospital, medical") ||
+    combined.includes("যন্ত্রপাতি") ||
+    combined.includes("ইন্ডাস্ট্রিয়াল") ||
+    keys.includes("machinerytype") ||
+    keys.includes("outputcapacity") ||
+    keys.includes("automationgrade") ||
+    keys.includes("spindlespeed") ||
+    keys.includes("sewingspeed") ||
+    keys.includes("controlsystem")
+  ) {
+    return "INDUSTRIAL_MACHINERY";
   }
 
   return "GENERAL";
@@ -1883,6 +1911,69 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
       }
       break;
     }
+
+    case "INDUSTRIAL_MACHINERY": {
+      // 1. Machine / Equipment Type
+      const machType = getVal("machineryType");
+      if (machType) {
+        highlights.push({
+          id: "machType",
+          label: "Machine Type",
+          value: machType,
+          icon: <Gauge size={13} />,
+          variant: "amber",
+        });
+      }
+
+      // 2. Power Rating / Voltage
+      const power = getVal("powerRating") || getVal("voltagePhase") || getVal("powerSource");
+      if (power) {
+        highlights.push({
+          id: "power",
+          label: "Power",
+          value: power,
+          icon: <Zap size={13} />,
+          variant: "blue",
+        });
+      }
+
+      // 3. Output Capacity / Throughput
+      const capacity = getVal("outputCapacity") || getVal("workingCapacity");
+      if (capacity) {
+        highlights.push({
+          id: "capacity",
+          label: "Capacity",
+          value: capacity,
+          icon: <Activity size={13} />,
+          variant: "emerald",
+        });
+      }
+
+      // 4. Automation Grade / Control
+      const autoGrade = getVal("automationGrade") || getVal("controlSystem");
+      if (autoGrade) {
+        highlights.push({
+          id: "autoGrade",
+          label: "Operation",
+          value: autoGrade,
+          icon: <Cpu size={13} />,
+          variant: "indigo",
+        });
+      }
+
+      // 5. Warranty Period
+      const warranty = getVal("warrantyPeriod");
+      if (warranty && warranty !== "No Warranty") {
+        highlights.push({
+          id: "warranty",
+          label: "Warranty",
+          value: warranty,
+          icon: <ShieldCheck size={13} />,
+          variant: "slate",
+        });
+      }
+      break;
+    }
       break;
   }
 
@@ -2760,6 +2851,65 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
         rows: qualitySpecs,
       });
     }
+  } else if (domain === "INDUSTRIAL_MACHINERY") {
+    // 1. Power, Output & Technical Specifications
+    const techSpecs = buildRows([
+      "machineryType",
+      "modelNumber",
+      "outputCapacity",
+      "workingCapacity",
+      "powerRating",
+      "voltagePhase",
+      "powerSource",
+      "operatingSpecs",
+      "spindleSpeed",
+      "sewingSpeed",
+      "airPressure",
+    ]);
+    if (techSpecs.length > 0) {
+      groups.push({
+        id: "mach-tech-specs",
+        title: "Power, Output & Technical Specifications",
+        icon: <Zap size={16} className="text-amber-600" />,
+        rows: techSpecs,
+      });
+    }
+
+    // 2. Automation, Controls & Machine Build
+    const buildSpecs = buildRows([
+      "automationGrade",
+      "controlSystem",
+      "contactMaterial",
+      "displayInterface",
+      "sterilizationMethod",
+      "mobilityType",
+      "operatingWeight",
+      "dimensions",
+    ]);
+    if (buildSpecs.length > 0) {
+      groups.push({
+        id: "mach-build-specs",
+        title: "Automation, Control & Engineering Build",
+        icon: <Cpu size={16} className="text-blue-600" />,
+        rows: buildSpecs,
+      });
+    }
+
+    // 3. Safety, Certifications & Warranty
+    const qualitySpecs = buildRows([
+      "safetyFeatures",
+      "certification",
+      "warrantyPeriod",
+      "countryOfOrigin",
+    ]);
+    if (qualitySpecs.length > 0) {
+      groups.push({
+        id: "mach-quality-specs",
+        title: "Safety, Certifications & Warranty",
+        icon: <ShieldCheck size={16} className="text-emerald-600" />,
+        rows: qualitySpecs,
+      });
+    }
   }
 
   // Handle custom dynamic specifications
@@ -2767,10 +2917,10 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
     processedKeys.add("customSpecs");
     const customRows: SpecRow[] = [];
     attrs.customSpecs.forEach((spec: any, idx: number) => {
-      if (spec && (spec.label || spec.value)) {
+      if (spec && (spec.label || spec.key || spec.value)) {
         customRows.push({
           key: `custom_${idx}`,
-          label: String(spec.label || "Specification"),
+          label: String(spec.label || spec.key || "Specification"),
           value: String(spec.value || "Yes"),
         });
       }
