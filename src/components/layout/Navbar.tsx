@@ -383,7 +383,7 @@ export default function MainNavbar() {
 
   // TOP PROMO BANNER
   const bannerContent = (
-    <div className="relative h-[50px] overflow-hidden rounded-none bg-slate-100 sm:h-[80px] xl:h-[80px]">
+    <div className="relative h-[50px] overflow-hidden rounded-none bg-slate-100 sm:h-[60px] xl:h-[60px]">
       {bannerImage ? (
         <Link
           href={activeBanner?.link || "/"}
