@@ -25,7 +25,7 @@ const API_URL =
 
 const CATEGORY_API = `${API_URL}/api/categories/main-with-count`;
 
-const MAIN_CATEGORY_LIMIT = 5;
+const MAIN_CATEGORY_LIMIT = 12;
 const CHILD_CATEGORY_LIMIT = 3;
 
 // ======================================================
