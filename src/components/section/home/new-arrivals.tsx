@@ -141,11 +141,11 @@ export default function NewArrivalsPage() {
 
           // Pricing
           const regularPrice = Number(
-            item.pricing?.customerRegularPrice ?? 0
+            item.pricing?.customerRegularPrice ?? item.regularPrice ?? item.price ?? 0
           );
 
           const salePrice = Number(
-            item.pricing?.customerSalePrice ?? 0
+            item.pricing?.customerSalePrice ?? item.salePrice ?? 0
           );
 
           const flashSalePrice = Number(

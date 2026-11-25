@@ -71,8 +71,8 @@ export default function JustForYouSection() {
                 ) / reviewsCount
               : Number(item.topRatedAttribute?.averageRating ?? 0);
 
-          const regularPrice = Number(item.pricing?.customerRegularPrice ?? 0);
-          const salePrice = Number(item.pricing?.customerSalePrice ?? 0);
+          const regularPrice = Number(item.pricing?.customerRegularPrice ?? item.regularPrice ?? item.price ?? 0);
+          const salePrice = Number(item.pricing?.customerSalePrice ?? item.salePrice ?? 0);
           const flashSalePrice = Number(item.flashSaleAttribute?.flashSalePrice ?? 0);
           const isFlashSale =
             item.flashSaleAttribute !== null &&

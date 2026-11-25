@@ -153,7 +153,7 @@ export default function FlashSaleSection() {
               );
 
               const originalPrice = Number(
-                item.pricing?.customerRegularPrice ?? 0
+                item.pricing?.customerRegularPrice ?? item.regularPrice ?? item.price ?? 0
               );
 
               const discountValue =

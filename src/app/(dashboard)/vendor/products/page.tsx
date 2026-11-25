@@ -133,26 +133,39 @@ function formatMoney(amount?: number | null): string {
 function getProductPrice(product: ApiProduct): number | null {
   const pricing = product.pricing;
 
-  const value =
-    pricing?.customerSalePrice ??
-    pricing?.salePrice ??
-    pricing?.finalPrice ??
-    pricing?.sellingPrice ??
-    pricing?.price ??
-    pricing?.customerRegularPrice ??
-    pricing?.regularPrice ??
-    pricing?.basePrice ??
-    product.sellingPrice ??
-    product.salePrice ??
-    product.price ??
-    product.regularPrice;
+  const saleCandidates = [
+    pricing?.customerSalePrice,
+    pricing?.salePrice,
+    pricing?.finalPrice,
+    pricing?.sellingPrice,
+    product.sellingPrice,
+    product.salePrice,
+  ];
 
-  if (value === undefined || value === null || value === "") {
-    return null;
+  for (const candidate of saleCandidates) {
+    if (candidate !== undefined && candidate !== null && candidate !== "") {
+      const num = Number(candidate);
+      if (Number.isFinite(num) && num > 0) return num;
+    }
   }
 
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+  const regularCandidates = [
+    pricing?.customerRegularPrice,
+    pricing?.regularPrice,
+    pricing?.price,
+    pricing?.basePrice,
+    product.price,
+    product.regularPrice,
+  ];
+
+  for (const candidate of regularCandidates) {
+    if (candidate !== undefined && candidate !== null && candidate !== "") {
+      const num = Number(candidate);
+      if (Number.isFinite(num) && num >= 0) return num;
+    }
+  }
+
+  return null;
 }
 
 function getErrorMessage(data: unknown, fallback: string): string {

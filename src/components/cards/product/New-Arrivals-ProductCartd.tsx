@@ -83,16 +83,24 @@ export default function ProductCard({
   } catch {}
   const productUrl = cleanSlug ? `/products/${cleanSlug}` : "#";
 
+  const rawPrice = Number(price ?? 0);
+  const rawRegular = Number(regularPrice ?? 0);
+  const rawFlash = Number(flashSalePrice ?? 0);
+
   const displayPrice =
-    isFlashSale && flashSalePrice && flashSalePrice > 0
-      ? flashSalePrice
-      : price;
+    isFlashSale && rawFlash > 0
+      ? rawFlash
+      : rawPrice > 0
+        ? rawPrice
+        : rawRegular > 0
+          ? rawRegular
+          : 0;
 
   const effectiveRegularPrice =
-    regularPrice && regularPrice > displayPrice
-      ? regularPrice
-      : price > displayPrice
-        ? price
+    rawRegular > displayPrice
+      ? rawRegular
+      : rawPrice > displayPrice
+        ? rawPrice
         : 0;
 
   const discountPercent =
@@ -332,13 +340,13 @@ export default function ProductCard({
         <div className="mt-1.5 flex items-center gap-1.5 flex-wrap px-1 sm:px-1.5">
           {/* Main Display Price */}
           <span className="text-sm sm:text-base font-black text-[#f95738]">
-            ৳{displayPrice.toLocaleString("en-BD")}
+            ৳{(displayPrice || 0).toLocaleString("en-BD")}
           </span>
 
           {/* Regular Strikethrough Price */}
           {effectiveRegularPrice > displayPrice && (
             <span className="text-[11px] font-medium text-slate-400 line-through">
-              ৳{effectiveRegularPrice.toLocaleString("en-BD")}
+              ৳{(effectiveRegularPrice || 0).toLocaleString("en-BD")}
             </span>
           )}
 

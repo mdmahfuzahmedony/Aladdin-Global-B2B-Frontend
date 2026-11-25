@@ -262,16 +262,37 @@ export default function ProductDetailsPage({ params }: Props) {
         const flashSalePrice = Number(item.flashSaleAttribute?.flashSalePrice ?? 0);
         const isFlashSale = Boolean(item.flashSaleAttribute && flashSalePrice > 0);
 
-        const regularPrice = Number(item.pricing?.customerRegularPrice ?? 0);
+        const rawRegular = Number(
+          item.pricing?.customerRegularPrice ??
+          item.regularPrice ??
+          item.price ??
+          0
+        );
+
+        const rawSale =
+          item.pricing?.customerSalePrice !== null &&
+          item.pricing?.customerSalePrice !== undefined &&
+          item.pricing?.customerSalePrice !== ""
+            ? Number(item.pricing.customerSalePrice)
+            : item.salePrice !== undefined && item.salePrice !== null && item.salePrice !== ""
+              ? Number(item.salePrice)
+              : undefined;
 
         const salePrice =
-          item.pricing?.customerSalePrice !== null &&
-          item.pricing?.customerSalePrice !== undefined
-            ? Number(item.pricing.customerSalePrice)
+          rawSale !== undefined && Number.isFinite(rawSale) && rawSale > 0
+            ? rawSale
             : undefined;
 
+        const regularPrice =
+          Number.isFinite(rawRegular) && rawRegular > 0
+            ? rawRegular
+            : (salePrice ?? 0);
+
         // Current effective price: flash sale takes priority, then sale price, then regular price
-        const currentPrice = isFlashSale ? flashSalePrice : (salePrice ?? regularPrice);
+        const currentPrice =
+          isFlashSale && flashSalePrice > 0
+            ? flashSalePrice
+            : (salePrice !== undefined && salePrice > 0 ? salePrice : regularPrice);
 
         // Effective regular/original price for strikethrough comparison
         const effectiveRegularPrice =

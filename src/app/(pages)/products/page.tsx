@@ -129,11 +129,17 @@ function FilterSection({
 }
 
 function getRegularPrice(product: Product): number {
-  return Number(product.pricing?.customerRegularPrice ?? 0);
+  return Number(
+    product.pricing?.customerRegularPrice ??
+    (product as any).regularPrice ??
+    (product as any).price ??
+    0
+  );
 }
 
 function getSalePrice(product: Product): number | null {
-  const value = product.pricing?.customerSalePrice;
+  const value =
+    product.pricing?.customerSalePrice ?? (product as any).salePrice;
 
   if (value == null || value === "") return null;
 
@@ -799,10 +805,13 @@ function ProductsContent() {
                         title={product.title}
                         image={image}
                         price={
-                          isFlashSale
-                            ? regularPrice
+                          isFlashSale &&
+                          product.flashSaleAttribute?.flashSalePrice != null &&
+                          Number(product.flashSaleAttribute.flashSalePrice) > 0
+                            ? Number(product.flashSaleAttribute.flashSalePrice)
                             : (salePrice ?? regularPrice)
                         }
+                        regularPrice={regularPrice > 0 ? regularPrice : undefined}
                         rating={Number(
                           product.topRatedAttribute?.averageRating ?? 0,
                         )}

@@ -49,6 +49,9 @@ import {
   Gift,
   Heart,
   Palette,
+  KeyRound,
+  Laptop,
+  Globe,
 } from "lucide-react";
 import type { ProductDetails, ProductAttributes } from "../types";
 
@@ -81,6 +84,7 @@ export type CategoryDomain =
   | "GIFTS_CRAFTS"
   | "AUTOMOTIVE"
   | "INDUSTRIAL_MACHINERY"
+  | "SOFTWARE_SERVICES"
   | "GENERAL";
 
 export interface HighlightItem {
@@ -956,6 +960,34 @@ export function detectCategoryDomain(
     keys.includes("controlsystem")
   ) {
     return "INDUSTRIAL_MACHINERY";
+  }
+
+  // 23. Software & Digital Services
+  if (
+    combined.includes("software") ||
+    combined.includes("service") ||
+    combined.includes("antivirus") ||
+    combined.includes("security") ||
+    combined.includes("programming") ||
+    combined.includes("website") ||
+    combined.includes("operating system") ||
+    combined.includes("e-learning") ||
+    combined.includes("video editing") ||
+    combined.includes("photo editing") ||
+    combined.includes("vpn") ||
+    combined.includes("firewall") ||
+    combined.includes("সফটওয়্যার") ||
+    combined.includes("সার্ভিস") ||
+    keys.includes("softwaretype") ||
+    keys.includes("licensetype") ||
+    keys.includes("securityproducttype") ||
+    keys.includes("solutiontype") ||
+    keys.includes("techstack") ||
+    keys.includes("osname") ||
+    keys.includes("creativeproducttype") ||
+    keys.includes("deliverymethod")
+  ) {
+    return "SOFTWARE_SERVICES";
   }
 
   return "GENERAL";
@@ -1974,6 +2006,87 @@ export function extractCategoryHighlights(product: ProductDetails): HighlightIte
       }
       break;
     }
+
+    case "SOFTWARE_SERVICES": {
+      // 1. Software / Solution / Service Title
+      const softType =
+        getVal("softwareType") ||
+        getVal("securityProductType") ||
+        getVal("solutionType") ||
+        getVal("osName") ||
+        getVal("creativeProductType");
+      if (softType) {
+        highlights.push({
+          id: "softType",
+          label: "Software",
+          value: softType,
+          icon: <Laptop size={13} />,
+          variant: "indigo",
+        });
+      }
+
+      // 2. License / Pricing Model
+      const license =
+        getVal("licenseType") ||
+        getVal("licenseUsage") ||
+        getVal("sourceCodeIncluded");
+      if (license) {
+        highlights.push({
+          id: "license",
+          label: "License",
+          value: license,
+          icon: <KeyRound size={13} />,
+          variant: "emerald",
+        });
+      }
+
+      // 3. Platform / Architecture / Tech Stack
+      const platform =
+        getVal("deploymentPlatform") ||
+        getVal("osCompatibility") ||
+        getVal("techStack") ||
+        getVal("bitVersion") ||
+        getVal("softwareCompatibility");
+      if (platform) {
+        highlights.push({
+          id: "platform",
+          label: "Platform",
+          value: platform,
+          icon: <Globe size={13} />,
+          variant: "blue",
+        });
+      }
+
+      // 4. Delivery Method
+      const delivery = getVal("deliveryMethod") || getVal("activationMethod");
+      if (delivery) {
+        highlights.push({
+          id: "delivery",
+          label: "Delivery",
+          value: delivery,
+          icon: <Zap size={13} />,
+          variant: "amber",
+        });
+      }
+
+      // 5. Support / Updates Duration
+      const support =
+        getVal("supportDuration") ||
+        getVal("validityPeriod") ||
+        getVal("freeBugFixSupport") ||
+        getVal("officialUpdatesSupported") ||
+        getVal("accessDuration");
+      if (support) {
+        highlights.push({
+          id: "support",
+          label: "Support",
+          value: support,
+          icon: <ShieldCheck size={13} />,
+          variant: "rose",
+        });
+      }
+      break;
+    }
       break;
   }
 
@@ -2908,6 +3021,89 @@ export function extractGroupedSpecifications(product: ProductDetails): SpecGroup
         title: "Safety, Certifications & Warranty",
         icon: <ShieldCheck size={16} className="text-emerald-600" />,
         rows: qualitySpecs,
+      });
+    }
+  } else if (domain === "SOFTWARE_SERVICES") {
+    // 1. Software & License Specifications
+    const licenseSpecs = buildRows([
+      "softwareType",
+      "securityProductType",
+      "solutionType",
+      "osName",
+      "creativeProductType",
+      "edition",
+      "licenseType",
+      "licenseUsage",
+      "sourceCodeIncluded",
+      "deviceCoverage",
+      "userCapacity",
+      "validityPeriod",
+      "accessDuration",
+      "multiBranchSupport",
+      "offlineSupport",
+    ]);
+    if (licenseSpecs.length > 0) {
+      groups.push({
+        id: "soft-license-specs",
+        title: "Software & License Specifications",
+        icon: <KeyRound size={16} className="text-blue-600" />,
+        rows: licenseSpecs,
+      });
+    }
+
+    // 2. Technical Stack & Compatibility
+    const techSpecs = buildRows([
+      "deploymentPlatform",
+      "osCompatibility",
+      "architecture",
+      "bitVersion",
+      "techStack",
+      "frontendFramework",
+      "backendTechnology",
+      "databaseSupported",
+      "databaseUsed",
+      "responsiveDesign",
+      "softwareCompatibility",
+      "resolutionQuality",
+      "minRamRequirement",
+      "minStorageRequirement",
+      "systemRequirements",
+      "securityFeatures",
+      "regionLock",
+    ]);
+    if (techSpecs.length > 0) {
+      groups.push({
+        id: "soft-tech-specs",
+        title: "Technical Stack & Platform Compatibility",
+        icon: <Cpu size={16} className="text-violet-600" />,
+        rows: techSpecs,
+      });
+    }
+
+    // 3. Delivery, Support & Documentation
+    const supportSpecs = buildRows([
+      "deliveryMethod",
+      "activationMethod",
+      "supportDuration",
+      "freeBugFixSupport",
+      "officialUpdatesSupported",
+      "officialSupport",
+      "setupAssistance",
+      "installationSupport",
+      "demoUrl",
+      "adminPanelUrl",
+      "documentationUrl",
+      "languageInstruction",
+      "certificateProvided",
+      "includedAssetsFiles",
+      "brandMaker",
+    ]);
+    if (supportSpecs.length > 0) {
+      groups.push({
+        id: "soft-support-specs",
+        title: "Delivery, Support & Documentation",
+        icon: <ShieldCheck size={16} className="text-emerald-600" />,
+        rows: supportSpecs,
       });
     }
   }

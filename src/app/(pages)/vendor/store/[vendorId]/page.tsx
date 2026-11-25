@@ -243,23 +243,28 @@ export default function VendorStorePage({ params }: Props) {
 
   // Get the effective customer price.
   function getProductPrice(product: Product) {
-    if (!product.pricing) return null;
+    const rawReg =
+      product.pricing?.customerRegularPrice ??
+      (product as any).regularPrice ??
+      (product as any).price;
+    const regularPrice = rawReg != null ? Number(rawReg) : 0;
 
-    const regularPrice = Number(product.pricing.customerRegularPrice);
-
-    const saleValue = product.pricing.customerSalePrice;
+    const saleValue =
+      product.pricing?.customerSalePrice ?? (product as any).salePrice;
     const salePrice =
-      saleValue !== null && saleValue !== undefined ? Number(saleValue) : null;
+      saleValue !== null && saleValue !== undefined && saleValue !== ""
+        ? Number(saleValue)
+        : null;
 
     if (
       salePrice !== null &&
       Number.isFinite(salePrice) &&
       salePrice > 0 &&
-      salePrice < regularPrice
+      (salePrice < regularPrice || regularPrice <= 0)
     ) {
       return {
         current: salePrice,
-        old: regularPrice,
+        old: regularPrice > salePrice ? regularPrice : null,
       };
     }
 
@@ -767,6 +772,9 @@ export default function VendorStorePage({ params }: Props) {
                       title={product.title}
                       image={image}
                       price={regularOrSalePrice}
+                      regularPrice={
+                        getProductPrice(product)?.old ?? undefined
+                      }
                       rating={rating}
                       reviewsCount={reviewsCount}
                       moq={firstSize || "1"}

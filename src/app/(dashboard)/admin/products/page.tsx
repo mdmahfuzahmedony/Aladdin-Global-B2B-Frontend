@@ -429,9 +429,11 @@ export default function ProductsPage() {
             item.vendor?.storeName ??
             item.vendor?.user?.fullName ??
             "Unknown Seller",
-          price: Number(
-            pricing.customerSalePrice ?? pricing.customerRegularPrice ?? 0,
-          ),
+          price: (() => {
+            const sale = Number(pricing.customerSalePrice ?? (item as any).salePrice ?? 0);
+            const reg = Number(pricing.customerRegularPrice ?? (item as any).regularPrice ?? (item as any).price ?? 0);
+            return sale > 0 ? sale : reg;
+          })(),
           stock,
           status:
             item.status === "PENDING"

@@ -563,14 +563,25 @@ export default function CategoryBrowser({ slug }: { slug?: string }) {
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3.5">
                   {displayedProducts.map((product) => {
                     const regularPrice = Number(
-                      product.pricing?.customerRegularPrice ?? 0,
+                      product.pricing?.customerRegularPrice ?? (product as any).regularPrice ?? (product as any).price ?? 0,
                     );
 
                     const salePrice = Number(
-                      product.pricing?.customerSalePrice ?? 0,
+                      product.pricing?.customerSalePrice ?? (product as any).salePrice ?? 0,
                     );
 
-                    const isFlashSale = Boolean(product.flashSaleAttribute);
+                    const flashSalePrice = Number(
+                      product.flashSaleAttribute?.flashSalePrice ?? 0,
+                    );
+                    const isFlashSale = Boolean(
+                      product.flashSaleAttribute && flashSalePrice > 0,
+                    );
+
+                    const effectivePrice = isFlashSale
+                      ? flashSalePrice
+                      : salePrice > 0
+                        ? salePrice
+                        : regularPrice;
 
                     return (
                       <ProductCard
@@ -579,13 +590,8 @@ export default function CategoryBrowser({ slug }: { slug?: string }) {
                         slug={product.slug}
                         title={product.title}
                         image={getProductImage(product)}
-                        price={
-                          isFlashSale
-                            ? regularPrice
-                            : salePrice > 0
-                              ? salePrice
-                              : regularPrice
-                        }
+                        price={effectivePrice}
+                        regularPrice={regularPrice > 0 ? regularPrice : undefined}
                         rating={Number(
                           product.topRatedAttribute?.averageRating ?? 0,
                         )}

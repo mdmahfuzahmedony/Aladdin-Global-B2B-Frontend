@@ -27,6 +27,7 @@ import ToysDispatcher from "./product-field/Toys/ToysDispatcher";
 import GiftsCraftsDispatcher from "./product-field/GiftsCrafts/GiftsCraftsDispatcher";
 import AutomotiveDispatcher from "./product-field/Automotive/AutomotiveDispatcher";
 import IndustrialMachineryDispatcher from "./product-field/IndustrialMachinery/IndustrialMachineryDispatcher";
+import SoftwareServicesDispatcher from "./product-field/SoftwareServices/SoftwareServicesDispatcher";
 
 // Grocery - Beverages
 import Juice from "./product-field/Grocery/Beverages/Juice";
@@ -700,6 +701,32 @@ function findComponentForCategory(
     });
   if (isIndustrialCategory) {
     return IndustrialMachineryDispatcher;
+  }
+
+  // Software & Services
+  const isSoftwareServicesCategory =
+    key.includes("software") ||
+    key.includes("service") ||
+    rawLower.includes("software") ||
+    rawLower.includes("service") ||
+    rawLower.includes("সফটওয়্যার") ||
+    rawLower.includes("সার্ভিস") ||
+    rawLower.includes("antivirus") ||
+    rawLower.includes("programming") ||
+    rawLower.includes("website") ||
+    parentNames.some((name) => {
+      const pKey = normalizeCategoryName(name);
+      return (
+        pKey.includes("software") ||
+        pKey.includes("service") ||
+        name.toLowerCase().includes("software") ||
+        name.toLowerCase().includes("service") ||
+        name.toLowerCase().includes("সফটওয়্যার") ||
+        name.toLowerCase().includes("সার্ভিস")
+      );
+    });
+  if (isSoftwareServicesCategory) {
+    return SoftwareServicesDispatcher;
   }
 
   // Fashion

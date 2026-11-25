@@ -275,9 +275,19 @@ export default function ProductInfo({ product, onColorChange }: Props) {
   // ------------------------------------------------------------
   // CALCULATIONS & PRICING
   // ------------------------------------------------------------
-  const currentPrice = Number(product.price ?? 0);
+  const currentPrice = Number(
+    product.price ??
+    (product as any).regularPrice ??
+    (product as any).pricing?.customerSalePrice ??
+    (product as any).pricing?.customerRegularPrice ??
+    0
+  );
   const oldPrice =
-    product.oldPrice !== undefined ? Number(product.oldPrice) : null;
+    product.oldPrice !== undefined && Number(product.oldPrice) > 0
+      ? Number(product.oldPrice)
+      : (product as any).regularPrice !== undefined && Number((product as any).regularPrice) > currentPrice
+        ? Number((product as any).regularPrice)
+        : null;
   const hasOldPrice = oldPrice !== null && oldPrice > currentPrice;
   const savingAmount = hasOldPrice ? oldPrice - currentPrice : 0;
   const discountPercent =
@@ -783,12 +793,12 @@ export default function ProductInfo({ product, onColorChange }: Props) {
 
         <div className="flex flex-wrap items-baseline gap-3">
           <span className="text-3xl font-extrabold text-[#12233f]">
-            ৳{currentPrice.toLocaleString()}
+            ৳{(currentPrice || 0).toLocaleString()}
           </span>
 
-          {hasOldPrice && (
+          {hasOldPrice && oldPrice !== null && (
             <span className="text-base font-semibold text-slate-400 line-through">
-              ৳{oldPrice.toLocaleString()}
+              ৳{(oldPrice || 0).toLocaleString()}
             </span>
           )}
 
