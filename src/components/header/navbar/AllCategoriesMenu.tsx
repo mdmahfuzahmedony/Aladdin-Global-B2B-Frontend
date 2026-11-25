@@ -702,18 +702,8 @@ export function AllCategoriesMenu({
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-3 py-2">
-        <Link
-          href="/categories"
-          onClick={onClose}
-          className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-[#12233F] transition hover:text-[#D6A419]"
-        >
-          <span className="truncate">
-            {t("browseAllCategories")}
-          </span>
-
-          <ArrowRight size={13} className="shrink-0" />
-        </Link>
-
+     
+<h2>More Catagory</h2>
         <span className="shrink-0 text-[11px] text-slate-400">
           {categories.length} {t("mainCategories")}
         </span>
