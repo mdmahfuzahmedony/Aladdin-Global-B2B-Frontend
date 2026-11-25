@@ -6,9 +6,10 @@ import Link from "next/link";
 
 import {
   AlertCircle,
-  ArrowRight,
   ChevronRight,
+  ChevronDown,
   Folder,
+  Layers3,
   Loader2,
 } from "lucide-react";
 
@@ -23,6 +24,9 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:6001";
 
 const CATEGORY_API = `${API_URL}/api/categories/main-with-count`;
+
+const MAIN_CATEGORY_LIMIT = 5;
+const CHILD_CATEGORY_LIMIT = 3;
 
 // ======================================================
 // TYPES
@@ -152,27 +156,30 @@ function mapNestedCategory(category: ApiCategory): CategoryNode {
 // Supports nested and flat API responses
 // ======================================================
 
-function buildCategoryTree(categories: ApiCategory[]): CategoryNode[] {
-  if (categories.length === 0) {
+function buildCategoryTree(
+  apiCategories: ApiCategory[]
+): CategoryNode[] {
+  if (apiCategories.length === 0) {
     return [];
   }
 
-  const hasNestedChildren = categories.some(
+  const hasNestedChildren = apiCategories.some(
     (category) =>
-      Array.isArray(category.children) && category.children.length > 0
+      Array.isArray(category.children) &&
+      category.children.length > 0
   );
 
   // API already provides a nested category tree
   if (hasNestedChildren) {
     return sortByOrder(
-      categories.filter((category) => !category.parentId)
+      apiCategories.filter((category) => !category.parentId)
     ).map(mapNestedCategory);
   }
 
   // API provides a flat category list
   const categoryMap = new Map<string, CategoryNode>();
 
-  categories.forEach((category) => {
+  apiCategories.forEach((category) => {
     categoryMap.set(category.id, {
       id: category.id,
       name: category.name,
@@ -189,19 +196,22 @@ function buildCategoryTree(categories: ApiCategory[]): CategoryNode[] {
 
   const roots: CategoryNode[] = [];
 
-  categories.forEach((category) => {
+  apiCategories.forEach((category) => {
     const current = categoryMap.get(category.id);
 
     if (!current) return;
 
-    if (category.parentId && categoryMap.has(category.parentId)) {
+    if (
+      category.parentId &&
+      categoryMap.has(category.parentId)
+    ) {
       categoryMap.get(category.parentId)!.children.push(current);
     } else {
       roots.push(current);
     }
   });
 
-  // Sort every level using the saved order
+  // Sort every level
   const sortTree = (items: CategoryNode[]): CategoryNode[] => {
     return sortByOrder(items).map((item) => ({
       ...item,
@@ -241,37 +251,21 @@ export function AllCategoriesMenu({
   // Desktop hover path
   const [activePath, setActivePath] = useState<CategoryNode[]>([]);
 
+  // Main category More / Show Less
+  const [showAllMainCategories, setShowAllMainCategories] =
+    useState(false);
+
   // Mobile expanded categories
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     () => new Set()
   );
 
-  // More / Show Less state for each individual category
-  const [showAllChildrenIds, setShowAllChildrenIds] = useState<Set<string>>(
-    () => new Set()
-  );
+  // Child More / Show Less
+  const [showAllChildrenIds, setShowAllChildrenIds] =
+    useState<Set<string>>(() => new Set());
 
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // ====================================================
-  // SHOW MORE / SHOW LESS
-  // ====================================================
-
-  const toggleShowAllChildren = (categoryId: string) => {
-    cancelCloseTimer();
-    onInteract?.();
-    setShowAllChildrenIds((current) => {
-      const next = new Set(current);
-
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
-      } else {
-        next.add(categoryId);
-      }
-
-      return next;
-    });
-  };
+  const closeTimerRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ====================================================
   // CLOSE TIMER
@@ -302,6 +296,47 @@ export function AllCategoriesMenu({
   }, [cancelCloseTimer]);
 
   // ====================================================
+  // SHOW MORE / SHOW LESS CHILDREN
+  // ====================================================
+
+  const toggleShowAllChildren = (categoryId: string) => {
+    cancelCloseTimer();
+    onInteract?.();
+
+    setShowAllChildrenIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+
+      return next;
+    });
+  };
+
+  // ====================================================
+  // SHOW MORE / SHOW LESS MAIN CATEGORIES
+  // ====================================================
+
+  const toggleMainCategories = () => {
+    cancelCloseTimer();
+    onInteract?.();
+
+    setShowAllMainCategories((current) => {
+      const nextValue = !current;
+
+      if (!nextValue) {
+        // When collapsing, return to the first main category
+        setActivePath(categories.length > 0 ? [categories[0]] : []);
+      }
+
+      return nextValue;
+    });
+  };
+
+  // ====================================================
   // LOAD CATEGORIES FROM API
   // ====================================================
 
@@ -322,7 +357,9 @@ export function AllCategoriesMenu({
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to load categories (${response.status})`);
+          throw new Error(
+            `Failed to load categories (${response.status})`
+          );
         }
 
         const payload: unknown = await response.json();
@@ -335,6 +372,7 @@ export function AllCategoriesMenu({
         setActivePath(tree.length > 0 ? [tree[0]] : []);
         setExpandedIds(new Set());
         setShowAllChildrenIds(new Set());
+        setShowAllMainCategories(false);
       } catch (err) {
         console.error("MegaMenu error:", err);
 
@@ -440,13 +478,16 @@ export function AllCategoriesMenu({
     depth: number
   ) => {
     const hasChildren = category.children.length > 0;
+
     const active =
       depth === 0 && activePath[0]?.id === category.id;
 
     return (
-      <a
+      <Link
         key={category.id}
         href={getCategoryHref(category)}
+        onMouseEnter={() => handleCategoryHover(category, depth)}
+        onFocus={() => handleCategoryHover(category, depth)}
         className={[
           "flex w-full min-w-0 items-center justify-between gap-1.5",
           "rounded-md px-2 text-left transition-all duration-150 ease-out",
@@ -455,8 +496,6 @@ export function AllCategoriesMenu({
             ? "bg-[#fff8e6] text-[#12233F] shadow-xs"
             : "text-slate-700 hover:bg-[#fffbf2] hover:text-[#12233F]",
         ].join(" ")}
-        onMouseEnter={() => handleCategoryHover(category, depth)}
-        onFocus={() => handleCategoryHover(category, depth)}
       >
         <span className="flex min-w-0 flex-1 items-center gap-1.5">
           {depth === 0 && (
@@ -482,7 +521,7 @@ export function AllCategoriesMenu({
             ].join(" ")}
           />
         )}
-      </a>
+      </Link>
     );
   };
 
@@ -500,7 +539,7 @@ export function AllCategoriesMenu({
 
     const visibleChildren = showAll
       ? category.children
-      : category.children.slice(0, 3);
+      : category.children.slice(0, CHILD_CATEGORY_LIMIT);
 
     return (
       <React.Fragment key={category.id}>
@@ -509,8 +548,10 @@ export function AllCategoriesMenu({
           onClick={() => handleCategoryTap(category)}
           aria-expanded={hasChildren ? expanded : undefined}
           className={[
-            "flex w-full items-center justify-between gap-3 border-b border-slate-100 px-3 text-left transition-colors hover:text-[#12233F]",
-            depth === 0 ? "py-2.5" : "py-1",
+            "flex w-full items-center justify-between gap-3",
+            "border-b border-slate-100 px-3 text-left transition-colors",
+            "hover:bg-[#fffbf2] hover:text-[#12233F]",
+            depth === 0 ? "py-2.5" : "py-2",
           ].join(" ")}
         >
           <span className="flex min-w-0 flex-1 items-center gap-2">
@@ -541,16 +582,16 @@ export function AllCategoriesMenu({
         </button>
 
         {hasChildren && expanded && (
-          <div className="w-full">
+          <div className="w-full bg-slate-50/60">
             {visibleChildren.map((child) =>
               renderMobileCategory(child, depth + 1)
             )}
 
-            {category.children.length > 3 && (
+            {category.children.length > CHILD_CATEGORY_LIMIT && (
               <button
                 type="button"
                 onClick={() => toggleShowAllChildren(category.id)}
-                className="ml-8 my-2 text-xs font-semibold text-[#12233F] hover:text-[#D6A419]"
+                className="ml-8 my-2 rounded-md px-2 py-1 text-xs font-semibold text-[#12233F] hover:bg-[#fff8e6] hover:text-[#D6A419]"
               >
                 {showAll ? "Show Less" : "+ More"}
               </button>
@@ -633,11 +674,26 @@ export function AllCategoriesMenu({
   }
 
   // ====================================================
+  // DESKTOP MAIN CATEGORY VISIBILITY
+  // ====================================================
+
+  const visibleMainCategories = showAllMainCategories
+    ? categories
+    : categories.slice(0, MAIN_CATEGORY_LIMIT);
+
+  const hasMoreMainCategories =
+    categories.length > MAIN_CATEGORY_LIMIT;
+
+  // ====================================================
   // DESKTOP MEGA MENU
   // ====================================================
 
   return (
-    <div className="relative w-fit min-w-0 max-w-[90vw] overflow-hidden bg-white">
+    <div
+      className="relative w-fit min-w-0 max-w-[90vw] overflow-hidden rounded-b-lg bg-white shadow-xl"
+      onMouseEnter={cancelCloseTimer}
+      onMouseLeave={scheduleClose}
+    >
       <div className="flex max-h-[min(440px,calc(100vh-165px))] min-h-[300px] w-fit min-w-0 max-w-[90vw] overflow-hidden">
         <div className="flex w-fit min-w-0 overflow-x-hidden">
           {Array.from(
@@ -657,17 +713,23 @@ export function AllCategoriesMenu({
                 : true;
 
               const visibleCategories =
-                depth === 0 || showAll
-                  ? columnCategories
-                  : columnCategories.slice(0, 3);
+                depth === 0
+                  ? visibleMainCategories
+                  : showAll
+                    ? columnCategories
+                    : columnCategories.slice(
+                        0,
+                        CHILD_CATEGORY_LIMIT
+                      );
 
               return (
                 <div
                   key={`category-column-${depth}`}
                   className={[
-                    "w-[215px] sm:w-[220px] min-w-0 min-h-[300px] shrink-0 overflow-y-auto p-1.5",
+                    "w-[215px] sm:w-[220px] min-w-0 min-h-[300px]",
+                    "shrink-0 overflow-y-auto p-1.5",
                     depth > 0
-                      ? "border-l border-slate-100"
+                      ? "border-l border-slate-100 bg-white"
                       : "bg-white",
                   ].join(" ")}
                 >
@@ -678,7 +740,7 @@ export function AllCategoriesMenu({
 
                     {depth > 0 &&
                       parent &&
-                      columnCategories.length > 3 && (
+                      columnCategories.length > CHILD_CATEGORY_LIMIT && (
                         <button
                           type="button"
                           onClick={() =>
@@ -686,11 +748,26 @@ export function AllCategoriesMenu({
                           }
                           onMouseEnter={() => {
                             cancelCloseTimer();
-                            setActivePath((current) => current.slice(0, depth));
+                            setActivePath((current) =>
+                              current.slice(0, depth)
+                            );
                           }}
-                          className="w-full rounded-md px-2 py-1 text-left text-[11px] font-semibold text-[#12233F] transition hover:bg-[#fffbf2] hover:text-[#D6A419]"
+                          className="flex w-full items-center gap-1.5 rounded-md px-2 py-2 text-left text-[11px] font-semibold text-[#12233F] transition hover:bg-[#fffbf2] hover:text-[#D6A419]"
                         >
-                          {showAll ? "Show Less" : "+ More"}
+                          {showAll ? (
+                            <>
+                              <ChevronDown
+                                size={13}
+                                className="rotate-180"
+                              />
+                              Show Less
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown size={13} />
+                              + More ({columnCategories.length - CHILD_CATEGORY_LIMIT})
+                            </>
+                          )}
                         </button>
                       )}
                   </div>
@@ -701,10 +778,46 @@ export function AllCategoriesMenu({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-3 py-2">
-     
-<h2>More Catagory</h2>
-        <span className="shrink-0 text-[11px] text-slate-400">
+      {/* ==================================================
+          MORE MAIN CATEGORIES FOOTER
+      ================================================== */}
+
+      <div className="flex min-h-[43px] items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-3 py-2">
+        <button
+          type="button"
+          onClick={toggleMainCategories}
+          disabled={!hasMoreMainCategories}
+          className={[
+            "flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5",
+            "text-xs font-semibold transition-all duration-200",
+            hasMoreMainCategories
+              ? "cursor-pointer text-[#12233F] hover:bg-[#fff3d2] hover:text-[#B88900]"
+              : "cursor-default text-slate-500",
+          ].join(" ")}
+        >
+          <Layers3
+            size={16}
+            className="shrink-0 text-[#D6A419]"
+          />
+
+          <span>
+            {showAllMainCategories
+              ? "Show Less Categories"
+              : "More Categories"}
+          </span>
+
+          {hasMoreMainCategories && (
+            <ChevronDown
+              size={14}
+              className={[
+                "shrink-0 transition-transform duration-200",
+                showAllMainCategories ? "rotate-180" : "",
+              ].join(" ")}
+            />
+          )}
+        </button>
+
+        <span className="shrink-0 text-[11px] font-medium text-slate-400">
           {categories.length} {t("mainCategories")}
         </span>
       </div>
