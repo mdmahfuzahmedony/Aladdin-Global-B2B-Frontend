@@ -714,7 +714,7 @@ export function AllCategoriesMenu({
       </div>
 
       {/* MORE MAIN CATEGORIES FOOTER */}
-      <div className="flex min-h-[43px] items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-3 py-2">
+      {/* <div className="flex min-h-[43px] items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-3 py-2">
         <button
           type="button"
           onClick={toggleMainCategories}
@@ -752,7 +752,7 @@ export function AllCategoriesMenu({
         <span className="shrink-0 text-[11px] font-medium text-slate-400">
           {categories.length} {t("mainCategories")}
         </span>
-      </div>
+      </div> */}
     </div>
   );
 }
