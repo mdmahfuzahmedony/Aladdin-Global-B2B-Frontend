@@ -26,7 +26,7 @@ const API_URL =
 const CATEGORY_API = `${API_URL}/api/categories/main-with-count`;
 
 const MAIN_CATEGORY_LIMIT = 12;
-const CHILD_CATEGORY_LIMIT = 3;
+const CHILD_CATEGORY_LIMIT =10;
 
 // ======================================================
 // TYPES
@@ -507,7 +507,7 @@ export function AllCategoriesMenu({
             />
           )}
 
-          <span className="truncate text-[12.5px] font-medium leading-tight">
+          <span className="truncate text-[14px] font-medium leading-tight">
             {category.name}
           </span>
         </span>
