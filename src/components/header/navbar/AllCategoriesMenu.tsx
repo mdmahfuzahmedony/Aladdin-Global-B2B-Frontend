@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -26,7 +25,7 @@ const API_URL =
 const CATEGORY_API = `${API_URL}/api/categories/main-with-count`;
 
 const MAIN_CATEGORY_LIMIT = 12;
-const CHILD_CATEGORY_LIMIT =10;
+const CHILD_CATEGORY_LIMIT = 10;
 
 // ======================================================
 // TYPES
@@ -153,7 +152,6 @@ function mapNestedCategory(category: ApiCategory): CategoryNode {
 
 // ======================================================
 // BUILD CATEGORY TREE
-// Supports nested and flat API responses
 // ======================================================
 
 function buildCategoryTree(
@@ -169,14 +167,12 @@ function buildCategoryTree(
       category.children.length > 0
   );
 
-  // API already provides a nested category tree
   if (hasNestedChildren) {
     return sortByOrder(
       apiCategories.filter((category) => !category.parentId)
     ).map(mapNestedCategory);
   }
 
-  // API provides a flat category list
   const categoryMap = new Map<string, CategoryNode>();
 
   apiCategories.forEach((category) => {
@@ -198,7 +194,6 @@ function buildCategoryTree(
 
   apiCategories.forEach((category) => {
     const current = categoryMap.get(category.id);
-
     if (!current) return;
 
     if (
@@ -211,7 +206,6 @@ function buildCategoryTree(
     }
   });
 
-  // Sort every level
   const sortTree = (items: CategoryNode[]): CategoryNode[] => {
     return sortByOrder(items).map((item) => ({
       ...item,
@@ -248,28 +242,19 @@ export function AllCategoriesMenu({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Desktop hover path
   const [activePath, setActivePath] = useState<CategoryNode[]>([]);
-
-  // Main category More / Show Less
   const [showAllMainCategories, setShowAllMainCategories] =
     useState(false);
 
-  // Mobile expanded categories
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     () => new Set()
   );
 
-  // Child More / Show Less
   const [showAllChildrenIds, setShowAllChildrenIds] =
     useState<Set<string>>(() => new Set());
 
   const closeTimerRef =
     useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // ====================================================
-  // CLOSE TIMER
-  // ====================================================
 
   const cancelCloseTimer = useCallback(() => {
     if (closeTimerRef.current) {
@@ -295,10 +280,6 @@ export function AllCategoriesMenu({
     };
   }, [cancelCloseTimer]);
 
-  // ====================================================
-  // SHOW MORE / SHOW LESS CHILDREN
-  // ====================================================
-
   const toggleShowAllChildren = (categoryId: string) => {
     cancelCloseTimer();
     onInteract?.();
@@ -316,10 +297,6 @@ export function AllCategoriesMenu({
     });
   };
 
-  // ====================================================
-  // SHOW MORE / SHOW LESS MAIN CATEGORIES
-  // ====================================================
-
   const toggleMainCategories = () => {
     cancelCloseTimer();
     onInteract?.();
@@ -328,17 +305,12 @@ export function AllCategoriesMenu({
       const nextValue = !current;
 
       if (!nextValue) {
-        // When collapsing, return to the first main category
         setActivePath(categories.length > 0 ? [categories[0]] : []);
       }
 
       return nextValue;
     });
   };
-
-  // ====================================================
-  // LOAD CATEGORIES FROM API
-  // ====================================================
 
   useEffect(() => {
     let mounted = true;
@@ -393,10 +365,6 @@ export function AllCategoriesMenu({
     };
   }, []);
 
-  // ====================================================
-  // DESKTOP COLUMN DATA
-  // ====================================================
-
   const getColumnCategories = useCallback(
     (depth: number): CategoryNode[] => {
       if (depth === 0) {
@@ -404,19 +372,15 @@ export function AllCategoriesMenu({
       }
 
       const parent = activePath[depth - 1];
-
       return parent?.children ?? [];
     },
     [categories, activePath]
   );
 
-  // ====================================================
-  // DESKTOP HOVER
-  // ====================================================
-
   const handleCategoryHover = useCallback(
     (category: CategoryNode, depth: number) => {
       cancelCloseTimer();
+      onInteract?.();
 
       if (category.children.length > 0) {
         setActivePath((current) => {
@@ -424,18 +388,13 @@ export function AllCategoriesMenu({
           nextPath.push(category);
           return nextPath;
         });
-
         return;
       }
 
       setActivePath((current) => current.slice(0, depth));
     },
-    [cancelCloseTimer]
+    [cancelCloseTimer, onInteract]
   );
-
-  // ====================================================
-  // MOBILE CATEGORY TOGGLE
-  // ====================================================
 
   const handleCategoryTap = (category: CategoryNode) => {
     if (category.children.length > 0) {
@@ -466,21 +425,16 @@ export function AllCategoriesMenu({
       return;
     }
 
+    onClose();
     window.location.href = getCategoryHref(category);
   };
-
-  // ====================================================
-  // DESKTOP CATEGORY ITEM
-  // ====================================================
 
   const renderDesktopCategoryItem = (
     category: CategoryNode,
     depth: number
   ) => {
     const hasChildren = category.children.length > 0;
-
-    const active =
-      depth === 0 && activePath[0]?.id === category.id;
+    const active = activePath[depth]?.id === category.id;
 
     return (
       <Link
@@ -488,6 +442,10 @@ export function AllCategoriesMenu({
         href={getCategoryHref(category)}
         onMouseEnter={() => handleCategoryHover(category, depth)}
         onFocus={() => handleCategoryHover(category, depth)}
+        onClick={() => {
+          onInteract?.();
+          onClose();
+        }}
         className={[
           "flex w-full min-w-0 items-center justify-between gap-1.5",
           "rounded-md px-2 text-left transition-all duration-150 ease-out",
@@ -524,10 +482,6 @@ export function AllCategoriesMenu({
       </Link>
     );
   };
-
-  // ====================================================
-  // MOBILE CATEGORY ITEM
-  // ====================================================
 
   const renderMobileCategory = (
     category: CategoryNode,
@@ -602,10 +556,6 @@ export function AllCategoriesMenu({
     );
   };
 
-  // ====================================================
-  // LOADING
-  // ====================================================
-
   if (loading) {
     return (
       <div className="flex min-h-[180px] items-center justify-center gap-3 p-6 text-sm text-slate-500">
@@ -615,17 +565,11 @@ export function AllCategoriesMenu({
     );
   }
 
-  // ====================================================
-  // ERROR
-  // ====================================================
-
   if (error) {
     return (
       <div className="flex min-h-[160px] flex-col items-center justify-center gap-3 p-6 text-center">
         <AlertCircle size={28} className="text-red-500" />
-
         <p className="text-sm text-slate-600">{error}</p>
-
         <button
           type="button"
           onClick={() => window.location.reload()}
@@ -637,29 +581,19 @@ export function AllCategoriesMenu({
     );
   }
 
-  // ====================================================
-  // EMPTY
-  // ====================================================
-
   if (categories.length === 0) {
     return (
       <div className="flex min-h-[150px] flex-col items-center justify-center gap-2 p-6 text-center">
         <Folder size={28} className="text-slate-400" />
-
         <p className="text-sm font-medium text-slate-700">
           {t("categoriesUnavailable")}
         </p>
-
         <p className="text-xs text-slate-500">
           {t("categoryApiHelp")}
         </p>
       </div>
     );
   }
-
-  // ====================================================
-  // MOBILE MENU
-  // ====================================================
 
   if (isMobile) {
     return (
@@ -673,10 +607,6 @@ export function AllCategoriesMenu({
     );
   }
 
-  // ====================================================
-  // DESKTOP MAIN CATEGORY VISIBILITY
-  // ====================================================
-
   const visibleMainCategories = showAllMainCategories
     ? categories
     : categories.slice(0, MAIN_CATEGORY_LIMIT);
@@ -684,18 +614,15 @@ export function AllCategoriesMenu({
   const hasMoreMainCategories =
     categories.length > MAIN_CATEGORY_LIMIT;
 
-  // ====================================================
-  // DESKTOP MEGA MENU
-  // ====================================================
-
   return (
     <div
       className="relative w-fit min-w-0 max-w-[90vw] overflow-hidden rounded-b-lg bg-white shadow-xl"
       onMouseEnter={cancelCloseTimer}
       onMouseLeave={scheduleClose}
+      onScroll={cancelCloseTimer}
     >
-      <div className="flex max-h-[min(440px,calc(100vh-165px))] min-h-[300px] w-fit min-w-0 max-w-[90vw] overflow-hidden">
-        <div className="flex w-fit min-w-0 overflow-x-hidden">
+      <div className="flex h-[320px] max-h-[min(360px,calc(100vh-180px))] w-fit min-w-0 max-w-[90vw] overflow-hidden">
+        <div className="flex h-full w-fit min-w-0 overflow-x-hidden">
           {Array.from(
             { length: activePath.length + 1 },
             (_, depth) => {
@@ -725,9 +652,15 @@ export function AllCategoriesMenu({
               return (
                 <div
                   key={`category-column-${depth}`}
+                  onScroll={cancelCloseTimer}
                   className={[
-                    "w-[215px] sm:w-[220px] min-w-0 min-h-[300px]",
+                    "h-full w-[220px] sm:w-[230px] min-w-0",
                     "shrink-0 overflow-y-auto p-1.5",
+                    "[&::-webkit-scrollbar]:w-1.5",
+                    "[&::-webkit-scrollbar-track]:bg-slate-100",
+                    "[&::-webkit-scrollbar-thumb]:rounded-full",
+                    "[&::-webkit-scrollbar-thumb]:bg-slate-300",
+                    "hover:[&::-webkit-scrollbar-thumb]:bg-slate-400",
                     depth > 0
                       ? "border-l border-slate-100 bg-white"
                       : "bg-white",
@@ -765,7 +698,9 @@ export function AllCategoriesMenu({
                           ) : (
                             <>
                               <ChevronDown size={13} />
-                              + More ({columnCategories.length - CHILD_CATEGORY_LIMIT})
+                              + More (
+                              {columnCategories.length - CHILD_CATEGORY_LIMIT}
+                              )
                             </>
                           )}
                         </button>
@@ -778,10 +713,7 @@ export function AllCategoriesMenu({
         </div>
       </div>
 
-      {/* ==================================================
-          MORE MAIN CATEGORIES FOOTER
-      ================================================== */}
-
+      {/* MORE MAIN CATEGORIES FOOTER */}
       <div className="flex min-h-[43px] items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-3 py-2">
         <button
           type="button"
