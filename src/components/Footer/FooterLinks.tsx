@@ -21,7 +21,7 @@ export function FooterLinks() {
     t("careers"),
     t("privacyPolicy"),
     t("certified"),
-    t("siteMap"),
+   
   ];
 
   return (

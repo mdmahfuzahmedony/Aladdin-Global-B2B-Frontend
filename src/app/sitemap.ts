@@ -2,102 +2,61 @@
 import type { MetadataRoute } from "next";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://aladdinglobal.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:2001";
-
-type SitemapItem = {
-  slug?: string;
-  updatedAt?: string;
-  status?: string;
-};
-
-async function fetchItems(
-  endpoint: string
-): Promise<SitemapItem[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!response.ok) return [];
-
-    const result = await response.json();
-
-    if (Array.isArray(result)) return result;
-
-    if (Array.isArray(result.data)) return result.data;
-    if (Array.isArray(result.products)) return result.products;
-    if (Array.isArray(result.categories)) return result.categories;
-
-    return [];
-  } catch (error) {
-    console.error("Sitemap API Error:", error);
-    return [];
-  }
-}
-
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticPages: MetadataRoute.Sitemap = [
+export default function sitemap(): MetadataRoute.Sitemap {
+  const pages = [
     {
-      url: SITE_URL,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 1,
+      url: "",
+      priority: 1.0,
+      changeFrequency: "daily" as const,
     },
     {
-      url: `${SITE_URL}/about-us`,
-      changeFrequency: "monthly",
+      url: "/about-us",
+      priority: 0.8,
+      changeFrequency: "monthly" as const,
+    },
+    {
+      url: "/products",
+      priority: 0.9,
+      changeFrequency: "daily" as const,
+    },
+    {
+      url: "/categories",
+      priority: 0.9,
+      changeFrequency: "weekly" as const,
+    },
+    {
+      url: "/brands",
+      priority: 0.8,
+      changeFrequency: "weekly" as const,
+    },
+    {
+      url: "/contact",
       priority: 0.7,
+      changeFrequency: "monthly" as const,
     },
     {
-      url: `${SITE_URL}/contact`,
-      changeFrequency: "monthly",
+      url: "/certified",
       priority: 0.7,
+      changeFrequency: "monthly" as const,
     },
     {
-      url: `${SITE_URL}/help`,
-      changeFrequency: "monthly",
-      priority: 0.6,
+      url: "/privacy-policy",
+      priority: 0.3,
+      changeFrequency: "yearly" as const,
     },
     {
-      url: `${SITE_URL}/payment-methods`,
-      changeFrequency: "monthly",
-      priority: 0.6,
+      url: "/terms",
+      priority: 0.3,
+      changeFrequency: "yearly" as const,
     },
   ];
 
-  const [products, categories] = await Promise.all([
-    fetchItems("/api/products"),
-    fetchItems("/api/categories"),
-  ]);
-
-  const productPages: MetadataRoute.Sitemap = products
-    .filter(
-      (product) =>
-        product.slug &&
-        (!product.status || product.status === "ACTIVE")
-    )
-    .map((product) => ({
-      url: `${SITE_URL}/products/${product.slug}`,
-      lastModified: product.updatedAt
-        ? new Date(product.updatedAt)
-        : new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    }));
-
-  const categoryPages: MetadataRoute.Sitemap = categories
-    .filter((category) => category.slug)
-    .map((category) => ({
-      url: `${SITE_URL}/categories/${category.slug}`,
-      lastModified: category.updatedAt
-        ? new Date(category.updatedAt)
-        : new Date(),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    }));
-
-  return [...staticPages, ...categoryPages, ...productPages];
+  return pages.map((page) => ({
+    url: `${SITE_URL}${page.url}`,
+    lastModified: new Date(),
+    changeFrequency: page.changeFrequency,
+    priority: page.priority,
+  }));
 }
