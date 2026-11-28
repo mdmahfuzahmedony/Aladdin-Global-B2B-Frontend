@@ -958,7 +958,7 @@ export default function PrivacyPolicyPage() {
           </h2>
 
           <p className="mt-2 text-sm text-slate-300">
-            © {new Date().getFullYear()} আলাদিন গ্লোবাল বিটুবি।
+            © {new Date().getFullYear()} Aladdin Global B2B
             সর্বস্বত্ব সংরক্ষিত।
           </p>
 
